@@ -129,40 +129,6 @@ def migrate():
         save_yaml(TARGET_CONFIG, current)
         print("Safely updated structural configurations.")
 
-    # 2. Text-Based Appending for Sensors (Preserves comments and keeps them commented out)
-    with open(TARGET_CONFIG, "r") as f:
-        raw_text = f.read()
-
-    sensors_to_add = []
-    
-    if "SerialJSON" not in raw_text:
-        sensors_to_add.append("""
-#  - type: "SerialJSON"
-#    id: "arduino-01"
-#    port: "/dev/ttyACM0"
-#    baud_rate: 9600
-#    interval_seconds: 3600
-#    k_constant: 10.0""")
-        
-    if "TDSN7300" not in raw_text:
-        sensors_to_add.append("""
-#  - type: "TDSN7300"
-#    id: "env-03"
-#    interval_seconds: 3600""")
-        
-    if sensors_to_add:
-        print("\nInjecting commented-out configurations for new sensors...")
-        with open(TARGET_CONFIG, "a") as f:
-            f.write("\n\n# --- Future Hardware Configurations ---")
-            f.write("\n# To enable the new sensors below when you receive the hardware,")
-            f.write("\n# simply remove the '#' from the beginning of each line.")
-            for sensor_block in sensors_to_add:
-                f.write(sensor_block)
-            f.write("\n")
-        print("✅ Injection complete. New sensors are available in config.yaml but disabled.")
-    else:
-        print("\nNew sensors are already present in the configuration. Skipping injection.")
-
     print("--- Migration complete ---")
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ echo -e "${GREEN}--- Sensor SFC System Initialization ---${NC}"
 CURRENT_VERSION="2"
 
 # Manifest of scripts that belong to THIS version (at the project root)
-CURRENT_SCRIPTS="01_install_update.sh 02_check_hardware.sh 02_test_wifi.sh 03_test_sensors.sh 04_start_service.sh 05_configure.sh"
+CURRENT_SCRIPTS="01_install_update.sh 02_check_hardware.sh 03_test_sensors.sh 04_start_service.sh 05_configure.sh test_wifi.sh"
 
 # 0. Pre-Flight Disk Space Check
 # Ensure at least 100MB (102400 KB) of free space on the root partition

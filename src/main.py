@@ -77,15 +77,8 @@ def main():
     
     # 4. Initialize Sensors
     sensors: List[Sensor] = []
-    
-    sensor_list = cm.get("sensors")
-    if not sensor_list:
-        legacy_id = cm.get("sensor.id")
-        if legacy_id:
-            legacy_type = "Mock" if cm.get("sensor.use_mock") else "BME280"
-            sensor_list = [{"type": legacy_type, "id": legacy_id, "interval_seconds": cm.get("sensor.interval_seconds", 60)}]
-        else:
-            sensor_list = []
+
+    sensor_list = cm.get("sensors") or []
 
     for s_conf in sensor_list:
         sensor = create_sensor(s_conf, device_id=device_id)
@@ -150,7 +143,7 @@ def main():
 
     app = Application(
         sensors=sensors,
-        storage_path=cm.get("storage.db_path", "sensor_data.db"),
+        storage_path=cm.get("storage.db_path", "data/sensor/sensor_data.db"),
         uploader=uploader,
         status_indicator=status_indicator,
         retention_manager=retention_manager,

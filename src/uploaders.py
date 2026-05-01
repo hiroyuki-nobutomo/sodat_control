@@ -12,50 +12,17 @@ try:
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaFileUpload
-    from tenacity import retry, stop_after_delay, wait_exponential, retry_if_exception_type
-    import socket
-    from google.auth.exceptions import TransportError
-    from googleapiclient.errors import HttpError
+    from tenacity import retry, stop_after_delay, wait_exponential
     HAS_GOOGLE = True
 except ImportError:
     HAS_GOOGLE = False
 
-# Robust Retry Strategy: Wait up to 120s, backing off exponentially
-# Retry on Network errors, Transport errors, and specific HttpErrors (5xx)
-def is_retriable_error(exception):
-    """Returns True if the exception is worth retrying (Network/Server errors)."""
-    if isinstance(exception, (socket.timeout, TransportError, ConnectionError, TimeoutError)):
-        return True
-    if isinstance(exception, HttpError):
-        # Retry 500 (Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 429 (Too Many Requests)
-        return exception.resp.status in [500, 502, 503, 429]
-    return False
-
-# Standard decorator for network operations
-RETRY_DECORATOR = retry(
-    stop=stop_after_delay(120),
-    wait=wait_exponential(multiplier=2, min=2, max=30),
-    retry=retry_if_exception_type(Exception), # We filter inside the function or trust the broad retry for now? 
-    # Better to filter:
-    # retry=retry_if_exception_type((socket.timeout, TransportError, ConnectionError, HttpError)) 
-    # But for simplicity and robustness against "Unable to find server" (often a wrapped GAierror), let's retry most things 
-    # EXCEPT 400/401/403 which are logic/auth errors.
-    
-    # Let's refine the strategy to be safe but persistent:
-    # We will let specific methods handle their own try/except blocks if they need custom logic,
-    # OR we use this decorator. For 'tenacity', we usually want it to bubble up if it fails after 120s.
-)
-
-# Custom robust decorator
 def robust_retry():
+    """Retry network operations for up to 120s with exponential backoff."""
     return retry(
         stop=stop_after_delay(120),
         wait=wait_exponential(multiplier=2, min=2, max=30),
-        # Retry on network-y things. 
-        # Note: gspread might raise distinct exceptions too.
-        # We'll keep it broad for 'Exception' but maybe log retries?
-        # For this implementation, we'll keep it simple: Retry all Exceptions that aren't obviously fatal code bugs.
-        reraise=True 
+        reraise=True,
     )
 
 class Uploader(ABC):

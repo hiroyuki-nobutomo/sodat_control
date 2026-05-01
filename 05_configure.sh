@@ -88,6 +88,7 @@ get_valid_integer() {
 SENSOR_INT=$(get_valid_integer "Env Sensors (BME/TDSN/IWS/Arduino) Interval [Enter for 1800]: " 1800)
 CAMERA_INT=$(get_valid_integer "Camera Interval [Enter for 1800]: " 1800)
 UPLOAD_INT=$(get_valid_integer "Upload Interval [Enter for 1800]: " 1800)
+UPLOAD_OFFSET=$(get_valid_integer "Upload Start Offset [Enter for 300]: " 300)
 RETENTION_DAYS=$(get_valid_integer "Local Data Retention (Days) [Enter for 90]: " 90)
 
 echo "Configuring device..."
@@ -97,6 +98,7 @@ if .venv/bin/python3 scripts/util_config.py \
     --sensor-interval "$SENSOR_INT" \
     --camera-interval "$CAMERA_INT" \
     --upload-interval "$UPLOAD_INT" \
+    --upload-offset "$UPLOAD_OFFSET" \
     --retention-days "$RETENTION_DAYS"; then
     echo -e "${GREEN}Configuration updated successfully in config.yaml.${NC}"
 else
