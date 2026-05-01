@@ -1,0 +1,41 @@
+device_id: S01
+sensors:
+- type: BME280
+  id: env-01
+  address: 118
+  interval_seconds: 1800
+- type: TDSN7200
+  id: env-02
+  interval_seconds: 1800
+- type: TDSN7300
+  id: env-03
+  interval_seconds: 1800
+- type: IWS660CS
+  id: lux-01
+  interval_seconds: 1800
+- type: Camera
+  id: cam-01
+  interval_seconds: 1800
+- type: SerialJSON
+  id: arduino-01
+  port: /dev/ttyACM0
+  baud_rate: 9600
+  interval_seconds: 1800
+  k_constant: 10.0
+uploader:
+  type: GoogleDrive
+  data_folder_id: 1P7JW2SwfLpMFoELkBya8IsPC-nA6J-w2
+  images_folder_id: 1DimUE8NX4_hvoAZbWcUwMP2mDPaw00Rg
+  token_file: secrets/token.json
+  interval_seconds: 1800
+  log_interval_seconds: 600
+  offset_seconds: 300
+wifi_monitor_interval_seconds: 600
+storage:
+  db_path: data/sensor/sensor_data.db
+  retention:
+    enabled: true
+    max_age_days: 90
+    images_dir: data/images
+logging:
+  level: DEBUG
