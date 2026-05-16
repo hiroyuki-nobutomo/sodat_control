@@ -69,16 +69,16 @@
   <li><kbd>保存</kbd> → <kbd>はい</kbd> で書き込み開始。書き込み + 検証で 5〜10 分。</li>
 </ol>
 
-<h2>手順 3. service_account.json を SD カードに乗せる</h2>
+<h2>手順 3. firstrun snippet を SD カードに乗せる</h2>
 
 <p>書き込みが終わったら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。</p>
 
-<p>次のページのブラウザ内ツールで、<code>service_account.json</code> を <code>bootfs</code> 上の <code>firstrun.sh</code> に貼るためのスニペットを生成できます。<strong>service_account.json はあなたの PC から外に出ません</strong> (すべて JavaScript でローカル処理)。</p>
+<p>下のページに進み、Pi Imager で設定したユーザー名を入力 → <strong>「snippet をダウンロード」</strong> をクリック → ダウンロードされた <code>sodat-firstrun-snippet.sh</code> の本体行を <code>bootfs/firstrun.sh</code> に貼り付けるだけです。<strong>service_account.json は Vercel 側で管理されているため、研究者の PC では一切扱いません</strong>。</p>
 
-<p><a class="cta" href="firstrun-generator.html">firstrun スニペット生成ツールを開く →</a></p>
+<p><a class="cta" href="firstrun-generator.html">firstrun snippet ダウンロードページを開く →</a></p>
 
 <div class="callout">
-  <strong>取り扱い注意:</strong> 生成された snippet には <code>service_account.json</code> が base64 で埋め込まれています。チャットなどに貼り付けないでください。SD カードに貼ったら速やかにアンマウントして取り外してください。
+  <strong>取り扱い注意:</strong> ダウンロードされた <code>.sh</code> ファイルにはプロジェクトの service_account.json が base64 で含まれます。チャットや公開リポジトリに貼らないでください。SD への書き込みが終わったら PC 上のダウンロードファイルも削除推奨。
 </div>
 
 <h2>手順 4. Pi に挿して電源 ON</h2>
@@ -143,16 +143,16 @@ sudo systemctl status sensor_sfc</code></pre>
   <li>Click <kbd>Save</kbd> → <kbd>Yes</kbd> to start writing. Write + verify takes 5–10 minutes.</li>
 </ol>
 
-<h2>Step 3. Put service_account.json on the SD card</h2>
+<h2>Step 3. Place the firstrun snippet on the SD card</h2>
 
 <p>When writing finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code>.</p>
 
-<p>Use the in-browser tool on the next page to generate a snippet that embeds your <code>service_account.json</code> into the SD card's <code>firstrun.sh</code>. <strong>The service_account.json never leaves your PC</strong> — all processing is client-side JavaScript.</p>
+<p>On the next page, enter the Pi Imager username and click <strong>Download snippet</strong>. The downloaded <code>sodat-firstrun-snippet.sh</code> body is pasted into <code>bootfs/firstrun.sh</code>. <strong>The service_account.json is managed centrally on Vercel</strong> — researchers don't handle the key file themselves.</p>
 
-<p><a class="cta" href="firstrun-generator.html">Open the firstrun snippet generator →</a></p>
+<p><a class="cta" href="firstrun-generator.html">Open the firstrun snippet download page →</a></p>
 
 <div class="callout">
-  <strong>Handle with care:</strong> the generated snippet contains your <code>service_account.json</code> as base64. Don't paste it into chat. Once it's on the SD card, eject the card promptly.
+  <strong>Handle with care:</strong> the downloaded <code>.sh</code> file embeds the project's <code>service_account.json</code> (base64). Don't paste it into chat or a public repo. Delete the downloaded copy from your PC after the SD card is written.
 </div>
 
 <h2>Step 4. Boot the Pi</h2>

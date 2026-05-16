@@ -13,16 +13,22 @@ The easiest way to provision a new device is the **web setup page**, which walks
 What the page covers:
 1. Install Raspberry Pi Imager (one-time, on your PC)
 2. Flash Raspberry Pi OS (64-bit) to a microSD with hostname `sNN` (SFC) or `aNN` (API building), Wi-Fi, and your SSH user — all done inside Pi Imager's customisation panel. (Lite 64-bit also works if you prefer a smaller image.)
-3. Use the in-browser tool to generate a `firstrun.sh` snippet that embeds the project's `service_account.json` as base64 (the key never leaves your PC — pure client-side JavaScript)
-4. Paste the snippet into the SD card's `firstrun.sh`, eject, boot the Pi — done
+3. On the web page, enter the Pi Imager username and click **Download snippet** — the page calls `/api/firstrun`, which injects the project's `service_account.json` (stored as a Vercel environment variable, not on researcher PCs) into the snippet
+4. Paste the downloaded snippet into the SD card's `firstrun.sh`, eject, boot the Pi — done
 
 The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in Pi Imager, so there's no per-device config edit.
 
 > 🛠️ **One-time project setup (do this once for the whole study, not per device):**
+>
 > 1. In Google Cloud Console, create a Service Account, then generate a JSON key.
 > 2. Note its email (`xxx@xxx.iam.gserviceaccount.com`).
 > 3. Share the target Google Drive folder(s) and Spreadsheet with that email, granting **Editor** access.
-> 4. Keep that JSON file secret — distribute it to project members via a secure channel (1Password, encrypted email, lab share). Each researcher feeds it into the web setup tool on their own PC.
+> 4. In the Vercel dashboard for this repo:
+>    - **Project Settings → Environment Variables**: add `SODAT_SERVICE_ACCOUNT_JSON_B64`, value = `base64 < service_account.json | tr -d '\n'` (paste the resulting single-line string). Apply to Production (and Preview if you want preview deploys to work too).
+>    - **Project Settings → Deployment Protection**: enable Password Protection or Vercel Access. **This is mandatory** — without it, `/api/firstrun` would let anyone with the URL download a Drive-editing credential.
+> 5. Redeploy so the env var takes effect.
+
+Researchers never see the `service_account.json` file with this setup. Rotating the key = generate a new key in Cloud Console, update the env var in Vercel, redeploy.
 
 ---
 
@@ -135,16 +141,22 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 ページでカバーする内容:
 1. Raspberry Pi Imager をインストール (PC 側、1 回のみ)
 2. Pi Imager で Raspberry Pi OS (64-bit) を microSD に書き込み、Pi Imager のカスタマイズ画面でホスト名 `sNN` (SFC) / `aNN` (API 機構) / Wi-Fi / SSH ユーザを設定 (より小さいイメージが良ければ Lite 64-bit も可)
-3. ブラウザ内ツールで `service_account.json` を base64 化して埋め込んだ `firstrun.sh` snippet を生成 (鍵は PC から外に出ません — 完全クライアントサイド処理)
-4. snippet を SD カード上の `firstrun.sh` に貼り付け、取り出して Pi を起動 — 以上
+3. Web ページで Pi Imager で設定したユーザ名を入力 → **「snippet をダウンロード」** をクリック。`/api/firstrun` が Vercel 環境変数の `service_account.json` を埋め込んで完成版を返す (鍵は研究者の PC に渡らない)
+4. ダウンロードした snippet を SD カード上の `firstrun.sh` に貼り付け、取り出して Pi を起動 — 以上
 
 `device_id` (`S01`, `S02`, ...) は Pi Imager で設定したホスト名から自動導出されるので、機器ごとに config を編集する必要はありません。
 
 > 🛠️ **プロジェクト初回セットアップ (研究全体で 1 回だけ、機器ごとではありません):**
+>
 > 1. Google Cloud Console で Service Account を作成し、JSON キーを発行
 > 2. その Service Account のメールアドレス (`xxx@xxx.iam.gserviceaccount.com`) を控える
 > 3. 出力先の Google Drive フォルダおよびスプレッドシートを、そのメールアドレスに **編集者**権限で共有
-> 4. その JSON キーは機密情報。プロジェクトメンバーには 1Password・暗号化メール・ラボ内共有など安全な経路で配布。各研究者は自分の PC で Web セットアップツールにそのファイルを投入
+> 4. Vercel ダッシュボードで:
+>    - **Project Settings → Environment Variables**: `SODAT_SERVICE_ACCOUNT_JSON_B64` を追加。値は `base64 < service_account.json | tr -d '\n'` の結果 (1 行の base64 文字列)。Production (必要なら Preview も) に適用
+>    - **Project Settings → Deployment Protection**: Password Protection か Vercel Access を有効化。**これは必須**。これが無いと `/api/firstrun` を URL を知った誰でも叩け、Drive 編集権限を持つ鍵が漏れます
+> 5. 再デプロイで env var が反映される
+
+研究者は `service_account.json` ファイルを直接触る必要がなくなります。鍵ローテーション = Cloud Console で新規発行 → Vercel の env var を更新 → 再デプロイ、で完結。
 
 ---
 
