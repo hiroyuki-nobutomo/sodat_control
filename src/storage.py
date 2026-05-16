@@ -2,7 +2,7 @@ import sqlite3
 import json
 import logging
 import os
-from typing import List, Optional
+from typing import List
 from src.models import SensorReading
 
 class StorageManager:

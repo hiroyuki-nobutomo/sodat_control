@@ -12,7 +12,6 @@ gspread
 google-auth>=2.47.0
 google-api-python-client>=2.188.0
 google-auth-httplib2
-google-auth-oauthlib
 
 # Testing
 pytest
