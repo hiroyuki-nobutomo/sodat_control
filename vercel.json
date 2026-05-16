@@ -6,6 +6,11 @@
   "outputDirectory": "docs",
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/firstrun.js": {
+      "includeFiles": "firstrun_snippet.sh.template"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -17,6 +22,12 @@
     },
     {
       "source": "/firstrun-generator(.html)?",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
       ]

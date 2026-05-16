@@ -1,8 +1,9 @@
-# Hide everything Vercel doesn't need to deploy the static web setup site.
-# Only docs/ and vercel.json should reach Vercel's build pipeline; otherwise
-# Vercel auto-detects src/app.py and src/main.py as a Python serverless project.
+# Files Vercel doesn't need: keep docs/ (static site), api/ (serverless
+# functions), vercel.json, and firstrun_snippet.sh.template (read at request
+# time by api/firstrun.js). Everything else is Pi-side runtime code or
+# secrets and should not be uploaded.
 
-# Python (the trigger for the original misdetection)
+# Python — Pi runtime, never executed on Vercel
 src/
 scripts/
 *.py
@@ -12,9 +13,12 @@ __pycache__/
 venv/
 requirements.txt
 
-# Shell scripts and project bootstrap
+# Shell scripts (installer / bootstrap) — Pi-side only
 *.sh
+
+# Templates — block by default, then un-ignore the one the function reads
 *.sh.template
+!firstrun_snippet.sh.template
 
 # Hardware / data / secrets
 arduino/

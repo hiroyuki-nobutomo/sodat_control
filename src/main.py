@@ -1,52 +1,15 @@
 import os
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from src.config import ConfigManager
 from src.logger import setup_logging
-from src.sensors import Sensor, BME280Sensor, MockSensor, TDSN7200Sensor, TDSN7300Sensor, IWS660CSSensor, SerialJSONSensor, CameraSensor, WifiMonitor
+from src.sensors import Sensor, create_sensor
+from src.wifi_monitor import WifiMonitor
 from src.uploaders import MockUploader, GoogleSheetsUploader
 from src.app import Application
 from src.status import StatusIndicator
 from src.retention import RetentionManager
-
-def create_sensor(sensor_config: dict, device_id: str = "S01") -> Optional[Sensor]:
-    """Factory to create a sensor instance from config."""
-    s_type = sensor_config.get("type")
-    s_id = sensor_config.get("id")
-    interval = sensor_config.get("interval_seconds", 60)
-    
-    try:
-        if s_type == "BME280":
-            address = sensor_config.get("address", 0x76)
-            return BME280Sensor(sensor_id=s_id, address=address, interval=interval)
-        elif s_type == "Mock":
-            return MockSensor(sensor_id=s_id, interval=interval)
-        elif s_type == "TDSN7200":
-            return TDSN7200Sensor(sensor_id=s_id, interval=interval)
-        elif s_type == "TDSN7300":
-            return TDSN7300Sensor(sensor_id=s_id, interval=interval)
-        elif s_type == "IWS660CS":
-            return IWS660CSSensor(sensor_id=s_id, interval=interval)
-        elif s_type == "SerialJSON":
-            port = sensor_config.get("port", "/dev/ttyACM0")
-            baud_rate = sensor_config.get("baud_rate", 9600)
-            k_constant = sensor_config.get("k_constant")
-            return SerialJSONSensor(sensor_id=s_id, interval=interval, port=port, 
-                                    baud_rate=baud_rate, k_constant=k_constant)
-        elif s_type == "Camera":
-            device = sensor_config.get("device", "/dev/video0")
-            resolution = sensor_config.get("resolution", "1280x720")
-            output_dir = sensor_config.get("output_dir", "data/images")
-            # Pass device_id here
-            return CameraSensor(sensor_id=s_id, interval=interval, device=device, 
-                                resolution=resolution, output_dir=output_dir, device_name=device_id)
-        else:
-            logging.warning(f"Unknown sensor type: {s_type}")
-            return None
-    except Exception as e:
-        logging.error(f"Failed to initialize sensor {s_id} ({s_type}): {e}")
-        return None
 
 def main():
     # 1. Load Configuration
