@@ -54,12 +54,12 @@
 <h2>手順 2. Pi Imager で SD カードを書き込み</h2>
 <ol>
   <li>Pi Imager を起動し、左の <strong>「デバイスを選ぶ」</strong> で使う Raspberry Pi の機種を選ぶ。</li>
-  <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS Lite (64-bit)</strong> を選ぶ。</li>
+  <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> を選ぶ (フル版推奨。より軽量にしたい場合は <strong>Raspberry Pi OS Lite (64-bit)</strong> でも動作します)。</li>
   <li>右の <strong>「ストレージを選ぶ」</strong> で microSD を選ぶ。</li>
   <li><strong>「次へ」</strong>を押すと「OS をカスタマイズしますか?」と聞かれるので <kbd>設定を編集する</kbd> を選ぶ。</li>
   <li>「一般」タブで次を設定:
     <ul>
-      <li>ホスト名: <code>sodat-sNN</code> (NN は 01, 02, 03 ... の連番。<strong>機器ごとに必ず変える</strong>)</li>
+      <li>ホスト名 = 機器名: <code>s01</code>, <code>s02</code> ... (SFC に設置する場合) / <code>a01</code>, <code>a02</code> ... (API 機構に設置する場合)。<strong>機器ごとに必ず変える</strong>。Pi Imager 側は小文字で入力 (DNS 規約)、初回起動で大文字化されて <code>device_id</code> (<code>S01</code> / <code>A01</code>) に自動反映される</li>
       <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。後で SSH する可能性があるなら覚えておく</li>
       <li>無線 LAN: SSID / パスワード / 国 (JP) を設定</li>
       <li>ロケール: タイムゾーン <code>Asia/Tokyo</code></li>
@@ -87,21 +87,21 @@
   <li>Wi-Fi に接続 (Pi Imager の設定)</li>
   <li>service_account.json を所定位置に展開</li>
   <li>GitHub からリポジトリを取得しインストール</li>
-  <li>ホスト名から device_id を導出 (<code>sodat-s05</code> → <code>S05</code>)</li>
+  <li>ホスト名から device_id を導出 (<code>s05</code> → <code>S05</code>、<code>a01</code> → <code>A01</code>)</li>
   <li>センサ収集サービスを起動</li>
 </ol>
 <p>所要時間は 8〜15 分程度。インターネット回線次第です。</p>
 
 <h2>動作確認</h2>
 <p>同じネットワーク上の PC から:</p>
-<pre><code>ssh &lt;ユーザー名&gt;@sodat-sNN.local
+<pre><code>ssh &lt;ユーザー名&gt;@sNN.local      # 例: ssh sodat@s05.local
 sudo systemctl status sensor_sfc</code></pre>
 <p><code>active (running)</code> になっていれば成功です。ログは <code>journalctl -u sensor_sfc -f</code> で追えます。</p>
 
 <h2>トラブルシュート</h2>
 <ul>
   <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
-  <li><strong><code>sodat-sNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
+  <li><strong><code>sNN.local</code> / <code>aNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
   <li><strong>もう一度やり直したい:</strong> SD を PC で再フォーマットして手順 2 から。</li>
 </ul>
 
@@ -128,12 +128,12 @@ sudo systemctl status sensor_sfc</code></pre>
 <h2>Step 2. Write the SD card with Pi Imager</h2>
 <ol>
   <li>Open Pi Imager. Under <strong>Choose device</strong>, pick your Pi model.</li>
-  <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS Lite (64-bit)</strong>.</li>
+  <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> (full version recommended; <strong>Raspberry Pi OS Lite (64-bit)</strong> also works for a lighter footprint).</li>
   <li>Under <strong>Choose storage</strong>, pick the microSD card.</li>
   <li>Click <strong>Next</strong>. When asked "Would you like to apply OS customisation settings?", choose <kbd>Edit Settings</kbd>.</li>
   <li>On the <em>General</em> tab:
     <ul>
-      <li>Hostname: <code>sodat-sNN</code> (NN is a zero-padded number — <strong>must be unique per device</strong>: 01, 02, ...).</li>
+      <li>Hostname = device name: <code>s01</code>, <code>s02</code>, ... (devices at SFC) or <code>a01</code>, <code>a02</code>, ... (devices in the API building). <strong>Must be unique per device.</strong> Enter in lowercase (DNS rules); first boot uppercases it into the <code>device_id</code> (<code>S01</code> / <code>A01</code>).</li>
       <li>Username and password: e.g. <code>sodat</code>. Remember these — you may need them for SSH later.</li>
       <li>Wireless LAN: SSID / password / country.</li>
       <li>Locale: set the timezone (e.g. <code>Asia/Tokyo</code>).</li>
@@ -161,21 +161,21 @@ sudo systemctl status sensor_sfc</code></pre>
   <li>Connect to Wi-Fi (from Pi Imager settings).</li>
   <li>Place service_account.json at the right location.</li>
   <li>Clone the repo from GitHub and run the installer.</li>
-  <li>Derive <code>device_id</code> from the hostname (<code>sodat-s05</code> → <code>S05</code>).</li>
+  <li>Derive <code>device_id</code> from the hostname (<code>s05</code> → <code>S05</code>, <code>a01</code> → <code>A01</code>).</li>
   <li>Start the sensor-collection service.</li>
 </ol>
 <p>This takes ~8–15 minutes depending on your internet speed.</p>
 
 <h2>Verify</h2>
 <p>From a PC on the same network:</p>
-<pre><code>ssh &lt;username&gt;@sodat-sNN.local
+<pre><code>ssh &lt;username&gt;@sNN.local      # e.g. ssh sodat@s05.local
 sudo systemctl status sensor_sfc</code></pre>
 <p>Look for <code>active (running)</code>. Logs: <code>journalctl -u sensor_sfc -f</code>.</p>
 
 <h2>Troubleshooting</h2>
 <ul>
   <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and <code>journalctl -u sensor_sfc -n 200</code>.</li>
-  <li><strong>Can't reach <code>sodat-sNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
+  <li><strong>Can't reach <code>sNN.local</code> / <code>aNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
   <li><strong>Want to start over:</strong> reformat the SD card on your PC and repeat from Step 2.</li>
 </ul>
 

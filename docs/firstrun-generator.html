@@ -194,8 +194,8 @@ chmod 600 "$SA_PATH"
 runuser -u "$SODAT_USER" -- bash -c \\
   'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash'
 
-# 4. Derive device_id from hostname (sodat-s05 -> S05). Skip if pattern doesn't match.
-HOSTNAME_DERIVED=$(hostname | sed -nE 's/^sodat-([a-z][0-9]+)$/\\1/p' | tr '[:lower:]' '[:upper:]')
+# 4. Derive device_id from hostname (s05 -> S05, a01 -> A01). Skip if pattern doesn't match.
+HOSTNAME_DERIVED=$(hostname | tr '[:lower:]' '[:upper:]' | sed -nE 's/^([A-Z][0-9]+)$/\\1/p')
 if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
     runuser -u "$SODAT_USER" -- \\
         "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \\
