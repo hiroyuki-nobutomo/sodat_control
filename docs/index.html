@@ -86,7 +86,7 @@
 
 <p>下のページに進み、Pi Imager で設定したユーザー名を入力 → <strong>「snippet をダウンロード」</strong> をクリック → ダウンロードされた <code>sodat-firstrun-snippet.sh</code> の本体行を <code>bootfs/firstrun.sh</code> に貼り付けるだけです。<strong>service_account.json は Vercel 側で管理されているため、研究者の PC では一切扱いません</strong>。</p>
 
-<p><a class="cta" href="firstrun-generator.html">firstrun snippet ダウンロードページを開く →</a></p>
+<p><a class="cta cta-generator" href="firstrun-generator.html">firstrun snippet ダウンロードページを開く →</a></p>
 
 <div class="callout">
   <strong>取り扱い注意:</strong> ダウンロードされた <code>.sh</code> ファイルにはプロジェクトの service_account.json が base64 で含まれます。チャットや公開リポジトリに貼らないでください。SD への書き込みが終わったら PC 上のダウンロードファイルも削除推奨。
@@ -161,7 +161,7 @@ sudo systemctl status sensor_sfc</code></pre>
 
 <p>On the next page, enter the Pi Imager username and click <strong>Download snippet</strong>. The downloaded <code>sodat-firstrun-snippet.sh</code> body is pasted into <code>bootfs/firstrun.sh</code>. <strong>The service_account.json is managed centrally on Vercel</strong> — researchers don't handle the key file themselves.</p>
 
-<p><a class="cta" href="firstrun-generator.html">Open the firstrun snippet download page →</a></p>
+<p><a class="cta cta-generator" href="firstrun-generator.html">Open the firstrun snippet download page →</a></p>
 
 <div class="callout">
   <strong>Handle with care:</strong> the downloaded <code>.sh</code> file embeds the project's <code>service_account.json</code> (base64). Don't paste it into chat or a public repo. Delete the downloaded copy from your PC after the SD card is written.
@@ -205,6 +205,20 @@ function setLang(lang) {
   try { saved = localStorage.getItem('sodatLang'); } catch (e) {}
   const initial = saved || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ja');
   setLang(initial);
+})();
+
+// Forward the lab access token from this page's URL to the snippet generator,
+// so researchers don't lose it when navigating between Step 1-2 (this page)
+// and Step 3 (firstrun-generator).
+(function () {
+  let token = '';
+  try { token = new URLSearchParams(window.location.search).get('token') || ''; } catch (e) {}
+  if (!token) return;
+  for (const a of document.querySelectorAll('a.cta-generator')) {
+    const url = new URL(a.getAttribute('href'), window.location.href);
+    url.searchParams.set('token', token);
+    a.setAttribute('href', url.pathname + url.search);
+  }
 })();
 </script>
 

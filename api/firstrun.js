@@ -1,15 +1,17 @@
-// Vercel Serverless Function: GET /api/firstrun?user=<unix-username>
+// Vercel Serverless Function: GET /api/firstrun?user=<unix-username>&token=<access-token>
 //
 // Returns the SD-card firstrun snippet pre-filled with the project's
 // service-account key (read from the SODAT_SERVICE_ACCOUNT_JSON_B64 env var,
 // set in the Vercel dashboard) and the requested Pi Imager username.
 //
-// Researchers don't need to handle the service_account.json themselves — they
-// just enter their username and click Download. The page that drives this
-// endpoint MUST be behind Vercel Deployment Protection (Pro) or equivalent,
-// since unauthenticated access to /api/firstrun would leak project Drive
-// write credentials.
+// Access is gated by a shared lab token (SODAT_ACCESS_TOKEN env var). Lab
+// admins distribute the token to researchers as part of the URL:
+//     https://<host>/firstrun-generator?token=<the-secret>
+// — that way researchers don't have to type the token, but knowing the URL
+// (without the token) is not enough to extract the service-account key.
+// Token rotation = change the env var and redeploy; old links die instantly.
 
+import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,6 +34,34 @@ const KNOWN_SENSORS = new Set([
   "SerialJSON",
 ]);
 
+function checkToken(req) {
+  const expected = process.env.SODAT_ACCESS_TOKEN;
+  if (!expected) {
+    return {
+      ok: false, status: 500,
+      msg: "SODAT_ACCESS_TOKEN env var is not set on this Vercel project. " +
+           "Set it in Project Settings -> Environment Variables (any random " +
+           "string), then redeploy. Researchers append ?token=<that-value> to " +
+           "the page URL.",
+    };
+  }
+  const provided = typeof req.query.token === "string" ? req.query.token : "";
+  if (!provided) {
+    return {
+      ok: false, status: 401,
+      msg: "Missing access token. Append ?token=<your-lab-token> to the URL " +
+           "(get it from the lab admin).",
+    };
+  }
+  // Constant-time comparison to avoid timing side channels on the token.
+  const a = Buffer.from(expected, "utf-8");
+  const b = Buffer.from(provided, "utf-8");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    return { ok: false, status: 401, msg: "Invalid access token." };
+  }
+  return { ok: true };
+}
+
 function fail(res, status, message) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -41,6 +71,11 @@ function fail(res, status, message) {
 export default function handler(req, res) {
   if (req.method !== "GET") {
     return fail(res, 405, "Method not allowed (use GET).");
+  }
+
+  const auth = checkToken(req);
+  if (!auth.ok) {
+    return fail(res, auth.status, auth.msg);
   }
 
   const saB64 = process.env.SODAT_SERVICE_ACCOUNT_JSON_B64;

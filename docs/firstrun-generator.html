@@ -185,6 +185,16 @@ const KNOWN_SENSORS = [
 
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 
+// Pull the lab access token out of the page URL (?token=...). Researchers
+// reach this page via a shared URL that already has the token appended;
+// the JS forwards it to /api/firstrun so the user never types it. If
+// the page was opened without the token, the download button stays
+// disabled and the banner explains how to fix it.
+const PAGE_TOKEN = (function () {
+  try { return new URLSearchParams(window.location.search).get("token") || ""; }
+  catch (e) { return ""; }
+})();
+
 function buildSensorList(containerId, lang) {
   const container = document.getElementById(containerId);
   if (!container) return [];
@@ -247,9 +257,21 @@ function wire(suffix, lang) {
       return;
     }
 
+    if (!PAGE_TOKEN) {
+      link.setAttribute('aria-disabled', 'true');
+      link.removeAttribute('href');
+      status.className = 'status err';
+      status.textContent = lang === 'en'
+        ? 'Access token missing — open this page via the lab-admin URL (it contains ?token=…).'
+        : 'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直してください。';
+      return;
+    }
+
     const sensorsParam = selected.length === KNOWN_SENSORS.length ? 'all' : selected.join(',');
     link.removeAttribute('aria-disabled');
-    link.href = `/api/firstrun?user=${encodeURIComponent(v)}&sensors=${encodeURIComponent(sensorsParam)}`;
+    link.href = `/api/firstrun?user=${encodeURIComponent(v)}`
+              + `&sensors=${encodeURIComponent(sensorsParam)}`
+              + `&token=${encodeURIComponent(PAGE_TOKEN)}`;
     status.className = 'status';
     status.textContent = '';
   }
