@@ -8,7 +8,7 @@ Welcome to the unified Sensor SFC deployment system. We have simplified the proc
 
 The easiest way to provision a new device is the **web setup page**, which walks you through making one microSD card. After you insert it into the Pi and power on, everything (install, service-account key, device-id from hostname, systemd service) happens automatically.
 
-👉 **Open the web setup:** https://hiroyuki-nobutomo.github.io/sodat_control/
+👉 **Open the web setup:** https://sodat-control.vercel.app/
 
 What the page covers:
 1. Install Raspberry Pi Imager (one-time, on your PC)
@@ -130,7 +130,7 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 
 新しい機器を立ち上げる最も簡単な方法は **Web セットアップページ**です。1 枚の microSD を作る手順を順に案内してくれます。SD を Pi に挿して電源を入れれば、インストール・service_account.json 配置・ホスト名からの device_id 自動設定・systemd サービス起動まで全て自動です。
 
-👉 **Web セットアップを開く:** https://hiroyuki-nobutomo.github.io/sodat_control/
+👉 **Web セットアップを開く:** https://sodat-control.vercel.app/
 
 ページでカバーする内容:
 1. Raspberry Pi Imager をインストール (PC 側、1 回のみ)
