@@ -10,12 +10,18 @@ from src.models import SensorReading
 try:
     import gspread
     from google.oauth2.credentials import Credentials
+    from google.oauth2.service_account import Credentials as SACredentials
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaFileUpload
     from tenacity import retry, stop_after_delay, wait_exponential
     HAS_GOOGLE = True
 except ImportError:
     HAS_GOOGLE = False
+
+GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
 
 def robust_retry():
     """Retry network operations for up to 120s with exponential backoff."""
@@ -63,13 +69,13 @@ class MockUploader(Uploader):
         logging.info(f"MockUploader: Would upload log file {log_path} now.")
 
 class GoogleSheetsUploader(Uploader):
-    def __init__(self, token_path: str, folder_id: Optional[str] = None, 
+    def __init__(self, credentials_path: str, folder_id: Optional[str] = None,
                  data_folder_id: Optional[str] = None, device_id: str = "Unknown",
                  initial_headers: Optional[List[str]] = None):
         if not HAS_GOOGLE:
             raise RuntimeError("Google libraries not installed.")
-        
-        self.token_path = token_path
+
+        self.credentials_path = credentials_path
         self.images_root_id = folder_id      # Config: images_folder_id (DATA/Images)
         self.data_root_id = data_folder_id   # Config: data_folder_id (DATA)
         self.device_id = device_id
@@ -98,13 +104,23 @@ class GoogleSheetsUploader(Uploader):
 
     @robust_retry()
     def _authenticate(self):
-        if not os.path.exists(self.token_path):
-            raise FileNotFoundError(f"Token file not found: {self.token_path}")
-        
-        creds = Credentials.from_authorized_user_file(self.token_path)
+        if not os.path.exists(self.credentials_path):
+            raise FileNotFoundError(f"Credentials file not found: {self.credentials_path}")
+
+        with open(self.credentials_path) as f:
+            cred_data = json.load(f)
+
+        if cred_data.get("type") == "service_account":
+            creds = SACredentials.from_service_account_info(cred_data, scopes=GOOGLE_SCOPES)
+            auth_mode = "Service Account"
+        else:
+            # Legacy: OAuth installed-app user token (token.json from older deployments)
+            creds = Credentials.from_authorized_user_file(self.credentials_path)
+            auth_mode = "OAuth user token (legacy)"
+
         self.gc = gspread.authorize(creds)
         self.drive_service = build('drive', 'v3', credentials=creds)
-        logging.info("Authenticated with Google Sheets and Drive.")
+        logging.info(f"Authenticated with Google Sheets and Drive via {auth_mode}.")
 
     def _get_or_create_subfolder(self, parent_id: Optional[str], folder_name: str) -> Optional[str]:
         """Checks if a folder exists inside parent_id, creates it if not."""

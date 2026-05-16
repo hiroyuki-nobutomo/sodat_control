@@ -26,7 +26,7 @@ uploader:
   type: GoogleDrive
   data_folder_id: 1P7JW2SwfLpMFoELkBya8IsPC-nA6J-w2
   images_folder_id: 1DimUE8NX4_hvoAZbWcUwMP2mDPaw00Rg
-  token_file: secrets/token.json
+  credentials_file: secrets/service_account.json
   interval_seconds: 1800
   log_interval_seconds: 600
   offset_seconds: 300

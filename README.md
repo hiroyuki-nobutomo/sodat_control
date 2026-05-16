@@ -43,19 +43,25 @@ The installer sets up everything (drivers, I2C, services, Python environment), t
 1. **Device ID** — pick a code for this Pi (e.g. `S01`, `A01`). Press Enter on the other prompts to accept defaults.
 2. **Run a sensor test now?** — say **Yes** to verify the hardware.
 
-### Step C — Place the Google OAuth token (one-time, per device)
+### Step C — Place the Google Service Account key (one-time, per device)
 
-The system needs `secrets/token.json` to upload data to Google Drive / Sheets. Until this file exists the Pi will still collect data locally, but uploads will fail.
+The system needs `secrets/service_account.json` to upload data to Google Drive / Sheets. Until this file exists, the Pi will still collect data locally, but uploads will fail.
 
-For now, copy the token from your PC (we'll replace this with a web-based flow soon):
+**The same `service_account.json` is used by every device in the project** — copy the one file you set up once to each new Pi:
 
 ```bash
-# From your PC (where token.json lives):
-scp token.json <username>@sodat-s01.local:~/sensor_sfc/secrets/
+# From your PC (where service_account.json lives):
+scp service_account.json <username>@sodat-s01.local:~/sensor_sfc/secrets/
 
 # Then on the Pi, restart the service to pick it up:
 ./04_start_service.sh --stop && ./04_start_service.sh
 ```
+
+> 🛠️ **One-time project setup (do this once for the whole study, not per device):**
+> 1. In Google Cloud Console, create a Service Account, then generate a JSON key.
+> 2. Note its email (`xxx@xxx.iam.gserviceaccount.com`).
+> 3. Share the target Google Drive folder(s) and Spreadsheet with that email, granting **Editor** access.
+> 4. Distribute the JSON key to each Pi as `secrets/service_account.json` (keep it secret — do not commit to git).
 
 > 💡 **Even simpler (optional, advanced):** see `firstrun_append.sh.example` for a snippet you can paste into Pi Imager's auto-generated `firstrun.sh` to make the Pi install Sodat **completely on its own** the first time it boots — no SSH, no commands.
 
@@ -174,19 +180,25 @@ curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/mai
 1. **Device ID** — この Pi の機器名 (例: `S01`, `A01`) を選択。それ以外の項目は Enter で既定値でも OK。
 2. **センサーテストを実行しますか？** — **Yes** でハードウェア動作確認まで自動実行。
 
-### ステップ C — Google OAuth トークンを配置 (デバイスごとに 1 回)
+### ステップ C — Google Service Account キーを配置 (デバイスごとに 1 回)
 
-Google Drive / Sheets へのアップロードには `secrets/token.json` が必要です。ファイルが無くてもデータはローカル DB に蓄積されますが、クラウドへのアップロードは失敗します。
+Google Drive / Sheets へのアップロードには `secrets/service_account.json` が必要です。ファイルが無くてもデータはローカル DB に蓄積されますが、クラウドへのアップロードは失敗します。
 
-当面は PC から token をコピーしてください (将来 Web からの取得フローに置き換えます):
+**プロジェクト内の全機器で同じ `service_account.json` を使います** — 一度設定したファイルを各 Pi にコピーするだけです:
 
 ```bash
-# PC 側 (token.json が手元にある PC):
-scp token.json <ユーザー名>@sodat-s01.local:~/sensor_sfc/secrets/
+# PC 側 (service_account.json が手元にある PC):
+scp service_account.json <ユーザー名>@sodat-s01.local:~/sensor_sfc/secrets/
 
 # 次に Pi 側でサービスを再起動して反映:
 ./04_start_service.sh --stop && ./04_start_service.sh
 ```
+
+> 🛠️ **プロジェクト初回セットアップ (研究全体で 1 回だけ、機器ごとではありません):**
+> 1. Google Cloud Console で Service Account を作成し、JSON キーを発行
+> 2. その Service Account のメールアドレス (`xxx@xxx.iam.gserviceaccount.com`) を控える
+> 3. 出力先の Google Drive フォルダおよびスプレッドシートを、そのメールアドレスに **編集者**権限で共有
+> 4. その JSON キーを各 Pi の `secrets/service_account.json` として配置 (機密情報なので git には絶対にコミットしない)
 
 > 💡 **さらに簡単 (上級者向け・オプション):** `firstrun_append.sh.example` を参照してください。Pi Imager が自動生成する `firstrun.sh` に貼り付けるスニペットで、**初回起動時に Sodat が自動でインストールされる完全ゼロタッチ**になります (SSH 操作不要)。
 
