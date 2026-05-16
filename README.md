@@ -4,6 +4,46 @@ Welcome to the unified Sensor SFC deployment system. We have simplified the proc
 
 ---
 
+## ⚡ Web Quick Start (Recommended — 2 Steps)
+
+For a brand-new Raspberry Pi 5, this is the fastest path. No file transfers, no zip files. Just a MicroSD card and a one-line command.
+
+### Step A — Image the MicroSD card (on your PC)
+
+1. Install **Raspberry Pi Imager** from https://www.raspberrypi.com/software/
+2. Insert your MicroSD card into your PC.
+3. In Imager, click **CHOOSE DEVICE → "Raspberry Pi 5"**.
+4. Click **CHOOSE OS → "Raspberry Pi OS (64-bit)"**.
+5. Click **CHOOSE STORAGE** and select your MicroSD.
+6. Click **NEXT → "EDIT SETTINGS"**, and fill in:
+    * **Hostname:** something memorable, e.g. `sodat-s01`
+    * **Username / Password:** anything you like — REMEMBER THESE
+    * **Wi‑Fi:** your SSID and password
+    * **Locale:** your timezone / keyboard
+    * **Services tab:** turn ON **"Enable SSH"** (use password auth)
+7. Click **SAVE → YES → YES** to write. This takes ~5 minutes.
+8. Eject the card, insert it into the Pi, and power on. Wait ~2 minutes for first boot.
+
+### Step B — Install Sodat (one line)
+
+From your PC, SSH into the Pi (use the hostname and username you just set):
+
+```bash
+ssh <username>@sodat-s01.local
+```
+
+Then paste this single line and press Enter:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
+```
+
+That's it. The installer downloads itself, sets up everything (drivers, I2C, services, Python environment), and asks if you want to run a sensor test at the end. Say **Yes**.
+
+> 💡 **Even simpler (optional, advanced):** see `firstrun_append.sh.example` for a snippet you can paste into Pi Imager's auto-generated `firstrun.sh` to make the Pi install Sodat **completely on its own** the first time it boots — no SSH, no commands.
+
+---
+
 ## 🚀 Unified Workflow (The 1-2-3-4 Path)
 
 Regardless of whether your SD card is blank or has old code, follow these steps in order:
@@ -75,6 +115,46 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 # Sensor SFC v2 インストール & 運用ガイド (日本語)
 
 新しい統合デプロイメントシステムへようこそ。手順を明確な番号順に整理しました。
+
+---
+
+## ⚡ Web クイックスタート (推奨・2 ステップ)
+
+新品の Raspberry Pi 5 に対する最速の手順です。**zip ファイルの転送は不要**。MicroSD カードと、SSH からの 1 行コマンドだけで完了します。
+
+### ステップ A — MicroSD カードを焼く (PC 側)
+
+1. PC に **Raspberry Pi Imager** をインストールします: https://www.raspberrypi.com/software/
+2. MicroSD カードを PC に挿入します。
+3. Imager を起動し、**「デバイスを選ぶ」 → "Raspberry Pi 5"** を選択。
+4. **「OS を選ぶ」 → "Raspberry Pi OS (64‑bit)"** を選択。
+5. **「ストレージを選ぶ」** で MicroSD を指定。
+6. **「次へ」 → 「設定を編集する」** をクリックし、以下を入力:
+    * **ホスト名:** わかりやすい名前 (例: `sodat-s01`)
+    * **ユーザー名 / パスワード:** 任意 — **必ず覚えておいてください**
+    * **Wi‑Fi:** SSID とパスワード
+    * **ロケール:** タイムゾーン / キーボード
+    * **「サービス」タブ:** **「SSH を有効化」を ON** (パスワード認証で OK)
+7. **「保存」 → 「はい」 → 「はい」** で書き込み開始。約 5 分。
+8. カードを取り出し、Pi に挿して電源 ON。初回起動の完了まで約 2 分待ちます。
+
+### ステップ B — Sodat をインストール (1 行)
+
+PC から SSH で Pi に接続します (ホスト名とユーザー名は手順 A で設定したもの):
+
+```bash
+ssh <ユーザー名>@sodat-s01.local
+```
+
+接続したら、以下の 1 行をそのままコピペして Enter:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
+```
+
+これだけです。インストーラが自動でダウンロードされ、ドライバ・I2C・サービス・Python 環境などすべて構築します。最後に「センサーをテストしますか？」と聞かれるので **Yes** と答えてください。
+
+> 💡 **さらに簡単 (上級者向け・オプション):** `firstrun_append.sh.example` を参照してください。Pi Imager が自動生成する `firstrun.sh` に貼り付けるスニペットで、**初回起動時に Sodat が自動でインストールされる完全ゼロタッチ**になります (SSH 操作不要)。
 
 ---
 

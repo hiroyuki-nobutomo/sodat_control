@@ -1,0 +1,42 @@
+#!/bin/bash
+# ============================================================================
+# Sensor SFC v2 — Optional Zero-Touch Install Snippet
+# ============================================================================
+#
+# This is an OPTIONAL advanced helper. If you append the block below to the
+# /boot/firmware/firstrun.sh that Raspberry Pi Imager generates (when you use
+# its "OS customisation" panel), the Pi will install Sodat completely on its
+# own the first time it boots — no SSH required.
+#
+# Recommended path for most users is still:
+#   1. Image with Pi Imager + customisation (WiFi/SSH/user)
+#   2. SSH in and run the one-liner from README.md
+# Use this file only if you really need fully unattended provisioning.
+#
+# ----------------------------------------------------------------------------
+# How to use:
+#   1. After Pi Imager finishes writing the SD card, RE-INSERT the SD card
+#      into your PC. The "bootfs" partition contains a file called
+#      `firstrun.sh` that Imager auto-generated.
+#   2. Open `firstrun.sh` in a text editor.
+#   3. Find the line `rm -f /boot/firstrun.sh` (or just before `exit 0`).
+#   4. Paste the block below DIRECTLY ABOVE that line.
+#   5. IMPORTANT: replace <YOUR_USERNAME> with the same username you set in
+#      Pi Imager's customisation panel.
+#   6. Save, eject, insert into the Pi, power on. Wait ~10 minutes.
+# ----------------------------------------------------------------------------
+
+# ===== BEGIN SNIPPET TO PASTE =====
+SODAT_USER="<YOUR_USERNAME>"
+
+# Wait until the network is up (firstrun runs very early).
+for i in $(seq 1 60); do
+    if getent hosts github.com >/dev/null 2>&1; then break; fi
+    sleep 2
+done
+
+# Run the Sodat web installer as the real user (sudo'd internally).
+runuser -u "$SODAT_USER" -- bash -c \
+  'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash' \
+  >> /var/log/sodat-firstrun.log 2>&1
+# ===== END SNIPPET TO PASTE =====
