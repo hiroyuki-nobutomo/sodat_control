@@ -107,8 +107,13 @@ def main():
 
     if uploader_type == "GoogleDrive":
         logging.info("Using Google Sheets Uploader.")
+        # Prefer new credentials_file key; fall back to legacy token_file for older configs.
+        credentials_path = cm.get(
+            "uploader.credentials_file",
+            cm.get("uploader.token_file", "secrets/service_account.json"),
+        )
         uploader = GoogleSheetsUploader(
-            token_path=cm.get("uploader.token_file", "secrets/token.json"),
+            credentials_path=credentials_path,
             folder_id=cm.get("uploader.images_folder_id"),    # New Config
             data_folder_id=cm.get("uploader.data_folder_id"), # New Config
             device_id=device_id,
