@@ -5,20 +5,31 @@
 <title>Sodat — firstrun snippet generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { color-scheme: light dark; }
+  :root {
+    color-scheme: light dark;
+    --leaf:      #15803d;   /* CTA — deep agricultural green (green-700) */
+    --leaf-hi:   #166534;   /* CTA hover (green-800) */
+    --leaf-soft: #86efac;   /* light leaf accent (green-300) */
+  }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-  h1 { border-bottom: 2px solid currentColor; padding-bottom: .3rem; }
+  h1 { border-bottom: 3px solid var(--leaf); padding-bottom: .3rem; }
+  h1 .leaf { color: var(--leaf); margin-right: .3em; }
+  .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 600; letter-spacing: .02em; }
   h2 { margin-top: 2rem; }
+  a { color: var(--leaf); }
+  a:hover { color: var(--leaf-hi); }
   code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
   code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 4px; }
   pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
-  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; }
+  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); }
   @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
-  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; }
+  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; }
+  .lang-toggle button:hover { background: rgba(21,128,61,.1); }
   label { display: block; margin: 1rem 0 .3rem; font-weight: 600; }
   input[type=text] { width: 100%; padding: .55rem .7rem; box-sizing: border-box; border-radius: 6px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; font: inherit; }
-  .cta { display: inline-block; padding: .7rem 1.3rem; font-size: 1rem; font-weight: 600; background: #2563eb; color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; }
-  .cta:hover { background: #1d4ed8; }
+  input[type=text]:focus { outline: none; border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(21,128,61,.15); }
+  .cta { display: inline-block; padding: .7rem 1.3rem; font-size: 1rem; font-weight: 600; background: var(--leaf); color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; }
+  .cta:hover { background: var(--leaf-hi); color: #fff; }
   .cta[aria-disabled="true"] { background: #94a3b8; cursor: not-allowed; pointer-events: none; }
   .callout { border-left: 4px solid #10b981; padding: .6rem 1rem; background: rgba(16,185,129,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
   .callout.warn { border-color: #f59e0b; background: rgba(245,158,11,.1); }
@@ -29,9 +40,10 @@
   [data-lang].active { display: block; }
   kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
   .sensor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .35rem .8rem; margin: .6rem 0 1rem; }
-  .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid rgba(127,127,127,.3); border-radius: 5px; cursor: pointer; user-select: none; }
-  .sensor-row:hover { background: rgba(127,127,127,.08); }
-  .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; }
+  .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid rgba(127,127,127,.3); border-radius: 5px; cursor: pointer; user-select: none; transition: background .15s, border-color .15s; }
+  .sensor-row:hover { background: rgba(21,128,61,.08); border-color: rgba(21,128,61,.4); }
+  .sensor-row:has(input:checked) { border-color: rgba(21,128,61,.55); background: rgba(21,128,61,.05); }
+  .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; accent-color: var(--leaf); }
   .sensor-row .label { font-weight: 600; }
   .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
 </style>
@@ -47,7 +59,8 @@
 <!-- ============================== Japanese ============================== -->
 <section data-lang="ja" class="active">
 
-<h1>firstrun スニペット ダウンロード</h1>
+<h1><span class="leaf" aria-hidden="true">🌱</span>firstrun スニペット ダウンロード</h1>
+<p class="tagline">SD カード 1 枚で農業センサー Pi を立ち上げ</p>
 
 <div class="callout">
   サービスアカウントキーは Vercel 側で保管済みです (環境変数 <code>SODAT_SERVICE_ACCOUNT_JSON_B64</code>)。研究者は鍵ファイルを持ち歩く必要がなく、ユーザ名を入力してダウンロードするだけです。
@@ -96,7 +109,8 @@
 <!-- ============================== English ============================== -->
 <section data-lang="en">
 
-<h1>firstrun snippet download</h1>
+<h1><span class="leaf" aria-hidden="true">🌱</span>firstrun snippet download</h1>
+<p class="tagline">Provision an agricultural-sensor Pi from one SD card</p>
 
 <div class="callout">
   The service-account key is stored on Vercel as an environment variable (<code>SODAT_SERVICE_ACCOUNT_JSON_B64</code>). You don't need to carry the key file around — just enter the Pi Imager username and download.
