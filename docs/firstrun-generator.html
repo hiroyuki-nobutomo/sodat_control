@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Sodat — firstrun snippet generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+  h1 { border-bottom: 2px solid currentColor; padding-bottom: .3rem; }
+  h2 { margin-top: 2rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; max-height: 320px; }
+  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; }
+  @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
+  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; }
+  label { display: block; margin: 1rem 0 .3rem; font-weight: 600; }
+  input[type=text], input[type=file] { width: 100%; padding: .55rem .7rem; box-sizing: border-box; border-radius: 6px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; font: inherit; }
+  button.primary { padding: .7rem 1.3rem; font-size: 1rem; font-weight: 600; background: #2563eb; color: #fff; border: 0; border-radius: 6px; cursor: pointer; margin-right: .5rem; }
+  button.primary:hover { background: #1d4ed8; }
+  button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+  button.secondary { padding: .55rem 1rem; font-size: .9rem; background: transparent; border: 1px solid currentColor; border-radius: 6px; cursor: pointer; color: inherit; }
+  .callout { border-left: 4px solid #10b981; padding: .6rem 1rem; background: rgba(16,185,129,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
+  .callout.warn { border-color: #f59e0b; background: rgba(245,158,11,.1); }
+  .callout.danger { border-color: #dc2626; background: rgba(220,38,38,.1); }
+  .status { margin: .8rem 0; font-weight: 600; }
+  .status.ok { color: #059669; }
+  .status.err { color: #dc2626; }
+  #output { display: none; }
+  #output.visible { display: block; }
+  .small { font-size: .9em; opacity: .8; }
+  [data-lang] { display: none; }
+  [data-lang].active { display: block; }
+  details { margin: 1rem 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button onclick="setLang('ja')">日本語</button>
+  <button onclick="setLang('en')">English</button>
+  <a href="index.html" style="margin-left: 1rem; font-size: .9em;">← ガイド / Guide</a>
+</div>
+
+<!-- ============================== Japanese ============================== -->
+<section data-lang="ja" class="active">
+
+<h1>firstrun スニペット生成ツール</h1>
+
+<div class="callout">
+  このページの処理はすべて<strong>あなたのブラウザ内</strong>で完結します。<code>service_account.json</code> はサーバには送信されません (このページに JavaScript で読み込まれるだけ)。確認は開発者ツールの Network タブで。
+</div>
+
+<h2>1. 入力</h2>
+
+<label for="saFile">service_account.json (プロジェクト管理者から受け取ったファイル)</label>
+<input type="file" id="saFile" accept=".json,application/json">
+
+<label for="username">Pi Imager で設定したユーザー名</label>
+<input type="text" id="username" value="sodat" placeholder="例: sodat">
+
+<div class="status" id="status"></div>
+
+<button class="primary" id="genBtn" disabled>スニペットを生成</button>
+
+<h2>2. 生成された snippet</h2>
+
+<div id="output">
+  <p><button class="secondary" id="copyBtn">コピー</button>
+  <button class="secondary" id="dlBtn">.sh としてダウンロード</button></p>
+
+  <pre id="snippet"></pre>
+
+  <h2>3. SD カードに貼り付ける</h2>
+  <ol>
+    <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く。</li>
+    <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)。</li>
+    <li>ファイル末尾近くにある <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、上の snippet を貼り付ける (<code># &gt;&gt;&gt; BEGIN ... &gt;&gt;&gt;</code> から <code># &lt;&lt;&lt; END &lt;&lt;&lt;</code> までの本体行)。</li>
+    <li>保存。改行コードは LF のまま (CRLF に変えない)。</li>
+    <li>SD カードを安全に取り外し、Raspberry Pi に挿入 → 電源 ON。</li>
+  </ol>
+
+  <details>
+    <summary>うまく貼れるか不安な人向け: ダウンロードしたファイルでまるごと置き換える方法</summary>
+    <ol>
+      <li>右の <kbd>.sh としてダウンロード</kbd> でファイルを保存。</li>
+      <li>ダウンロードした <code>firstrun.sh</code> をテキストエディタで開く。</li>
+      <li>Pi Imager が <code>bootfs</code> に生成した <code>firstrun.sh</code> を同じエディタで開き、<strong>Wi-Fi 設定や userconf 行などの上の方の中身を全部コピー</strong>して、ダウンロードしたファイルの先頭の指定箇所に貼り付ける。</li>
+      <li>保存し、bootfs 上の <code>firstrun.sh</code> をこのファイルで上書きする。</li>
+    </ol>
+    <p class="small">慣れない場合は手順 3 のシンプルな貼り付け方を推奨します。</p>
+  </details>
+
+  <div class="callout warn">
+    生成された snippet には <code>service_account.json</code> が base64 で含まれます。チャットやメール本文に貼らないでください。SD への書き込みが終わったらブラウザのこのタブも閉じることを推奨。
+  </div>
+</div>
+
+</section>
+
+<!-- ============================== English ============================== -->
+<section data-lang="en">
+
+<h1>firstrun snippet generator</h1>
+
+<div class="callout">
+  All processing happens <strong>inside your browser</strong>. Your <code>service_account.json</code> is never sent to any server — verify in DevTools → Network if you like.
+</div>
+
+<h2>1. Input</h2>
+
+<label for="saFileEn">service_account.json (the project key your lead gave you)</label>
+<input type="file" id="saFileEn" accept=".json,application/json">
+
+<label for="usernameEn">Username you set in Pi Imager</label>
+<input type="text" id="usernameEn" value="sodat" placeholder="e.g. sodat">
+
+<div class="status" id="statusEn"></div>
+
+<button class="primary" id="genBtnEn" disabled>Generate snippet</button>
+
+<h2>2. Generated snippet</h2>
+
+<div id="outputEn" style="display:none">
+  <p><button class="secondary" id="copyBtnEn">Copy</button>
+  <button class="secondary" id="dlBtnEn">Download as .sh</button></p>
+
+  <pre id="snippetEn"></pre>
+
+  <h2>3. Place on the SD card</h2>
+  <ol>
+    <li>Insert the microSD into your PC, open the <code>bootfs</code> partition.</li>
+    <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows; TextEdit in plain-text mode on macOS).</li>
+    <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or just <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet body (everything between the <code># &gt;&gt;&gt; BEGIN ...</code> and <code># &lt;&lt;&lt; END</code> markers).</li>
+    <li>Save the file. Keep line endings as LF (don't let your editor switch to CRLF).</li>
+    <li>Safely eject the SD card, insert it into the Pi, power on.</li>
+  </ol>
+
+  <div class="callout warn">
+    The generated snippet embeds your <code>service_account.json</code> as base64. Don't paste it into chat or email. Once it's on the SD card, close this browser tab.
+  </div>
+</div>
+
+</section>
+
+<script>
+// ---- Language toggle ----
+function setLang(lang) {
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.classList.toggle('active', el.dataset.lang === lang);
+  });
+  try { localStorage.setItem('sodatLang', lang); } catch (e) {}
+}
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem('sodatLang'); } catch (e) {}
+  const initial = saved || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ja');
+  setLang(initial);
+})();
+
+// ---- Embedded firstrun snippet template (kept in sync with firstrun_snippet.sh.template at the repo root) ----
+const SNIPPET_TEMPLATE = `# >>> BEGIN PASTE INTO /boot/firmware/firstrun.sh (above \`rm -f\` / \`exit 0\`) >>>
+
+# --- Variables filled in by the web generator -------------------------------
+SODAT_USER="__SODAT_USER__"          # Username you set in Pi Imager customisation
+SA_JSON_B64="__SA_JSON_B64__"        # base64 of project service_account.json
+# ----------------------------------------------------------------------------
+
+SODAT_LOG=/var/log/sodat-firstrun.log
+exec >>"$SODAT_LOG" 2>&1
+echo "=== sodat firstrun: $(date -Is) ==="
+
+# 1. Wait for the network (firstrun runs very early).
+for i in $(seq 1 60); do
+    if getent hosts github.com >/dev/null 2>&1; then break; fi
+    sleep 2
+done
+
+# 2. Place the service-account key on disk before bootstrap runs.
+SODAT_HOME=$(getent passwd "$SODAT_USER" | cut -d: -f6)
+if [ -z "$SODAT_HOME" ]; then
+    echo "sodat firstrun: user '$SODAT_USER' has no home directory yet; aborting."
+    exit 0
+fi
+SECRETS_DIR="$SODAT_HOME/sensor_sfc/secrets"
+install -d -o "$SODAT_USER" -g "$SODAT_USER" -m 700 "$SECRETS_DIR"
+SA_PATH="$SECRETS_DIR/service_account.json"
+printf '%s' "$SA_JSON_B64" | base64 -d > "$SA_PATH"
+chown "$SODAT_USER":"$SODAT_USER" "$SA_PATH"
+chmod 600 "$SA_PATH"
+
+# 3. Run the Sodat web installer as the real user (sudo'd internally).
+runuser -u "$SODAT_USER" -- bash -c \\
+  'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash'
+
+# 4. Derive device_id from hostname (sodat-s05 -> S05). Skip if pattern doesn't match.
+HOSTNAME_DERIVED=$(hostname | sed -nE 's/^sodat-([a-z][0-9]+)$/\\1/p' | tr '[:lower:]' '[:upper:]')
+if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
+    runuser -u "$SODAT_USER" -- \\
+        "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \\
+        "$SODAT_HOME/sensor_sfc/scripts/util_config.py" \\
+        --device-id "$HOSTNAME_DERIVED" || true
+    systemctl restart sensor_sfc 2>/dev/null || true
+fi
+
+echo "=== sodat firstrun: done $(date -Is) ==="
+
+# <<< END PASTE <<<`;
+
+// ---- File → base64 (no padding stripped; we want plain b64) ----
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const result = reader.result;          // "data:application/json;base64,XXXX"
+      const comma = result.indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---- Validate the JSON looks like a service-account key ----
+async function validateServiceAccount(file) {
+  const text = await file.text();
+  let obj;
+  try { obj = JSON.parse(text); }
+  catch (e) { throw new Error('Not valid JSON: ' + e.message); }
+  if (obj.type !== 'service_account') {
+    throw new Error('JSON is not a Google service-account key (missing "type": "service_account"). Did you pick the right file?');
+  }
+  if (!obj.client_email || !obj.private_key) {
+    throw new Error('Service-account JSON is missing client_email or private_key.');
+  }
+  return obj.client_email;
+}
+
+// ---- Wire up one language's UI (suffix = "" for JA, "En" for EN) ----
+function wireUp(suffix) {
+  const $ = (id) => document.getElementById(id + suffix);
+  const fileEl = $('saFile');
+  const userEl = $('username');
+  const statusEl = $('status');
+  const genBtn = $('genBtn');
+  const output = $('output');
+  const snippetEl = $('snippet');
+  const copyBtn = $('copyBtn');
+  const dlBtn = $('dlBtn');
+
+  let chosenFile = null;
+
+  fileEl.addEventListener('change', async () => {
+    chosenFile = fileEl.files[0] || null;
+    if (!chosenFile) {
+      genBtn.disabled = true;
+      statusEl.textContent = '';
+      return;
+    }
+    try {
+      const email = await validateServiceAccount(chosenFile);
+      statusEl.className = 'status ok';
+      statusEl.textContent = '✓ Service account: ' + email;
+      genBtn.disabled = false;
+    } catch (e) {
+      statusEl.className = 'status err';
+      statusEl.textContent = '✗ ' + e.message;
+      genBtn.disabled = true;
+      chosenFile = null;
+    }
+  });
+
+  genBtn.addEventListener('click', async () => {
+    const username = (userEl.value || '').trim();
+    if (!username) {
+      statusEl.className = 'status err';
+      statusEl.textContent = 'Username required.';
+      return;
+    }
+    if (!chosenFile) return;
+    try {
+      const b64 = await fileToBase64(chosenFile);
+      const filled = SNIPPET_TEMPLATE
+        .replace('__SODAT_USER__', username)
+        .replace('__SA_JSON_B64__', b64);
+      snippetEl.textContent = filled;
+      output.style.display = 'block';
+      output.classList.add('visible');
+      statusEl.className = 'status ok';
+      statusEl.textContent = '✓ Snippet generated. Copy it or download as a file.';
+    } catch (e) {
+      statusEl.className = 'status err';
+      statusEl.textContent = '✗ ' + e.message;
+    }
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(snippetEl.textContent);
+      copyBtn.textContent = '✓';
+      setTimeout(() => { copyBtn.textContent = suffix === 'En' ? 'Copy' : 'コピー'; }, 1500);
+    } catch (e) {
+      // Fallback: select the pre
+      const range = document.createRange();
+      range.selectNodeContents(snippetEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  });
+
+  dlBtn.addEventListener('click', () => {
+    const blob = new Blob([snippetEl.textContent + '\n'], { type: 'text/x-shellscript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sodat-firstrun-snippet.sh';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+wireUp('');     // Japanese inputs (no suffix)
+wireUp('En');   // English inputs
+
+</script>
+
+</body>
+</html>

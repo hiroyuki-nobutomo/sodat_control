@@ -1,0 +1,77 @@
+#!/bin/bash
+# ============================================================================
+# Sodat Sensor SFC — firstrun snippet (zero-touch SD-card setup)
+# ============================================================================
+#
+# DO NOT RUN THIS FILE DIRECTLY. It is a snippet meant to be pasted into the
+# `firstrun.sh` that Raspberry Pi Imager auto-generates on the SD card's
+# "bootfs" partition (when you used the OS-customisation panel).
+#
+# The web setup page generates a ready-to-paste copy of this file with your
+# project's service_account.json already embedded as base64. Use that — do
+# not edit this template by hand unless you are the maintainer.
+#
+# ----------------------------------------------------------------------------
+# What the snippet does on the Pi's very first boot:
+#   1. Waits for the network (Pi Imager already brought Wi-Fi up).
+#   2. Decodes the embedded base64 service_account.json and writes it to
+#      ~$SODAT_USER/sensor_sfc/secrets/service_account.json (mode 600).
+#   3. Runs the project bootstrap (clones the repo, runs 01_install_update.sh).
+#   4. Sets device_id in config.yaml based on the hostname (sodat-s05 -> S05).
+#   5. Restarts the systemd service so the new device_id takes effect.
+#   6. Logs everything to /var/log/sodat-firstrun.log.
+#
+# How the maintainer hosts this file:
+#   - It lives in the repo so PR review can see what runs on every Pi.
+#   - The web page at docs/firstrun-generator.html reads this template, splices
+#     in the user-supplied SODAT_USER and SA_JSON_B64, and offers the result
+#     as a download.
+# ============================================================================
+
+# >>> BEGIN PASTE INTO /boot/firmware/firstrun.sh (above `rm -f` / `exit 0`) >>>
+
+# --- Variables filled in by the web generator -------------------------------
+SODAT_USER="__SODAT_USER__"          # Username you set in Pi Imager customisation
+SA_JSON_B64="__SA_JSON_B64__"        # base64 of project service_account.json
+# ----------------------------------------------------------------------------
+
+SODAT_LOG=/var/log/sodat-firstrun.log
+exec >>"$SODAT_LOG" 2>&1
+echo "=== sodat firstrun: $(date -Is) ==="
+
+# 1. Wait for the network (firstrun runs very early).
+for i in $(seq 1 60); do
+    if getent hosts github.com >/dev/null 2>&1; then break; fi
+    sleep 2
+done
+
+# 2. Place the service-account key on disk before bootstrap runs.
+SODAT_HOME=$(getent passwd "$SODAT_USER" | cut -d: -f6)
+if [ -z "$SODAT_HOME" ]; then
+    echo "sodat firstrun: user '$SODAT_USER' has no home directory yet; aborting."
+    exit 0
+fi
+SECRETS_DIR="$SODAT_HOME/sensor_sfc/secrets"
+install -d -o "$SODAT_USER" -g "$SODAT_USER" -m 700 "$SECRETS_DIR"
+SA_PATH="$SECRETS_DIR/service_account.json"
+printf '%s' "$SA_JSON_B64" | base64 -d > "$SA_PATH"
+chown "$SODAT_USER":"$SODAT_USER" "$SA_PATH"
+chmod 600 "$SA_PATH"
+
+# 3. Run the Sodat web installer as the real user (sudo'd internally).
+runuser -u "$SODAT_USER" -- bash -c \
+  'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash'
+
+# 4. Derive device_id from hostname (sodat-s05 -> S05). Skip if pattern doesn't match.
+HOSTNAME_DERIVED=$(hostname | sed -nE 's/^sodat-([a-z][0-9]+)$/\1/p' | tr '[:lower:]' '[:upper:]')
+if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
+    runuser -u "$SODAT_USER" -- \
+        "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
+        "$SODAT_HOME/sensor_sfc/scripts/util_config.py" \
+        --device-id "$HOSTNAME_DERIVED" || true
+    systemctl restart sensor_sfc 2>/dev/null || true
+fi
+
+echo "=== sodat firstrun: done $(date -Is) ==="
+
+# <<< END PASTE <<<

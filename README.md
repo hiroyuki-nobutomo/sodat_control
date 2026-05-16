@@ -4,66 +4,51 @@ Welcome to the unified Sensor SFC deployment system. We have simplified the proc
 
 ---
 
-## ⚡ Web Quick Start (Recommended — 2 Steps)
+## ⚡ Web Quick Start (Recommended)
 
-For a brand-new Raspberry Pi 5, this is the fastest path. No file transfers, no zip files. Just a MicroSD card and a one-line command.
+The easiest way to provision a new device is the **web setup page**, which walks you through making one microSD card. After you insert it into the Pi and power on, everything (install, service-account key, device-id from hostname, systemd service) happens automatically.
 
-### Step A — Image the MicroSD card (on your PC)
+👉 **Open the web setup:** https://hiroyuki-nobutomo.github.io/sodat_control/
 
-1. Install **Raspberry Pi Imager** from https://www.raspberrypi.com/software/
-2. Insert your MicroSD card into your PC.
-3. In Imager, click **CHOOSE DEVICE → "Raspberry Pi 5"**.
-4. Click **CHOOSE OS → "Raspberry Pi OS (64-bit)"**.
-5. Click **CHOOSE STORAGE** and select your MicroSD.
-6. Click **NEXT → "EDIT SETTINGS"**, and fill in:
-    * **Hostname:** something memorable, e.g. `sodat-s01`
-    * **Username / Password:** anything you like — REMEMBER THESE
-    * **Wi‑Fi:** your SSID and password
-    * **Locale:** your timezone / keyboard
-    * **Services tab:** turn ON **"Enable SSH"** (use password auth)
-7. Click **SAVE → YES → YES** to write. This takes ~5 minutes.
-8. Eject the card, insert it into the Pi, and power on. Wait ~2 minutes for first boot.
+What the page covers:
+1. Install Raspberry Pi Imager (one-time, on your PC)
+2. Flash Raspberry Pi OS Lite (64-bit) to a microSD with hostname `sodat-sNN`, Wi-Fi, and your SSH user (all done inside Pi Imager's customisation panel)
+3. Use the in-browser tool to generate a `firstrun.sh` snippet that embeds the project's `service_account.json` as base64 (the key never leaves your PC — pure client-side JavaScript)
+4. Paste the snippet into the SD card's `firstrun.sh`, eject, boot the Pi — done
 
-### Step B — Install Sodat (one line)
-
-From your PC, SSH into the Pi (use the hostname and username you just set):
-
-```bash
-ssh <username>@sodat-s01.local
-```
-
-Then paste this single line and press Enter:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
-```
-
-The installer sets up everything (drivers, I2C, services, Python environment), then asks you two short questions on the same console:
-
-1. **Device ID** — pick a code for this Pi (e.g. `S01`, `A01`). Press Enter on the other prompts to accept defaults.
-2. **Run a sensor test now?** — say **Yes** to verify the hardware.
-
-### Step C — Place the Google Service Account key (one-time, per device)
-
-The system needs `secrets/service_account.json` to upload data to Google Drive / Sheets. Until this file exists, the Pi will still collect data locally, but uploads will fail.
-
-**The same `service_account.json` is used by every device in the project** — copy the one file you set up once to each new Pi:
-
-```bash
-# From your PC (where service_account.json lives):
-scp service_account.json <username>@sodat-s01.local:~/sensor_sfc/secrets/
-
-# Then on the Pi, restart the service to pick it up:
-./04_start_service.sh --stop && ./04_start_service.sh
-```
+The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in Pi Imager, so there's no per-device config edit.
 
 > 🛠️ **One-time project setup (do this once for the whole study, not per device):**
 > 1. In Google Cloud Console, create a Service Account, then generate a JSON key.
 > 2. Note its email (`xxx@xxx.iam.gserviceaccount.com`).
 > 3. Share the target Google Drive folder(s) and Spreadsheet with that email, granting **Editor** access.
-> 4. Distribute the JSON key to each Pi as `secrets/service_account.json` (keep it secret — do not commit to git).
+> 4. Keep that JSON file secret — distribute it to project members via a secure channel (1Password, encrypted email, lab share). Each researcher feeds it into the web setup tool on their own PC.
 
-> 💡 **Even simpler (optional, advanced):** see `firstrun_append.sh.example` for a snippet you can paste into Pi Imager's auto-generated `firstrun.sh` to make the Pi install Sodat **completely on its own** the first time it boots — no SSH, no commands.
+---
+
+## 🖥️ Manual install (fallback)
+
+If the web setup isn't available, you can still install over SSH after flashing a stock Pi OS image with Pi Imager's customisation:
+
+```bash
+ssh <username>@sodat-s01.local
+curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
+```
+
+The installer sets up everything (drivers, I2C, services, Python environment), then asks two short questions:
+
+1. **Device ID** — pick a code for this Pi (e.g. `S01`, `A01`). Press Enter on the other prompts to accept defaults.
+2. **Run a sensor test now?** — say **Yes** to verify the hardware.
+
+Then place the service-account key manually:
+
+```bash
+# From your PC (where service_account.json lives):
+scp service_account.json <username>@sodat-s01.local:~/sensor_sfc/secrets/
+
+# On the Pi, restart the service to pick it up:
+./04_start_service.sh --stop && ./04_start_service.sh
+```
 
 ---
 
@@ -141,66 +126,51 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 
 ---
 
-## ⚡ Web クイックスタート (推奨・2 ステップ)
+## ⚡ Web クイックスタート (推奨)
 
-新品の Raspberry Pi 5 に対する最速の手順です。**zip ファイルの転送は不要**。MicroSD カードと、SSH からの 1 行コマンドだけで完了します。
+新しい機器を立ち上げる最も簡単な方法は **Web セットアップページ**です。1 枚の microSD を作る手順を順に案内してくれます。SD を Pi に挿して電源を入れれば、インストール・service_account.json 配置・ホスト名からの device_id 自動設定・systemd サービス起動まで全て自動です。
 
-### ステップ A — MicroSD カードを焼く (PC 側)
+👉 **Web セットアップを開く:** https://hiroyuki-nobutomo.github.io/sodat_control/
 
-1. PC に **Raspberry Pi Imager** をインストールします: https://www.raspberrypi.com/software/
-2. MicroSD カードを PC に挿入します。
-3. Imager を起動し、**「デバイスを選ぶ」 → "Raspberry Pi 5"** を選択。
-4. **「OS を選ぶ」 → "Raspberry Pi OS (64‑bit)"** を選択。
-5. **「ストレージを選ぶ」** で MicroSD を指定。
-6. **「次へ」 → 「設定を編集する」** をクリックし、以下を入力:
-    * **ホスト名:** わかりやすい名前 (例: `sodat-s01`)
-    * **ユーザー名 / パスワード:** 任意 — **必ず覚えておいてください**
-    * **Wi‑Fi:** SSID とパスワード
-    * **ロケール:** タイムゾーン / キーボード
-    * **「サービス」タブ:** **「SSH を有効化」を ON** (パスワード認証で OK)
-7. **「保存」 → 「はい」 → 「はい」** で書き込み開始。約 5 分。
-8. カードを取り出し、Pi に挿して電源 ON。初回起動の完了まで約 2 分待ちます。
+ページでカバーする内容:
+1. Raspberry Pi Imager をインストール (PC 側、1 回のみ)
+2. Pi Imager で Raspberry Pi OS Lite (64-bit) を microSD に書き込み、Pi Imager のカスタマイズ画面でホスト名 `sodat-sNN` / Wi-Fi / SSH ユーザを設定
+3. ブラウザ内ツールで `service_account.json` を base64 化して埋め込んだ `firstrun.sh` snippet を生成 (鍵は PC から外に出ません — 完全クライアントサイド処理)
+4. snippet を SD カード上の `firstrun.sh` に貼り付け、取り出して Pi を起動 — 以上
 
-### ステップ B — Sodat をインストール (1 行)
-
-PC から SSH で Pi に接続します (ホスト名とユーザー名は手順 A で設定したもの):
-
-```bash
-ssh <ユーザー名>@sodat-s01.local
-```
-
-接続したら、以下の 1 行をそのままコピペして Enter:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
-```
-
-インストーラがドライバ・I2C・サービス・Python 環境などをすべて構築し、最後に **同じコンソール上で** 2 つだけ質問してきます:
-
-1. **Device ID** — この Pi の機器名 (例: `S01`, `A01`) を選択。それ以外の項目は Enter で既定値でも OK。
-2. **センサーテストを実行しますか？** — **Yes** でハードウェア動作確認まで自動実行。
-
-### ステップ C — Google Service Account キーを配置 (デバイスごとに 1 回)
-
-Google Drive / Sheets へのアップロードには `secrets/service_account.json` が必要です。ファイルが無くてもデータはローカル DB に蓄積されますが、クラウドへのアップロードは失敗します。
-
-**プロジェクト内の全機器で同じ `service_account.json` を使います** — 一度設定したファイルを各 Pi にコピーするだけです:
-
-```bash
-# PC 側 (service_account.json が手元にある PC):
-scp service_account.json <ユーザー名>@sodat-s01.local:~/sensor_sfc/secrets/
-
-# 次に Pi 側でサービスを再起動して反映:
-./04_start_service.sh --stop && ./04_start_service.sh
-```
+`device_id` (`S01`, `S02`, ...) は Pi Imager で設定したホスト名から自動導出されるので、機器ごとに config を編集する必要はありません。
 
 > 🛠️ **プロジェクト初回セットアップ (研究全体で 1 回だけ、機器ごとではありません):**
 > 1. Google Cloud Console で Service Account を作成し、JSON キーを発行
 > 2. その Service Account のメールアドレス (`xxx@xxx.iam.gserviceaccount.com`) を控える
 > 3. 出力先の Google Drive フォルダおよびスプレッドシートを、そのメールアドレスに **編集者**権限で共有
-> 4. その JSON キーを各 Pi の `secrets/service_account.json` として配置 (機密情報なので git には絶対にコミットしない)
+> 4. その JSON キーは機密情報。プロジェクトメンバーには 1Password・暗号化メール・ラボ内共有など安全な経路で配布。各研究者は自分の PC で Web セットアップツールにそのファイルを投入
 
-> 💡 **さらに簡単 (上級者向け・オプション):** `firstrun_append.sh.example` を参照してください。Pi Imager が自動生成する `firstrun.sh` に貼り付けるスニペットで、**初回起動時に Sodat が自動でインストールされる完全ゼロタッチ**になります (SSH 操作不要)。
+---
+
+## 🖥️ 手動インストール (フォールバック)
+
+Web セットアップが使えない場合は、Pi Imager のカスタマイズで標準 Pi OS を焼いた後、SSH 経由でインストールできます:
+
+```bash
+ssh <ユーザー名>@sodat-s01.local
+curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
+```
+
+インストーラがドライバ・I2C・サービス・Python 環境などをすべて構築し、最後に 2 つだけ質問してきます:
+
+1. **Device ID** — この Pi の機器名 (例: `S01`, `A01`) を選択。
+2. **センサーテストを実行しますか?** — **Yes** でハードウェア動作確認まで自動実行。
+
+その後、service_account.json を手動配置:
+
+```bash
+# PC 側 (service_account.json が手元にある PC):
+scp service_account.json <ユーザー名>@sodat-s01.local:~/sensor_sfc/secrets/
+
+# Pi 側でサービスを再起動して反映:
+./04_start_service.sh --stop && ./04_start_service.sh
+```
 
 ---
 

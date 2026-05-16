@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Sodat Sensor SFC — SD Card Setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+  h1 { border-bottom: 2px solid currentColor; padding-bottom: .3rem; }
+  h2 { margin-top: 2.5rem; }
+  ol li, ul li { margin: .35rem 0; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 4px; }
+  pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
+  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; }
+  @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
+  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; }
+  .cta { display: inline-block; padding: .6rem 1.1rem; background: #2563eb; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; }
+  .cta:hover { background: #1d4ed8; }
+  .callout { border-left: 4px solid #f59e0b; padding: .6rem 1rem; background: rgba(245,158,11,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
+  .callout.danger { border-color: #dc2626; background: rgba(220,38,38,.1); }
+  [data-lang] { display: none; }
+  [data-lang].active { display: block; }
+  kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button onclick="setLang('ja')">日本語</button>
+  <button onclick="setLang('en')">English</button>
+</div>
+
+<!-- ============================== Japanese ============================== -->
+<section data-lang="ja" class="active">
+
+<h1>Sodat Sensor SFC — SD カードセットアップ</h1>
+
+<p>このページの手順通りに 1 枚の microSD を作れば、Raspberry Pi に挿して電源を入れるだけでセンサ収集が始まり、Google Drive / Sheets へのアップロードまで動きます。SSH や <code>scp</code> は不要です。</p>
+
+<h2>用意するもの</h2>
+<ul>
+  <li>Raspberry Pi (Zero 2 W / 3 / 4 / 5 のいずれか)</li>
+  <li>microSD カード (8 GB 以上推奨)</li>
+  <li>SD カードリーダ付きの PC (Windows / macOS / Linux いずれも可)</li>
+  <li>プロジェクト管理者から受け取った <code>service_account.json</code> (Google サービスアカウント鍵)</li>
+</ul>
+
+<h2>手順 1. Raspberry Pi Imager をインストール (1 回だけ)</h2>
+<p><a class="cta" href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">Raspberry Pi Imager をダウンロード</a></p>
+<p>各 OS のインストーラに従ってインストールしてください。</p>
+
+<h2>手順 2. Pi Imager で SD カードを書き込み</h2>
+<ol>
+  <li>Pi Imager を起動し、左の <strong>「デバイスを選ぶ」</strong> で使う Raspberry Pi の機種を選ぶ。</li>
+  <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS Lite (64-bit)</strong> を選ぶ。</li>
+  <li>右の <strong>「ストレージを選ぶ」</strong> で microSD を選ぶ。</li>
+  <li><strong>「次へ」</strong>を押すと「OS をカスタマイズしますか?」と聞かれるので <kbd>設定を編集する</kbd> を選ぶ。</li>
+  <li>「一般」タブで次を設定:
+    <ul>
+      <li>ホスト名: <code>sodat-sNN</code> (NN は 01, 02, 03 ... の連番。<strong>機器ごとに必ず変える</strong>)</li>
+      <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。後で SSH する可能性があるなら覚えておく</li>
+      <li>無線 LAN: SSID / パスワード / 国 (JP) を設定</li>
+      <li>ロケール: タイムゾーン <code>Asia/Tokyo</code></li>
+    </ul>
+  </li>
+  <li>「サービス」タブで <strong>SSH を有効化</strong> (パスワード認証で可)。</li>
+  <li><kbd>保存</kbd> → <kbd>はい</kbd> で書き込み開始。書き込み + 検証で 5〜10 分。</li>
+</ol>
+
+<h2>手順 3. service_account.json を SD カードに乗せる</h2>
+
+<p>書き込みが終わったら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。</p>
+
+<p>次のページのブラウザ内ツールで、<code>service_account.json</code> を <code>bootfs</code> 上の <code>firstrun.sh</code> に貼るためのスニペットを生成できます。<strong>service_account.json はあなたの PC から外に出ません</strong> (すべて JavaScript でローカル処理)。</p>
+
+<p><a class="cta" href="firstrun-generator.html">firstrun スニペット生成ツールを開く →</a></p>
+
+<div class="callout">
+  <strong>取り扱い注意:</strong> 生成された snippet には <code>service_account.json</code> が base64 で埋め込まれています。チャットなどに貼り付けないでください。SD カードに貼ったら速やかにアンマウントして取り外してください。
+</div>
+
+<h2>手順 4. Pi に挿して電源 ON</h2>
+<p><code>bootfs</code> をアンマウント / 取り出して、microSD を Raspberry Pi に挿してください。電源を入れると初回起動が始まり、自動で:</p>
+<ol>
+  <li>Wi-Fi に接続 (Pi Imager の設定)</li>
+  <li>service_account.json を所定位置に展開</li>
+  <li>GitHub からリポジトリを取得しインストール</li>
+  <li>ホスト名から device_id を導出 (<code>sodat-s05</code> → <code>S05</code>)</li>
+  <li>センサ収集サービスを起動</li>
+</ol>
+<p>所要時間は 8〜15 分程度。インターネット回線次第です。</p>
+
+<h2>動作確認</h2>
+<p>同じネットワーク上の PC から:</p>
+<pre><code>ssh &lt;ユーザー名&gt;@sodat-sNN.local
+sudo systemctl status sensor_sfc</code></pre>
+<p><code>active (running)</code> になっていれば成功です。ログは <code>journalctl -u sensor_sfc -f</code> で追えます。</p>
+
+<h2>トラブルシュート</h2>
+<ul>
+  <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
+  <li><strong><code>sodat-sNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
+  <li><strong>もう一度やり直したい:</strong> SD を PC で再フォーマットして手順 2 から。</li>
+</ul>
+
+</section>
+
+<!-- ============================== English ============================== -->
+<section data-lang="en">
+
+<h1>Sodat Sensor SFC — SD Card Setup</h1>
+
+<p>Follow the steps below to prepare one microSD card. Insert it into a Raspberry Pi, power on, and sensor collection + Google Drive / Sheets upload starts automatically — no SSH or <code>scp</code> required.</p>
+
+<h2>What you need</h2>
+<ul>
+  <li>A Raspberry Pi (Zero 2 W / 3 / 4 / 5)</li>
+  <li>A microSD card (8 GB+ recommended)</li>
+  <li>A PC with an SD-card reader (Windows / macOS / Linux)</li>
+  <li>The project's <code>service_account.json</code> (Google service-account key — obtain from your project lead)</li>
+</ul>
+
+<h2>Step 1. Install Raspberry Pi Imager (one-time)</h2>
+<p><a class="cta" href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">Download Raspberry Pi Imager</a></p>
+
+<h2>Step 2. Write the SD card with Pi Imager</h2>
+<ol>
+  <li>Open Pi Imager. Under <strong>Choose device</strong>, pick your Pi model.</li>
+  <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS Lite (64-bit)</strong>.</li>
+  <li>Under <strong>Choose storage</strong>, pick the microSD card.</li>
+  <li>Click <strong>Next</strong>. When asked "Would you like to apply OS customisation settings?", choose <kbd>Edit Settings</kbd>.</li>
+  <li>On the <em>General</em> tab:
+    <ul>
+      <li>Hostname: <code>sodat-sNN</code> (NN is a zero-padded number — <strong>must be unique per device</strong>: 01, 02, ...).</li>
+      <li>Username and password: e.g. <code>sodat</code>. Remember these — you may need them for SSH later.</li>
+      <li>Wireless LAN: SSID / password / country.</li>
+      <li>Locale: set the timezone (e.g. <code>Asia/Tokyo</code>).</li>
+    </ul>
+  </li>
+  <li>On the <em>Services</em> tab: enable SSH (password auth is fine).</li>
+  <li>Click <kbd>Save</kbd> → <kbd>Yes</kbd> to start writing. Write + verify takes 5–10 minutes.</li>
+</ol>
+
+<h2>Step 3. Put service_account.json on the SD card</h2>
+
+<p>When writing finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code>.</p>
+
+<p>Use the in-browser tool on the next page to generate a snippet that embeds your <code>service_account.json</code> into the SD card's <code>firstrun.sh</code>. <strong>The service_account.json never leaves your PC</strong> — all processing is client-side JavaScript.</p>
+
+<p><a class="cta" href="firstrun-generator.html">Open the firstrun snippet generator →</a></p>
+
+<div class="callout">
+  <strong>Handle with care:</strong> the generated snippet contains your <code>service_account.json</code> as base64. Don't paste it into chat. Once it's on the SD card, eject the card promptly.
+</div>
+
+<h2>Step 4. Boot the Pi</h2>
+<p>Unmount/eject <code>bootfs</code>, insert the microSD into the Raspberry Pi, and power on. The first boot will automatically:</p>
+<ol>
+  <li>Connect to Wi-Fi (from Pi Imager settings).</li>
+  <li>Place service_account.json at the right location.</li>
+  <li>Clone the repo from GitHub and run the installer.</li>
+  <li>Derive <code>device_id</code> from the hostname (<code>sodat-s05</code> → <code>S05</code>).</li>
+  <li>Start the sensor-collection service.</li>
+</ol>
+<p>This takes ~8–15 minutes depending on your internet speed.</p>
+
+<h2>Verify</h2>
+<p>From a PC on the same network:</p>
+<pre><code>ssh &lt;username&gt;@sodat-sNN.local
+sudo systemctl status sensor_sfc</code></pre>
+<p>Look for <code>active (running)</code>. Logs: <code>journalctl -u sensor_sfc -f</code>.</p>
+
+<h2>Troubleshooting</h2>
+<ul>
+  <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and <code>journalctl -u sensor_sfc -n 200</code>.</li>
+  <li><strong>Can't reach <code>sodat-sNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
+  <li><strong>Want to start over:</strong> reformat the SD card on your PC and repeat from Step 2.</li>
+</ul>
+
+</section>
+
+<script>
+function setLang(lang) {
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.classList.toggle('active', el.dataset.lang === lang);
+  });
+  try { localStorage.setItem('sodatLang', lang); } catch (e) {}
+}
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem('sodatLang'); } catch (e) {}
+  const initial = saved || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ja');
+  setLang(initial);
+})();
+</script>
+
+</body>
+</html>
