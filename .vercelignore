@@ -1,0 +1,36 @@
+# Hide everything Vercel doesn't need to deploy the static web setup site.
+# Only docs/ and vercel.json should reach Vercel's build pipeline; otherwise
+# Vercel auto-detects src/app.py and src/main.py as a Python serverless project.
+
+# Python (the trigger for the original misdetection)
+src/
+scripts/
+*.py
+*.pyc
+__pycache__/
+.venv/
+venv/
+requirements.txt
+
+# Shell scripts and project bootstrap
+*.sh
+*.sh.template
+
+# Hardware / data / secrets
+arduino/
+data/
+secrets/
+
+# Config & misc
+config.yaml
+config.yaml.template
+*.yaml
+*.yml
+*.db
+*.log
+mock_uploads.jsonl
+
+# Tooling state
+.git/
+.gitignore
+.claude/
