@@ -23,12 +23,17 @@ The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in
 > 1. In Google Cloud Console, create a Service Account, then generate a JSON key.
 > 2. Note its email (`xxx@xxx.iam.gserviceaccount.com`).
 > 3. Share the target Google Drive folder(s) and Spreadsheet with that email, granting **Editor** access.
-> 4. In the Vercel dashboard for this repo:
->    - **Project Settings → Environment Variables**: add `SODAT_SERVICE_ACCOUNT_JSON_B64`, value = `base64 < service_account.json | tr -d '\n'` (paste the resulting single-line string). Apply to Production (and Preview if you want preview deploys to work too).
->    - **Project Settings → Deployment Protection**: enable Password Protection or Vercel Access. **This is mandatory** — without it, `/api/firstrun` would let anyone with the URL download a Drive-editing credential.
-> 5. Redeploy so the env var takes effect.
+> 4. In the Vercel dashboard for this repo, add two Environment Variables (**Project Settings → Environment Variables**, apply to Production + Preview):
+>    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — value is the output of `base64 < service_account.json | tr -d '\n'`
+>    - `SODAT_ACCESS_TOKEN` — any random string you generate (e.g. `openssl rand -hex 24`). This is the shared lab "password" that gates the `/api/firstrun` endpoint.
+> 5. Redeploy so both env vars take effect.
+> 6. Share the snippet-generator URL with lab members in the form:
+>    `https://sodat-control.vercel.app/firstrun-generator?token=<the-SODAT_ACCESS_TOKEN-value>`
+>    Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
 
-Researchers never see the `service_account.json` file with this setup. Rotating the key = generate a new key in Cloud Console, update the env var in Vercel, redeploy.
+Researchers never see the `service_account.json` file with this setup. Rotating the token = update `SODAT_ACCESS_TOKEN` in Vercel, redeploy — old links die instantly. Rotating the SA key itself = generate a new key in Cloud Console, update `SODAT_SERVICE_ACCOUNT_JSON_B64`, redeploy.
+
+> 💡 **Why not Vercel's built-in Password Protection?** Vercel moved Password Protection to its Enterprise "Advanced Deployment Protection" tier at $150/month, which is overkill for a small research project. The token gate above is implemented in the Serverless Function itself (constant-time comparison, env-var driven), works on the free / Pro plan, and rotates instantly.
 
 ---
 
@@ -151,12 +156,17 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 > 1. Google Cloud Console で Service Account を作成し、JSON キーを発行
 > 2. その Service Account のメールアドレス (`xxx@xxx.iam.gserviceaccount.com`) を控える
 > 3. 出力先の Google Drive フォルダおよびスプレッドシートを、そのメールアドレスに **編集者**権限で共有
-> 4. Vercel ダッシュボードで:
->    - **Project Settings → Environment Variables**: `SODAT_SERVICE_ACCOUNT_JSON_B64` を追加。値は `base64 < service_account.json | tr -d '\n'` の結果 (1 行の base64 文字列)。Production (必要なら Preview も) に適用
->    - **Project Settings → Deployment Protection**: Password Protection か Vercel Access を有効化。**これは必須**。これが無いと `/api/firstrun` を URL を知った誰でも叩け、Drive 編集権限を持つ鍵が漏れます
-> 5. 再デプロイで env var が反映される
+> 4. Vercel ダッシュボードで環境変数を 2 つ追加 (**Project Settings → Environment Variables**、Production + Preview にチェック):
+>    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — 値は `base64 < service_account.json | tr -d '\n'` の結果 (1 行の base64 文字列)
+>    - `SODAT_ACCESS_TOKEN` — ランダム文字列 (例: `openssl rand -hex 24` の出力)。これが `/api/firstrun` のアクセスゲートのトークン
+> 5. 再デプロイで両方の env var が反映される
+> 6. ラボメンバーに以下の形式で URL を共有:
+>    `https://sodat-control.vercel.app/firstrun-generator?token=<SODAT_ACCESS_TOKEN の値>`
+>    この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
 
-研究者は `service_account.json` ファイルを直接触る必要がなくなります。鍵ローテーション = Cloud Console で新規発行 → Vercel の env var を更新 → 再デプロイ、で完結。
+研究者は `service_account.json` を直接触る必要がありません。トークンローテーション = Vercel の `SODAT_ACCESS_TOKEN` を更新して再デプロイ、で旧 URL が即無効化。SA キー本体のローテーション = Cloud Console で新規発行 → `SODAT_SERVICE_ACCOUNT_JSON_B64` を更新 → 再デプロイ。
+
+> 💡 **なぜ Vercel 標準の Password Protection を使わないのか:** Vercel は Password Protection を Enterprise の "Advanced Deployment Protection" ($150/月) に移行しました。研究プロジェクト規模ではオーバースペックなので、Serverless Function 内でトークン照合 (定数時間比較・env var 駆動) を実装。Free / Pro プランで動作し、即時ローテーション可能。
 
 ---
 
