@@ -17,7 +17,7 @@
 #   2. Decodes the embedded base64 service_account.json and writes it to
 #      ~$SODAT_USER/sensor_sfc/secrets/service_account.json (mode 600).
 #   3. Runs the project bootstrap (clones the repo, runs 01_install_update.sh).
-#   4. Sets device_id in config.yaml based on the hostname (sodat-s05 -> S05).
+#   4. Sets device_id in config.yaml based on the hostname (s05 -> S05, a01 -> A01).
 #   5. Restarts the systemd service so the new device_id takes effect.
 #   6. Logs everything to /var/log/sodat-firstrun.log.
 #
@@ -62,8 +62,8 @@ chmod 600 "$SA_PATH"
 runuser -u "$SODAT_USER" -- bash -c \
   'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash'
 
-# 4. Derive device_id from hostname (sodat-s05 -> S05). Skip if pattern doesn't match.
-HOSTNAME_DERIVED=$(hostname | sed -nE 's/^sodat-([a-z][0-9]+)$/\1/p' | tr '[:lower:]' '[:upper:]')
+# 4. Derive device_id from hostname (s05 -> S05, a01 -> A01). Skip if pattern doesn't match.
+HOSTNAME_DERIVED=$(hostname | tr '[:lower:]' '[:upper:]' | sed -nE 's/^([A-Z][0-9]+)$/\1/p')
 if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
     runuser -u "$SODAT_USER" -- \
         "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
