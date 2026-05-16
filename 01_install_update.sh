@@ -251,6 +251,39 @@ chmod +x *.sh 2>/dev/null || true
 # Delegate to standalone health tool
 ./02_check_hardware.sh
 
+# 10.5 First-time device configuration (Device ID, intervals) — fresh installs only.
+# Updates keep the researcher's existing config.yaml as-is.
+if [ "$MODE" == "INSTALL" ] && [ -t 0 ]; then
+    echo
+    echo -e "${GREEN}=== First-time device configuration ===${NC}"
+    echo "Set the Device ID for this Raspberry Pi (e.g. S01, A01). Defaults are fine for the rest."
+    if sudo -u "$REAL_USER" ./05_configure.sh; then
+        echo "Restarting service with the new configuration..."
+        ./04_start_service.sh --stop 2>/dev/null || true
+        ./04_start_service.sh
+    else
+        echo -e "${YELLOW}Device configuration skipped — you can run ./05_configure.sh later.${NC}"
+    fi
+fi
+
+# 10.6 Google OAuth token presence check.
+# The service runs fine without it, but cloud uploads will fail until placed.
+TOKEN_FILE="$TARGET_PATH/secrets/token.json"
+if [ ! -s "$TOKEN_FILE" ]; then
+    echo
+    echo -e "${YELLOW}=================================================================${NC}"
+    echo -e "${YELLOW}[!] Google OAuth token NOT FOUND.${NC}"
+    echo "Sensor data will be collected locally, but uploads to Google Drive /"
+    echo "Sheets will FAIL until you place a valid token at:"
+    echo -e "  ${GREEN}$TOKEN_FILE${NC}"
+    echo
+    echo "From your PC, run (replace <host> with this Pi's hostname):"
+    echo -e "  ${GREEN}scp token.json $REAL_USER@<host>.local:$TARGET_PATH/secrets/${NC}"
+    echo "Then restart the service:"
+    echo -e "  ${GREEN}./04_start_service.sh --stop && ./04_start_service.sh${NC}"
+    echo -e "${YELLOW}=================================================================${NC}"
+fi
+
 echo -e "\n${GREEN}--- Initialization Complete! ---${NC}"
 echo -e "Location: ${YELLOW}$TARGET_PATH${NC}"
 

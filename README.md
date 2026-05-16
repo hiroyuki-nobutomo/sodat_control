@@ -38,7 +38,24 @@ Then paste this single line and press Enter:
 curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
 ```
 
-That's it. The installer downloads itself, sets up everything (drivers, I2C, services, Python environment), and asks if you want to run a sensor test at the end. Say **Yes**.
+The installer sets up everything (drivers, I2C, services, Python environment), then asks you two short questions on the same console:
+
+1. **Device ID** — pick a code for this Pi (e.g. `S01`, `A01`). Press Enter on the other prompts to accept defaults.
+2. **Run a sensor test now?** — say **Yes** to verify the hardware.
+
+### Step C — Place the Google OAuth token (one-time, per device)
+
+The system needs `secrets/token.json` to upload data to Google Drive / Sheets. Until this file exists the Pi will still collect data locally, but uploads will fail.
+
+For now, copy the token from your PC (we'll replace this with a web-based flow soon):
+
+```bash
+# From your PC (where token.json lives):
+scp token.json <username>@sodat-s01.local:~/sensor_sfc/secrets/
+
+# Then on the Pi, restart the service to pick it up:
+./04_start_service.sh --stop && ./04_start_service.sh
+```
 
 > 💡 **Even simpler (optional, advanced):** see `firstrun_append.sh.example` for a snippet you can paste into Pi Imager's auto-generated `firstrun.sh` to make the Pi install Sodat **completely on its own** the first time it boots — no SSH, no commands.
 
@@ -152,7 +169,24 @@ ssh <ユーザー名>@sodat-s01.local
 curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
 ```
 
-これだけです。インストーラが自動でダウンロードされ、ドライバ・I2C・サービス・Python 環境などすべて構築します。最後に「センサーをテストしますか？」と聞かれるので **Yes** と答えてください。
+インストーラがドライバ・I2C・サービス・Python 環境などをすべて構築し、最後に **同じコンソール上で** 2 つだけ質問してきます:
+
+1. **Device ID** — この Pi の機器名 (例: `S01`, `A01`) を選択。それ以外の項目は Enter で既定値でも OK。
+2. **センサーテストを実行しますか？** — **Yes** でハードウェア動作確認まで自動実行。
+
+### ステップ C — Google OAuth トークンを配置 (デバイスごとに 1 回)
+
+Google Drive / Sheets へのアップロードには `secrets/token.json` が必要です。ファイルが無くてもデータはローカル DB に蓄積されますが、クラウドへのアップロードは失敗します。
+
+当面は PC から token をコピーしてください (将来 Web からの取得フローに置き換えます):
+
+```bash
+# PC 側 (token.json が手元にある PC):
+scp token.json <ユーザー名>@sodat-s01.local:~/sensor_sfc/secrets/
+
+# 次に Pi 側でサービスを再起動して反映:
+./04_start_service.sh --stop && ./04_start_service.sh
+```
 
 > 💡 **さらに簡単 (上級者向け・オプション):** `firstrun_append.sh.example` を参照してください。Pi Imager が自動生成する `firstrun.sh` に貼り付けるスニペットで、**初回起動時に Sodat が自動でインストールされる完全ゼロタッチ**になります (SSH 操作不要)。
 
