@@ -46,6 +46,15 @@
   .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; accent-color: var(--leaf); }
   .sensor-row .label { font-weight: 600; }
   .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
+  .btn-group { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: .6rem 0; }
+  .cta.secondary { background: transparent; color: var(--leaf); border: 2px solid var(--leaf); padding: calc(.7rem - 2px) calc(1.3rem - 2px); }
+  .cta.secondary:hover { background: rgba(21,128,61,.1); color: var(--leaf-hi); border-color: var(--leaf-hi); }
+  .cta.secondary[aria-disabled="true"] { color: #94a3b8; border-color: #94a3b8; background: transparent; }
+  .token-fallback { border: 1px solid rgba(245,158,11,.4); background: rgba(245,158,11,.06); border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
+  .token-fallback summary { font-weight: 600; cursor: pointer; }
+  .token-fallback input { margin-top: .5rem; }
+  .copy-feedback { display: inline-block; margin-left: .8rem; color: var(--leaf); font-weight: 600; opacity: 0; transition: opacity .15s; }
+  .copy-feedback.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -81,14 +90,26 @@
 
 <div class="status" id="status"></div>
 
-<p><a class="cta" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">snippet をダウンロード</a></p>
+<div class="btn-group">
+  <button class="cta" id="copyBtn" type="button">📋 クリップボードにコピー</button>
+  <a class="cta secondary" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">ファイルとしてダウンロード</a>
+  <span class="copy-feedback" id="copyFeedback" aria-live="polite"></span>
+</div>
+
+<details class="token-fallback" id="tokenFallback">
+  <summary>トークン無しでこのページを開いてしまった場合 (手動入力)</summary>
+  <p class="small">管理者から受け取った <code>token=</code> の値をここに貼り付けて「適用」を押すと、URL にトークンを付けてリロードします。次回からは管理者から受け取った URL 全体で開く方が手間が無いので、URL もブックマークしておいてください。</p>
+  <label for="tokenInput">アクセストークン</label>
+  <input type="text" id="tokenInput" autocomplete="off" spellcheck="false" placeholder="lab admin から受け取った文字列">
+  <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('')">適用してリロード</button></p>
+</details>
 
 <h2>3. SD カードに貼り付ける</h2>
 
 <ol>
   <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
   <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
-  <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、ダウンロードした <code>sodat-firstrun-snippet.sh</code> の本体行 (<code># &gt;&gt;&gt; BEGIN ...</code> から <code># &lt;&lt;&lt; END</code> までの行) を貼り付ける</li>
+  <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>「📋 クリップボードにコピー」</strong> で取得した snippet (or ダウンロードした <code>.sh</code> ファイルの本体行) を貼り付ける</li>
   <li>保存 (改行コードは LF のまま、CRLF に変えない)</li>
   <li>SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
 </ol>
@@ -131,14 +152,26 @@
 
 <div class="status" id="statusEn"></div>
 
-<p><a class="cta" id="dlBtnEn" href="#" download="sodat-firstrun-snippet.sh">Download snippet</a></p>
+<div class="btn-group">
+  <button class="cta" id="copyBtnEn" type="button">📋 Copy to clipboard</button>
+  <a class="cta secondary" id="dlBtnEn" href="#" download="sodat-firstrun-snippet.sh">Download as file</a>
+  <span class="copy-feedback" id="copyFeedbackEn" aria-live="polite"></span>
+</div>
+
+<details class="token-fallback" id="tokenFallbackEn">
+  <summary>Opened this page without a token? (manual entry)</summary>
+  <p class="small">Paste the <code>token=</code> value you got from the lab admin and click Apply. The page will reload with the token attached. Bookmark the resulting URL so you don't need to do this again.</p>
+  <label for="tokenInputEn">Access token</label>
+  <input type="text" id="tokenInputEn" autocomplete="off" spellcheck="false" placeholder="the string the lab admin gave you">
+  <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('En')">Apply and reload</button></p>
+</details>
 
 <h2>3. Place on the SD card</h2>
 
 <ol>
   <li>Insert the microSD into your PC; open the <code>bootfs</code> partition.</li>
   <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
-  <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the body of the downloaded <code>sodat-firstrun-snippet.sh</code> (everything between the <code># &gt;&gt;&gt; BEGIN ...</code> and <code># &lt;&lt;&lt; END</code> markers).</li>
+  <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet — either via <strong>📋 Copy to clipboard</strong>, or by opening the downloaded <code>.sh</code> file (everything between the <code># &gt;&gt;&gt; BEGIN ...</code> and <code># &lt;&lt;&lt; END</code> markers).</li>
   <li>Save the file. Keep line endings as LF (don't let your editor switch to CRLF).</li>
   <li>Safely eject the SD card, insert it into the Pi, power on.</li>
 </ol>
@@ -227,18 +260,56 @@ function buildSensorList(containerId, lang) {
   });
 }
 
+// Manual-entry fallback: triggered by the "Apply and reload" button inside
+// the <details class="token-fallback"> block. Lets researchers paste a
+// token they got out-of-band and reload the page with ?token=... attached.
+window.applyToken = function (suffix) {
+  const inp = document.getElementById('tokenInput' + suffix);
+  const v = (inp && inp.value || '').trim();
+  if (!v) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('token', v);
+  window.location.href = url.toString();
+};
+
+function buildApiUrl(user, sensorsParam, token) {
+  return `/api/firstrun?user=${encodeURIComponent(user)}`
+       + `&sensors=${encodeURIComponent(sensorsParam)}`
+       + `&token=${encodeURIComponent(token)}`;
+}
+
 function wire(suffix, lang) {
   const $ = (id) => document.getElementById(id + suffix);
   const inp = $('user');
-  const link = $('dlBtn');
+  const dl = $('dlBtn');
+  const copyBtn = $('copyBtn');
+  const copyFeedback = $('copyFeedback');
+  const tokenFallback = $('tokenFallback');
   const status = $('status');
   const checkboxes = buildSensorList(lang === 'en' ? 'sensorListEn' : 'sensorList', lang);
 
+  // Track the validated request URL so the Copy button can reach it without
+  // recomputing.
+  let currentApiUrl = '';
+
+  function setDisabled(disabled) {
+    if (disabled) {
+      dl.setAttribute('aria-disabled', 'true');
+      dl.removeAttribute('href');
+      copyBtn.setAttribute('aria-disabled', 'true');
+      copyBtn.disabled = true;
+    } else {
+      dl.removeAttribute('aria-disabled');
+      copyBtn.removeAttribute('aria-disabled');
+      copyBtn.disabled = false;
+    }
+  }
+
   function refresh() {
+    currentApiUrl = '';
     const v = (inp.value || '').trim();
     if (!USER_RE.test(v)) {
-      link.setAttribute('aria-disabled', 'true');
-      link.removeAttribute('href');
+      setDisabled(true);
       status.className = 'status err';
       status.textContent = lang === 'en'
         ? `Invalid username "${v}". Must match ${USER_RE}.`
@@ -248,8 +319,7 @@ function wire(suffix, lang) {
 
     const selected = checkboxes.filter((c) => c.checked).map((c) => c.value);
     if (selected.length === 0) {
-      link.setAttribute('aria-disabled', 'true');
-      link.removeAttribute('href');
+      setDisabled(true);
       status.className = 'status err';
       status.textContent = lang === 'en'
         ? 'Pick at least one sensor.'
@@ -258,26 +328,60 @@ function wire(suffix, lang) {
     }
 
     if (!PAGE_TOKEN) {
-      link.setAttribute('aria-disabled', 'true');
-      link.removeAttribute('href');
+      setDisabled(true);
       status.className = 'status err';
       status.textContent = lang === 'en'
-        ? 'Access token missing — open this page via the lab-admin URL (it contains ?token=…).'
-        : 'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直してください。';
+        ? 'Access token missing — open this page via the lab-admin URL (it contains ?token=…), or paste it below.'
+        : 'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直すか、下の欄に直接貼り付けてください。';
+      if (tokenFallback) tokenFallback.open = true;
       return;
     }
 
     const sensorsParam = selected.length === KNOWN_SENSORS.length ? 'all' : selected.join(',');
-    link.removeAttribute('aria-disabled');
-    link.href = `/api/firstrun?user=${encodeURIComponent(v)}`
-              + `&sensors=${encodeURIComponent(sensorsParam)}`
-              + `&token=${encodeURIComponent(PAGE_TOKEN)}`;
+    currentApiUrl = buildApiUrl(v, sensorsParam, PAGE_TOKEN);
+    setDisabled(false);
+    dl.href = currentApiUrl;
     status.className = 'status';
     status.textContent = '';
   }
 
+  // One-click copy: fetch the snippet and write it to the clipboard. Saves
+  // the researcher the "Downloads -> open .sh -> select all -> copy" round
+  // trip; they just paste straight into firstrun.sh.
+  async function onCopy() {
+    if (!currentApiUrl || copyBtn.disabled) return;
+    const originalLabel = copyBtn.textContent;
+    copyBtn.disabled = true;
+    copyBtn.textContent = lang === 'en' ? 'Copying…' : 'コピー中…';
+    try {
+      const resp = await fetch(currentApiUrl, { cache: 'no-store' });
+      if (!resp.ok) {
+        const detail = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${detail.slice(0, 200)}`);
+      }
+      const text = await resp.text();
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = lang === 'en' ? '✓ Copied' : '✓ コピー完了';
+      copyFeedback.textContent = lang === 'en'
+        ? 'Now paste into firstrun.sh on the SD card.'
+        : 'SD カードの firstrun.sh に貼り付けてください。';
+      copyFeedback.classList.add('show');
+      setTimeout(() => {
+        copyBtn.textContent = originalLabel;
+        copyBtn.disabled = false;
+        copyFeedback.classList.remove('show');
+      }, 3500);
+    } catch (e) {
+      copyBtn.textContent = originalLabel;
+      copyBtn.disabled = false;
+      status.className = 'status err';
+      status.textContent = (lang === 'en' ? 'Copy failed: ' : 'コピー失敗: ') + e.message;
+    }
+  }
+
   inp.addEventListener('input', refresh);
   checkboxes.forEach((c) => c.addEventListener('change', refresh));
+  copyBtn.addEventListener('click', onCopy);
   refresh();
 }
 
