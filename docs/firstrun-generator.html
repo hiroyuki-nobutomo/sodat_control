@@ -28,6 +28,12 @@
   [data-lang] { display: none; }
   [data-lang].active { display: block; }
   kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
+  .sensor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .35rem .8rem; margin: .6rem 0 1rem; }
+  .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid rgba(127,127,127,.3); border-radius: 5px; cursor: pointer; user-select: none; }
+  .sensor-row:hover { background: rgba(127,127,127,.08); }
+  .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; }
+  .sensor-row .label { font-weight: 600; }
+  .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
 </style>
 </head>
 <body>
@@ -52,11 +58,19 @@
 <label for="user">ユーザー名 (小文字 + 数字 + アンダースコア・ハイフン)</label>
 <input type="text" id="user" value="sodat" placeholder="例: sodat" maxlength="32">
 
+<h2>2. インストールするセンサーを選択</h2>
+
+<p class="small">この Pi に物理的に接続するセンサーだけを残してください。未選択のセンサーは config.yaml から除外され、ログにエラーが出ません。デフォルトは全選択。</p>
+
+<div class="sensor-list" id="sensorList">
+  <!-- populated by JS from KNOWN_SENSORS -->
+</div>
+
 <div class="status" id="status"></div>
 
 <p><a class="cta" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">snippet をダウンロード</a></p>
 
-<h2>2. SD カードに貼り付ける</h2>
+<h2>3. SD カードに貼り付ける</h2>
 
 <ol>
   <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
@@ -93,11 +107,19 @@
 <label for="userEn">Username (lowercase + digits + <code>_</code>/<code>-</code>)</label>
 <input type="text" id="userEn" value="sodat" placeholder="e.g. sodat" maxlength="32">
 
+<h2>2. Pick sensors to install</h2>
+
+<p class="small">Check only the sensors physically connected to this Pi. Unchecked sensors are removed from config.yaml so they don't generate runtime errors. Defaults to all sensors selected.</p>
+
+<div class="sensor-list" id="sensorListEn">
+  <!-- populated by JS from KNOWN_SENSORS -->
+</div>
+
 <div class="status" id="statusEn"></div>
 
 <p><a class="cta" id="dlBtnEn" href="#" download="sodat-firstrun-snippet.sh">Download snippet</a></p>
 
-<h2>2. Place on the SD card</h2>
+<h2>3. Place on the SD card</h2>
 
 <ol>
   <li>Insert the microSD into your PC; open the <code>bootfs</code> partition.</li>
@@ -134,14 +156,59 @@ function setLang(lang) {
   setLang(initial);
 })();
 
-// Wire each language's input to update the download link's href.
-// Validates client-side to give early feedback; server re-validates anyway.
+// Sensor types the project currently supports.
+// MUST stay in sync with KNOWN_SENSORS in api/firstrun.js and with
+// the @register_sensor(...) decorators in src/sensors/*.py.
+// (Mock is intentionally excluded — it's a test fixture, not a field sensor.)
+const KNOWN_SENSORS = [
+  { type: 'BME280',     ja: 'BME280',      en: 'BME280',      descJa: 'I2C 温湿度・気圧', descEn: 'I2C temp/humidity/pressure' },
+  { type: 'TDSN7200',   ja: 'TDSN-7200',   en: 'TDSN-7200',   descJa: 'USB 温湿度・気圧', descEn: 'USB temp/humidity/pressure' },
+  { type: 'TDSN7300',   ja: 'TDSN-7300',   en: 'TDSN-7300',   descJa: 'USB CO2・温湿度',  descEn: 'USB CO2/temp/humidity' },
+  { type: 'IWS660CS',   ja: 'IWS-660CS',   en: 'IWS-660CS',   descJa: 'USB 照度',          descEn: 'USB illuminance' },
+  { type: 'Camera',     ja: 'Camera',      en: 'Camera',      descJa: 'USB Webカメラ',      descEn: 'USB webcam' },
+  { type: 'SerialJSON', ja: 'SerialJSON',  en: 'SerialJSON',  descJa: 'Arduino 経由・拡張用', descEn: 'Arduino-attached probe (extensible)' },
+];
+
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
-function wire(suffix) {
+
+function buildSensorList(containerId, lang) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  container.innerHTML = '';
+  return KNOWN_SENSORS.map((s) => {
+    const id = `sensor-${lang}-${s.type}`;
+    const row = document.createElement('label');
+    row.className = 'sensor-row';
+    row.setAttribute('for', id);
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.value = s.type;
+    cb.checked = true;  // default: all sensors selected
+    row.appendChild(cb);
+
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = lang === 'en' ? s.en : s.ja;
+    row.appendChild(label);
+
+    const desc = document.createElement('span');
+    desc.className = 'desc';
+    desc.textContent = lang === 'en' ? `(${s.descEn})` : `(${s.descJa})`;
+    row.appendChild(desc);
+
+    container.appendChild(row);
+    return cb;
+  });
+}
+
+function wire(suffix, lang) {
   const $ = (id) => document.getElementById(id + suffix);
   const inp = $('user');
   const link = $('dlBtn');
   const status = $('status');
+  const checkboxes = buildSensorList(lang === 'en' ? 'sensorListEn' : 'sensorList', lang);
 
   function refresh() {
     const v = (inp.value || '').trim();
@@ -149,22 +216,37 @@ function wire(suffix) {
       link.setAttribute('aria-disabled', 'true');
       link.removeAttribute('href');
       status.className = 'status err';
-      status.textContent = suffix === 'En'
+      status.textContent = lang === 'en'
         ? `Invalid username "${v}". Must match ${USER_RE}.`
         : `ユーザー名が不正です "${v}"。${USER_RE} を満たしてください。`;
       return;
     }
+
+    const selected = checkboxes.filter((c) => c.checked).map((c) => c.value);
+    if (selected.length === 0) {
+      link.setAttribute('aria-disabled', 'true');
+      link.removeAttribute('href');
+      status.className = 'status err';
+      status.textContent = lang === 'en'
+        ? 'Pick at least one sensor.'
+        : 'センサーを 1 つ以上選択してください。';
+      return;
+    }
+
+    const sensorsParam = selected.length === KNOWN_SENSORS.length ? 'all' : selected.join(',');
     link.removeAttribute('aria-disabled');
-    link.href = `/api/firstrun?user=${encodeURIComponent(v)}`;
+    link.href = `/api/firstrun?user=${encodeURIComponent(v)}&sensors=${encodeURIComponent(sensorsParam)}`;
     status.className = 'status';
     status.textContent = '';
   }
 
   inp.addEventListener('input', refresh);
+  checkboxes.forEach((c) => c.addEventListener('change', refresh));
   refresh();
 }
-wire('');     // JA
-wire('En');   // EN
+
+wire('', 'ja');
+wire('En', 'en');
 </script>
 
 </body>

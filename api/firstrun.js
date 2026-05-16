@@ -20,6 +20,18 @@ const TEMPLATE_PATH = join(__dirname, "..", "firstrun_snippet.sh.template");
 // Linux usernames: lowercase letter first, then [a-z0-9_-], up to 32 chars.
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 
+// Sensor types the project currently supports. Must stay in sync with
+// src/sensors/*.py and with the checkbox list in docs/firstrun-generator.html.
+// (Mock is intentionally excluded — it's for unit tests, not field deployment.)
+const KNOWN_SENSORS = new Set([
+  "BME280",
+  "TDSN7200",
+  "TDSN7300",
+  "IWS660CS",
+  "Camera",
+  "SerialJSON",
+]);
+
 function fail(res, status, message) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -65,6 +77,29 @@ export default function handler(req, res) {
     );
   }
 
+  // Sensor selection. "all" (or missing) means leave config.yaml's sensors
+  // list untouched on the Pi. Otherwise the value must be a CSV of known
+  // sensor types — unknown names are rejected to surface typos early instead
+  // of silently producing a Pi that runs zero sensors.
+  const rawSensors = typeof req.query.sensors === "string" ? req.query.sensors : "all";
+  let sensorsValue;
+  if (rawSensors.trim().toLowerCase() === "all" || rawSensors.trim() === "") {
+    sensorsValue = "all";
+  } else {
+    const requested = rawSensors.split(",").map((s) => s.trim()).filter(Boolean);
+    const unknown = requested.filter((s) => !KNOWN_SENSORS.has(s));
+    if (unknown.length) {
+      return fail(res, 400,
+        `Unknown sensor type(s): ${unknown.join(", ")}. ` +
+        `Supported: ${[...KNOWN_SENSORS].join(", ")} (or "all").`
+      );
+    }
+    if (requested.length === 0) {
+      return fail(res, 400, 'sensors=" " — pick at least one, or use sensors=all.');
+    }
+    sensorsValue = [...new Set(requested)].join(",");
+  }
+
   let template;
   try {
     template = readFileSync(TEMPLATE_PATH, "utf-8");
@@ -77,7 +112,8 @@ export default function handler(req, res) {
 
   const filled = template
     .replace("__SODAT_USER__", rawUser)
-    .replace("__SA_JSON_B64__", saB64);
+    .replace("__SA_JSON_B64__", saB64)
+    .replace("__SODAT_SENSORS__", sensorsValue);
 
   res.setHeader("Content-Type", "text/x-shellscript; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="sodat-firstrun-snippet.sh"');

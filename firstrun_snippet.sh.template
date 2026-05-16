@@ -18,14 +18,16 @@
 #      ~$SODAT_USER/sensor_sfc/secrets/service_account.json (mode 600).
 #   3. Runs the project bootstrap (clones the repo, runs 01_install_update.sh).
 #   4. Sets device_id in config.yaml based on the hostname (s05 -> S05, a01 -> A01).
-#   5. Restarts the systemd service so the new device_id takes effect.
-#   6. Logs everything to /var/log/sodat-firstrun.log.
+#   5. Trims config.yaml's sensors[] to the subset selected on the web page
+#      (or leaves it untouched if "all" was selected).
+#   6. Restarts the systemd service so the new device_id / sensor set take effect.
+#   7. Logs everything to /var/log/sodat-firstrun.log.
 #
 # How the maintainer hosts this file:
 #   - It lives in the repo so PR review can see what runs on every Pi.
 #   - The web page at docs/firstrun-generator.html reads this template, splices
-#     in the user-supplied SODAT_USER and SA_JSON_B64, and offers the result
-#     as a download.
+#     in the user-supplied SODAT_USER / SA_JSON_B64 / SODAT_SENSORS, and offers
+#     the result as a download.
 # ============================================================================
 
 # >>> BEGIN PASTE INTO /boot/firmware/firstrun.sh (above `rm -f` / `exit 0`) >>>
@@ -33,6 +35,7 @@
 # --- Variables filled in by the web generator -------------------------------
 SODAT_USER="__SODAT_USER__"          # Username you set in Pi Imager customisation
 SA_JSON_B64="__SA_JSON_B64__"        # base64 of project service_account.json
+SODAT_SENSORS="__SODAT_SENSORS__"    # CSV of sensor types to keep (or "all")
 # ----------------------------------------------------------------------------
 
 SODAT_LOG=/var/log/sodat-firstrun.log
@@ -69,8 +72,19 @@ if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
         "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
         "$SODAT_HOME/sensor_sfc/scripts/util_config.py" \
         --device-id "$HOSTNAME_DERIVED" || true
-    systemctl restart sensor_sfc 2>/dev/null || true
 fi
+
+# 5. Trim config.yaml's sensors[] to the researcher-selected subset.
+if [ -n "$SODAT_SENSORS" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
+    runuser -u "$SODAT_USER" -- \
+        "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
+        "$SODAT_HOME/sensor_sfc/scripts/util_set_sensors.py" \
+        --keep "$SODAT_SENSORS" \
+        --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
+fi
+
+# 6. Pick up the new device_id / sensor set.
+systemctl restart sensor_sfc 2>/dev/null || true
 
 echo "=== sodat firstrun: done $(date -Is) ==="
 
