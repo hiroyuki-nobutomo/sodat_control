@@ -27,9 +27,9 @@ The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in
 >    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — value is the output of `base64 < service_account.json | tr -d '\n'`
 >    - `SODAT_ACCESS_TOKEN` — any random string you generate (e.g. `openssl rand -hex 24`). This is the shared lab "password" that gates the `/api/firstrun` endpoint.
 > 5. Redeploy so both env vars take effect.
-> 6. Share the snippet-generator URL with lab members in the form:
->    `https://sodat-control.vercel.app/firstrun-generator?token=<the-SODAT_ACCESS_TOKEN-value>`
->    Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
+> 6. Share the **guide** URL with lab members in the form:
+>    `https://sodat-control.vercel.app/?token=<the-SODAT_ACCESS_TOKEN-value>`
+>    Researchers land on the step-by-step guide (Pi Imager → SD card → boot) and the snippet-generator link inside it carries the token through automatically. Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
 
 Researchers never see the `service_account.json` file with this setup. Rotating the token = update `SODAT_ACCESS_TOKEN` in Vercel, redeploy — old links die instantly. Rotating the SA key itself = generate a new key in Cloud Console, update `SODAT_SERVICE_ACCOUNT_JSON_B64`, redeploy.
 
@@ -160,9 +160,9 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 >    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — 値は `base64 < service_account.json | tr -d '\n'` の結果 (1 行の base64 文字列)
 >    - `SODAT_ACCESS_TOKEN` — ランダム文字列 (例: `openssl rand -hex 24` の出力)。これが `/api/firstrun` のアクセスゲートのトークン
 > 5. 再デプロイで両方の env var が反映される
-> 6. ラボメンバーに以下の形式で URL を共有:
->    `https://sodat-control.vercel.app/firstrun-generator?token=<SODAT_ACCESS_TOKEN の値>`
->    この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
+> 6. ラボメンバーには**ガイドページ**の URL を共有:
+>    `https://sodat-control.vercel.app/?token=<SODAT_ACCESS_TOKEN の値>`
+>    研究者は手順 1〜4 のガイド (Pi Imager → SD カード → 起動) に着地し、ガイド内の snippet ダウンロード CTA が自動的にトークンを引き継ぎます。この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
 
 研究者は `service_account.json` を直接触る必要がありません。トークンローテーション = Vercel の `SODAT_ACCESS_TOKEN` を更新して再デプロイ、で旧 URL が即無効化。SA キー本体のローテーション = Cloud Console で新規発行 → `SODAT_SERVICE_ACCOUNT_JSON_B64` を更新 → 再デプロイ。
 
