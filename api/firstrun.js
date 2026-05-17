@@ -6,7 +6,7 @@
 //
 // Access is gated by a shared lab token (SODAT_ACCESS_TOKEN env var). Lab
 // admins distribute the token to researchers as part of the URL:
-//     https://<host>/firstrun-generator?token=<the-secret>
+//     https://<host>/?token=<the-secret>
 // — that way researchers don't have to type the token, but knowing the URL
 // (without the token) is not enough to extract the service-account key.
 // Token rotation = change the env var and redeploy; old links die instantly.
@@ -23,7 +23,8 @@ const TEMPLATE_PATH = join(__dirname, "..", "firstrun_snippet.sh.template");
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 
 // Sensor types the project currently supports. Must stay in sync with
-// src/sensors/*.py and with the checkbox list in docs/firstrun-generator.html.
+// src/sensors/*.py and with KNOWN_SENSORS in docs/index.html (the Step 3
+// checkbox list).
 // (Mock is intentionally excluded — it's for unit tests, not field deployment.)
 const KNOWN_SENSORS = new Set([
   "BME280",

@@ -25,9 +25,13 @@
 #
 # How the maintainer hosts this file:
 #   - It lives in the repo so PR review can see what runs on every Pi.
-#   - The web page at docs/firstrun-generator.html reads this template, splices
-#     in the user-supplied SODAT_USER / SA_JSON_B64 / SODAT_SENSORS, and offers
-#     the result as a download.
+#   - api/firstrun.js (a Vercel Serverless Function) reads this template
+#     and splices in SODAT_USER, SA_JSON_B64 (= the SA key from the
+#     SODAT_SERVICE_ACCOUNT_JSON_B64 env var), and SODAT_SENSORS (the
+#     subset chosen on the web wizard).
+#   - docs/index.html is the researcher-facing 4-step wizard; its Step 3
+#     fetches /api/firstrun and writes the result to bootfs/firstrun.sh
+#     (via the File System Access API, clipboard, or download fallback).
 # ============================================================================
 
 # >>> BEGIN PASTE INTO /boot/firmware/firstrun.sh (above `rm -f` / `exit 0`) >>>
