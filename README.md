@@ -13,7 +13,7 @@ The easiest way to provision a new device is the **web setup page**, which walks
 The page is a 4-step wizard:
 1. Install Raspberry Pi Imager (one-time, on your PC).
 2. Flash Raspberry Pi OS (64-bit) to a microSD with hostname `sNN` (SFC) or `aNN` (API building), Wi-Fi, and your SSH user — all done inside Pi Imager's customisation panel. (Lite 64-bit also works.)
-3. Enter the Pi Imager username + pick sensors, then write the snippet to the SD card. The page fetches `/api/firstrun`, which injects the project's `service_account.json` (stored as a Vercel env var, not on researcher PCs) into the snippet, and writes it straight into `bootfs/firstrun.sh` via the File System Access API (📂) — or via copy / download as fallbacks for older browsers.
+3. Enter the Pi Imager username + pick sensors, then append the snippet to the SD card. The page fetches `/api/firstrun`, which injects the project's `service_account.json` (stored as a Vercel env var, not on researcher PCs) into a cloud-init YAML snippet, and appends it to `bootfs/user-data` via the File System Access API (📂) — or via copy / download as fallbacks for older browsers. (Requires Raspberry Pi Imager v2.0+, which writes cloud-init `user-data` instead of the legacy `firstrun.sh`.)
 4. Eject the SD card, insert it into the Pi, power on — done.
 
 The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in Pi Imager, so there's no per-device config edit.
@@ -146,7 +146,7 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 ページは 4 ステップウィザード:
 1. Raspberry Pi Imager をインストール (PC 側、1 回だけ)
 2. Pi Imager で Raspberry Pi OS (64-bit) を microSD に書き込み、Pi Imager のカスタマイズ画面でホスト名 `sNN` (SFC) / `aNN` (API 機構) / Wi-Fi / SSH ユーザを設定 (より小さいイメージが良ければ Lite 64-bit も可)
-3. Pi Imager で設定したユーザ名 + センサーを指定し、SD カードに snippet を書き込み。ページが `/api/firstrun` を fetch し、Vercel 環境変数の `service_account.json` を埋め込んだ snippet を File System Access API (📂) で `bootfs/firstrun.sh` に直書き込み (鍵は研究者の PC に渡らない)。古いブラウザはコピー / ダウンロードのフォールバックあり
+3. Pi Imager で設定したユーザ名 + センサーを指定し、SD カードに snippet を追記。ページが `/api/firstrun` を fetch し、Vercel 環境変数の `service_account.json` を埋め込んだ cloud-init YAML snippet を File System Access API (📂) で `bootfs/user-data` の末尾に追記 (鍵は研究者の PC に渡らない)。古いブラウザはコピー / ダウンロードのフォールバックあり。Raspberry Pi Imager **v2.0+ が必須** (v2 から cloud-init 方式に変わり、旧 `firstrun.sh` は廃止)
 4. SD を取り出して Pi に挿入 → 電源 ON — 以上
 
 `device_id` (`S01`, `S02`, ...) は Pi Imager で設定したホスト名から自動導出されるので、機器ごとに config を編集する必要はありません。

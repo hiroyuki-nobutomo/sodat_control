@@ -202,39 +202,54 @@
 <section class="step" data-step="2">
   <h2><span data-lang="ja">Pi Imager で SD カードを書き込み</span><span data-lang="en">Write the SD card with Pi Imager</span></h2>
 
+  <p class="callout info" data-lang="ja">
+    <strong>Pi Imager v2.0 以降が必要です</strong> (v1.x は <code>firstrun.sh</code> 方式、v2.0+ は cloud-init <code>user-data</code> 方式)。このウィザードは v2.0+ 専用です。古い場合は <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">公式サイト</a> から最新版を再インストールしてください。
+  </p>
+  <p class="callout info" data-lang="en">
+    <strong>Pi Imager v2.0 or later is required.</strong> (v1.x writes <code>firstrun.sh</code>; v2.0+ writes cloud-init <code>user-data</code>.) This wizard targets v2.0+. If you have an older version, reinstall from <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">the official site</a>.
+  </p>
+
   <ol data-lang="ja">
     <li>Pi Imager を起動し、左の <strong>「デバイスを選ぶ」</strong> で使う Raspberry Pi の機種を選ぶ。</li>
     <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> を選ぶ (フル版推奨。より軽量にしたい場合は <strong>Raspberry Pi OS Lite (64-bit)</strong> でも動作します)。</li>
     <li>右の <strong>「ストレージを選ぶ」</strong> で microSD を選ぶ。</li>
-    <li><strong>「次へ」</strong>を押すと「OS をカスタマイズしますか?」と聞かれるので <kbd>設定を編集する</kbd> を選ぶ。</li>
-    <li>「一般」タブで次を設定:
+    <li><strong>「次へ」</strong>を押すと OS カスタマイズの確認画面が出るので <kbd>設定を編集する</kbd> を選ぶ。</li>
+    <li>「Hostname」を設定:
       <ul>
         <li>ホスト名 = 機器名: <code>s01</code>, <code>s02</code> ... (SFC に設置する場合) / <code>a01</code>, <code>a02</code> ... (API 機構に設置する場合)。<strong>機器ごとに必ず変える</strong>。Pi Imager 側は小文字で入力 (DNS 規約)、初回起動で大文字化されて <code>device_id</code> (<code>S01</code> / <code>A01</code>) に自動反映される</li>
-        <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。<strong>次のステップで同じユーザー名を入力する</strong>ので覚えておく</li>
-        <li>無線 LAN: SSID / パスワード / 国 (JP) を設定</li>
-        <li>ロケール: タイムゾーン <code>Asia/Tokyo</code></li>
       </ul>
     </li>
-    <li>「サービス」タブで <strong>SSH を有効化</strong> (パスワード認証で可)。</li>
-    <li><kbd>保存</kbd> → <kbd>はい</kbd> で書き込み開始。書き込み + 検証で 5〜10 分。</li>
-    <li>書き込みが終わったら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。</li>
+    <li>「User」を設定:
+      <ul>
+        <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。<strong>次のステップで同じユーザー名を入力する</strong>ので覚えておく</li>
+      </ul>
+    </li>
+    <li>「Wi-Fi」「Localisation」を設定 (SSID / パスワード / 国 = JP / タイムゾーン = Asia/Tokyo)。</li>
+    <li>「Remote access」で <strong>SSH を有効化</strong> (パスワード認証で可)。</li>
+    <li>各タブで設定が終わったら <kbd>保存</kbd>。サマリー画面 (Write image) が表示されます。</li>
+    <li>サマリーで「Customisations to apply」に <em>Hostname / User / Wi-Fi / SSH</em> が並んでいることを確認し、右下の赤い <kbd>WRITE</kbd> ボタンを押す。<strong>これで初めて SD に書き込まれます</strong> (v2 では「保存」だけでは書かれません)。</li>
+    <li>書き込み + 検証で 5〜10 分。完了したら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。中に <code>user-data</code> というファイルがあれば成功。</li>
   </ol>
   <ol data-lang="en">
     <li>Open Pi Imager. Under <strong>Choose device</strong>, pick your Pi model.</li>
     <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> (full version recommended; <strong>Raspberry Pi OS Lite (64-bit)</strong> also works for a lighter footprint).</li>
     <li>Under <strong>Choose storage</strong>, pick the microSD card.</li>
-    <li>Click <strong>Next</strong>. When asked "Would you like to apply OS customisation settings?", choose <kbd>Edit Settings</kbd>.</li>
-    <li>On the <em>General</em> tab:
+    <li>Click <strong>Next</strong>. On the OS-customisation prompt, choose <kbd>Edit Settings</kbd>.</li>
+    <li>Set <strong>Hostname</strong>:
       <ul>
         <li>Hostname = device name: <code>s01</code>, <code>s02</code>, ... (devices at SFC) or <code>a01</code>, <code>a02</code>, ... (devices in the API building). <strong>Must be unique per device.</strong> Enter in lowercase (DNS rules); first boot uppercases it into the <code>device_id</code> (<code>S01</code> / <code>A01</code>).</li>
-        <li>Username and password: e.g. <code>sodat</code>. <strong>You'll re-enter this same username on the next step</strong>, so remember it.</li>
-        <li>Wireless LAN: SSID / password / country.</li>
-        <li>Locale: set the timezone (e.g. <code>Asia/Tokyo</code>).</li>
       </ul>
     </li>
-    <li>On the <em>Services</em> tab: enable SSH (password auth is fine).</li>
-    <li>Click <kbd>Save</kbd> → <kbd>Yes</kbd> to start writing. Write + verify takes 5–10 minutes.</li>
-    <li>When writing finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code>.</li>
+    <li>Set <strong>User</strong>:
+      <ul>
+        <li>Username and password: e.g. <code>sodat</code>. <strong>You'll re-enter this same username on the next step</strong>, so remember it.</li>
+      </ul>
+    </li>
+    <li>Set <strong>Wi-Fi</strong> and <strong>Localisation</strong> (SSID / password / country = JP / timezone = Asia/Tokyo).</li>
+    <li>Under <strong>Remote access</strong>: enable SSH (password auth is fine).</li>
+    <li>Click <kbd>Save</kbd> after each tab. Pi Imager shows a summary (Write image) screen.</li>
+    <li>On the summary, confirm "Customisations to apply" lists <em>Hostname / User / Wi-Fi / SSH</em>, then click the red <kbd>WRITE</kbd> button. <strong>This is what actually writes the card</strong> — in v2 the Save button alone does not write anything.</li>
+    <li>Write + verify takes 5–10 minutes. When it finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code> containing a file called <code>user-data</code>.</li>
   </ol>
 
   <div class="nav-row">
@@ -252,7 +267,7 @@
 
 <!-- ============================== Step 3: Snippet (embedded form) ============================== -->
 <section class="step" data-step="3">
-  <h2><span data-lang="ja">firstrun snippet を SD カードに書き込む</span><span data-lang="en">Write the firstrun snippet to the SD card</span></h2>
+  <h2><span data-lang="ja">cloud-init snippet を SD カードに追記する</span><span data-lang="en">Append the cloud-init snippet to the SD card</span></h2>
 
   <p class="small">
     <span data-lang="ja">下のフォームで Pi Imager と同じユーザー名 + 接続するセンサーを指定し、 SD カードに反映してください。</span>
@@ -291,14 +306,14 @@
 
   <div class="btn-group">
     <button class="cta" id="sdBtn" type="button" hidden>
-      <span data-lang="ja">📂 SD カードに直接書き込む</span>
-      <span data-lang="en">📂 Write directly to the SD card</span>
+      <span data-lang="ja">📂 SD カードに直接追記する</span>
+      <span data-lang="en">📂 Append directly to the SD card</span>
     </button>
     <button class="cta" id="copyBtn" type="button">
       <span data-lang="ja">📋 クリップボードにコピー</span>
       <span data-lang="en">📋 Copy to clipboard</span>
     </button>
-    <a class="cta secondary" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">
+    <a class="cta secondary" id="dlBtn" href="#" download="sodat-user-data-snippet.yaml">
       <span data-lang="ja">ファイルとしてダウンロード</span>
       <span data-lang="en">Download as file</span>
     </a>
@@ -306,13 +321,13 @@
   </div>
 
   <p class="small" id="sdHelp" hidden>
-    <span data-lang="ja">📂 ボタンは SD カードの <code>bootfs</code> フォルダをブラウザが直接読み書きします。ブラウザの権限ダイアログで「許可」を選んでください (このタブを閉じれば失効)。</span>
-    <span data-lang="en">📂 lets the browser read and write the SD card's <code>bootfs</code> folder directly. Grant permission when the browser asks (revoked when this tab closes).</span>
+    <span data-lang="ja">📂 ボタンは SD カードの <code>bootfs</code> フォルダをブラウザが直接読み書きします (<code>user-data</code> の末尾に追記)。ブラウザの権限ダイアログで「許可」を選んでください (このタブを閉じれば失効)。</span>
+    <span data-lang="en">📂 lets the browser read and append to the SD card's <code>bootfs/user-data</code> directly. Grant permission when the browser asks (revoked when this tab closes).</span>
   </p>
 
   <p class="small" id="sdUnsupported" hidden>
-    <span data-lang="ja">⚠ お使いのブラウザは 📂 直接書き込みに対応していません (Chrome / Edge / Safari 17.4 以降で対応)。<strong>📋 クリップボードにコピー</strong>を使い、<code>bootfs/firstrun.sh</code> に手動で貼り付けてください。</span>
-    <span data-lang="en">⚠ Your browser doesn't support 📂 direct writing (supported in Chrome / Edge / Safari 17.4+). Use <strong>📋 Copy to clipboard</strong> instead, and paste manually into <code>bootfs/firstrun.sh</code>.</span>
+    <span data-lang="ja">⚠ お使いのブラウザは 📂 直接書き込みに対応していません (Chrome / Edge / Safari 17.4 以降で対応)。<strong>📋 クリップボードにコピー</strong>を使い、<code>bootfs/user-data</code> の末尾に手動で貼り付けてください。</span>
+    <span data-lang="en">⚠ Your browser doesn't support 📂 direct writing (supported in Chrome / Edge / Safari 17.4+). Use <strong>📋 Copy to clipboard</strong> instead, and paste manually at the end of <code>bootfs/user-data</code>.</span>
   </p>
 
   <div data-lang="ja">
@@ -321,14 +336,14 @@
       <li>microSD を PC に挿す (Mac なら自動で <code>bootfs</code> ボリュームがマウント)</li>
       <li>上の <strong>📂 ボタン</strong>をクリック → フォルダ選択ダイアログで <code>bootfs</code> を選ぶ</li>
       <li>ブラウザの「許可」を押す</li>
-      <li>「✓ SD に書き込み完了」を確認したら Step 4 へ</li>
+      <li>「✓ SD に追記完了」を確認したら Step 4 へ</li>
     </ol>
 
     <h3>方法 B (📋 手動ペースト)</h3>
     <ol>
       <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
-      <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
-      <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>📋 Copy</strong> で取得した snippet を貼り付ける</li>
+      <li><code>user-data</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
+      <li><strong>ファイルの末尾</strong>に、<strong>📋 Copy</strong> で取得した snippet をそのまま貼り付ける (cloud-init は YAML なので、新しい <code>write_files:</code> と <code>runcmd:</code> ブロックを最後に並べる)</li>
       <li>保存 (改行コードは LF のまま、CRLF に変えない) → Step 4 へ</li>
     </ol>
   </div>
@@ -338,14 +353,14 @@
       <li>Insert the microSD into your PC (on macOS the <code>bootfs</code> volume mounts automatically).</li>
       <li>Click the <strong>📂 button</strong> above → in the folder picker, select <code>bootfs</code>.</li>
       <li>Click Allow on the browser permission prompt.</li>
-      <li>When you see "✓ Wrote firstrun.sh", continue to Step 4.</li>
+      <li>When you see "✓ Appended to user-data", continue to Step 4.</li>
     </ol>
 
     <h3>Method B (📋 manual paste)</h3>
     <ol>
       <li>Insert the microSD; open the <code>bootfs</code> partition.</li>
-      <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
-      <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet you grabbed with <strong>📋 Copy to clipboard</strong>.</li>
+      <li>Open <code>user-data</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
+      <li><strong>At the end of the file</strong>, paste the snippet you grabbed with <strong>📋 Copy to clipboard</strong>. It contains two top-level YAML blocks (<code>write_files:</code> and <code>runcmd:</code>) that simply tack onto the existing document.</li>
       <li>Save the file (keep LF line endings, not CRLF), then continue to Step 4.</li>
     </ol>
   </div>
@@ -442,12 +457,12 @@ sudo systemctl status sensor_sfc</code></pre>
       <span data-lang="en">Troubleshooting</span>
     </summary>
     <ul data-lang="ja">
-      <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
+      <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> および cloud-init ログ <code>/var/log/cloud-init-output.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
       <li><strong><code>sNN.local</code> / <code>aNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
       <li><strong>もう一度やり直したい:</strong> SD を PC で再フォーマットして Step 2 から。</li>
     </ul>
     <ul data-lang="en">
-      <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and <code>journalctl -u sensor_sfc -n 200</code>.</li>
+      <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and the cloud-init log <code>/var/log/cloud-init-output.log</code>; also <code>journalctl -u sensor_sfc -n 200</code>.</li>
       <li><strong>Can't reach <code>sNN.local</code> / <code>aNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
       <li><strong>Want to start over:</strong> reformat the SD card on your PC and repeat from Step 2.</li>
     </ul>
@@ -577,24 +592,33 @@ function buildApiUrl(user, sensorsParam, token) {
        + `&token=${encodeURIComponent(token)}`;
 }
 
-function spliceFirstrun(existing, snippet) {
-  const beginRe = /^# >>> BEGIN PASTE.*$/m;
-  const endRe = /^# <<< END PASTE.*$/m;
+// Append the cloud-init snippet to an existing user-data file. Idempotent:
+// if a previous SODAT block (bounded by the BEGIN/END SODAT PASTE markers)
+// is present, replace it. After stripping any old block, refuse to append
+// if user-data still has its own top-level `write_files:` or `runcmd:`
+// keys — those would silently clobber ours under YAML merge rules.
+function spliceUserData(existing, snippet) {
+  const beginRe = /^# >>> BEGIN SODAT PASTE.*$/m;
+  const endRe = /^# <<< END SODAT PASTE.*$/m;
   const beginMatch = existing.match(beginRe);
   const endMatch = existing.match(endRe);
+
+  let stripped = existing;
   if (beginMatch && endMatch && beginMatch.index < endMatch.index) {
-    const before = existing.slice(0, beginMatch.index);
+    const before = existing.slice(0, beginMatch.index).replace(/\n+$/, '');
     const afterEnd = existing.slice(endMatch.index + endMatch[0].length).replace(/^\n+/, '');
-    return before + snippet.trimEnd() + '\n\n' + afterEnd;
+    stripped = afterEnd ? before + '\n\n' + afterEnd : before + '\n';
   }
-  const insertRe = /^(rm -f \/boot(?:\/firmware)?\/firstrun\.sh.*|exit 0\s*)$/m;
-  const insertMatch = existing.match(insertRe);
-  if (insertMatch) {
-    return existing.slice(0, insertMatch.index)
-         + snippet.trimEnd() + '\n\n'
-         + existing.slice(insertMatch.index);
+
+  if (/^write_files:/m.test(stripped) || /^runcmd:/m.test(stripped)) {
+    throw new Error(t(
+      'user-data に既に write_files: または runcmd: のトップレベルブロックがあります。Sodat snippet と YAML キーが衝突するため、自動追記できません。Pi Imager で OS カスタマイズ以外の追加設定をしていないか確認してください。',
+      'user-data already has a top-level write_files: or runcmd: block. Cannot auto-append because the YAML keys would conflict with the Sodat snippet. Check whether you added extra cloud-init settings in Pi Imager beyond the standard customisation tabs.'
+    ));
   }
-  return existing.trimEnd() + '\n\n' + snippet.trimEnd() + '\n';
+
+  const base = stripped.replace(/\n+$/, '') + '\n\n';
+  return base + snippet.trimEnd() + '\n';
 }
 
 let checkboxes = [];
@@ -708,7 +732,7 @@ async function onCopy() {
     const text = await resp.text();
     await navigator.clipboard.writeText(text);
     copyBtn.textContent = t('✓ コピー完了', '✓ Copied');
-    copyFeedback.textContent = t('bootfs/firstrun.sh に貼り付けてください。', 'Now paste into bootfs/firstrun.sh.');
+    copyFeedback.textContent = t('bootfs/user-data の末尾に貼り付けてください。', 'Now paste at the end of bootfs/user-data.');
     copyFeedback.classList.add('show');
     setTimeout(() => {
       copyBtn.innerHTML = original;
@@ -754,14 +778,14 @@ async function onWriteSd() {
       throw e;
     }
 
-    sdBtn.textContent = t('firstrun.sh 読み込み中…', 'Reading firstrun.sh…');
+    sdBtn.textContent = t('user-data 読み込み中…', 'Reading user-data…');
     let fileHandle;
     try {
-      fileHandle = await dirHandle.getFileHandle('firstrun.sh', { create: false });
+      fileHandle = await dirHandle.getFileHandle('user-data', { create: false });
     } catch (e) {
       throw new Error(t(
-        `「${dirHandle.name}」の中に firstrun.sh が見つかりません。bootfs パーティションを選択していますか? (Pi Imager の OS カスタマイズが実行されていますか?)`,
-        `Could not find firstrun.sh in "${dirHandle.name}". Did you pick the bootfs partition? (Also: did Pi Imager's OS customisation actually run?)`
+        `「${dirHandle.name}」の中に user-data が見つかりません。bootfs パーティションを選択していますか? (Pi Imager v2 で OS カスタマイズを適用 + WRITE しましたか? v1.x の場合は firstrun.sh 方式なので Pi Imager を v2.0+ に更新してください。)`,
+        `Could not find user-data in "${dirHandle.name}". Did you pick the bootfs partition, and did you actually click WRITE in Pi Imager v2 with customisation applied? (Pi Imager v1.x uses firstrun.sh instead — upgrade to v2.0+.)`
       ));
     }
 
@@ -770,15 +794,15 @@ async function onWriteSd() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
     const snippet = await resp.text();
 
-    sdBtn.textContent = t('書き込み中…', 'Writing…');
+    sdBtn.textContent = t('追記中…', 'Appending…');
     const existingFile = await fileHandle.getFile();
     const existing = await existingFile.text();
-    const updated = spliceFirstrun(existing, snippet);
+    const updated = spliceUserData(existing, snippet);
     const writable = await fileHandle.createWritable();
     await writable.write(updated);
     await writable.close();
 
-    sdBtn.textContent = t('✓ SD に書き込み完了', '✓ Wrote firstrun.sh');
+    sdBtn.textContent = t('✓ SD に追記完了', '✓ Appended to user-data');
     copyFeedback.textContent = t('SD カードを取り出して Raspberry Pi に挿してください (Step 4 へ)。', 'Eject the SD card and insert it into the Pi (continue to Step 4).');
     copyFeedback.classList.add('show');
     setTimeout(() => {
