@@ -7,80 +7,38 @@
 <style>
   :root {
     color-scheme: light dark;
-    --leaf:      #15803d;
-    --leaf-hi:   #166534;
-    --leaf-soft: #86efac;
-    --muted:     #94a3b8;
+    --leaf:      #15803d;   /* CTA — deep agricultural green (green-700) */
+    --leaf-hi:   #166534;   /* CTA hover (green-800) */
+    --leaf-soft: #86efac;   /* light leaf accent (green-300) */
   }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
   h1 { border-bottom: 3px solid var(--leaf); padding-bottom: .3rem; }
   h1 .leaf { color: var(--leaf); margin-right: .3em; }
   .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 600; letter-spacing: .02em; }
-  h2 { margin-top: 1.5rem; }
+  h2 { margin-top: 2rem; }
   a { color: var(--leaf); }
   a:hover { color: var(--leaf-hi); }
   code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
   code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 4px; }
   pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
-  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); z-index: 5; }
+  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); }
   @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
-  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; font: inherit; }
+  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; }
   .lang-toggle button:hover { background: rgba(21,128,61,.1); }
-
-  /* --- Step indicator -------------------------------------------------- */
-  .stepper { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
-  .stepper li { display: contents; }
-  .stepper button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .5rem .3rem; position: relative; color: inherit; font: inherit; }
-  .stepper button:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; border-radius: 6px; }
-  .stepper .circle { width: 2.2rem; height: 2.2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; border: 2px solid var(--muted); color: var(--muted); background: transparent; transition: all .2s; }
-  .stepper .ttl { font-size: .82rem; font-weight: 600; color: var(--muted); text-align: center; line-height: 1.25; }
-  .stepper [data-state="current"] .circle { border-color: var(--leaf); color: var(--leaf); background: rgba(21,128,61,.08); box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
-  .stepper [data-state="current"] .ttl { color: var(--leaf); }
-  .stepper [data-state="done"] .circle { border-color: var(--leaf); background: var(--leaf); color: #fff; }
-  .stepper [data-state="done"] .circle::before { content: "✓"; }
-  .stepper [data-state="done"] .circle .num { display: none; }
-  .stepper [data-state="done"] .ttl { color: var(--leaf); }
-  .stepper button:hover .circle { transform: scale(1.05); }
-  .stepper button[aria-disabled="true"] { cursor: not-allowed; }
-  .stepper button[aria-disabled="true"]:hover .circle { transform: none; }
-  /* Connecting line between steps */
-  .stepper li:not(:last-child) button::after {
-    content: ""; position: absolute; top: 1.15rem; left: calc(50% + 1.4rem); right: calc(-50% + 1.4rem); height: 2px; background: var(--muted); z-index: -1;
-  }
-  .stepper [data-state="done"] + li button::after,
-  .stepper li:has(+ li [data-state="current"]) button::after,
-  .stepper li:has(+ li [data-state="done"]) button::after { background: var(--leaf); }
-
-  /* --- Step panels (only one visible at a time) ------------------------ */
-  .step { display: none; }
-  .step.active { display: block; animation: fade .2s ease-out; }
-  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-
   label { display: block; margin: 1rem 0 .3rem; font-weight: 600; }
   input[type=text] { width: 100%; padding: .55rem .7rem; box-sizing: border-box; border-radius: 6px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; font: inherit; }
   input[type=text]:focus { outline: none; border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(21,128,61,.15); }
-
-  .cta { display: inline-block; padding: .65rem 1.2rem; font-size: 1rem; font-weight: 600; background: var(--leaf); color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; font-family: inherit; }
+  .cta { display: inline-block; padding: .7rem 1.3rem; font-size: 1rem; font-weight: 600; background: var(--leaf); color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; }
   .cta:hover { background: var(--leaf-hi); color: #fff; }
-  .cta[aria-disabled="true"], .cta:disabled { background: var(--muted); cursor: not-allowed; pointer-events: none; }
-  .cta.secondary { background: transparent; color: var(--leaf); border: 2px solid var(--leaf); padding: calc(.65rem - 2px) calc(1.2rem - 2px); }
-  .cta.secondary:hover { background: rgba(21,128,61,.1); color: var(--leaf-hi); border-color: var(--leaf-hi); }
-  .cta.secondary[aria-disabled="true"], .cta.secondary:disabled { color: var(--muted); border-color: var(--muted); background: transparent; }
-
-  .nav-row { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.2); }
-  .nav-row .spacer { flex: 1; }
-
-  .btn-group { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: .6rem 0; }
-  .copy-feedback { display: inline-block; margin-left: .8rem; color: var(--leaf); font-weight: 600; opacity: 0; transition: opacity .15s; }
-  .copy-feedback.show { opacity: 1; }
-
+  .cta[aria-disabled="true"] { background: #94a3b8; cursor: not-allowed; pointer-events: none; }
   .callout { border-left: 4px solid #10b981; padding: .6rem 1rem; background: rgba(16,185,129,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
   .callout.warn { border-color: #f59e0b; background: rgba(245,158,11,.1); }
   .small { font-size: .9em; opacity: .8; }
   .status { margin: .8rem 0; font-weight: 600; min-height: 1.4em; }
   .status.err { color: #dc2626; }
-
-  /* --- Sensor checkboxes --------------------------------------------- */
+  [data-lang] { display: none; }
+  [data-lang].active { display: block; }
+  kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
   .sensor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .35rem .8rem; margin: .6rem 0 1rem; }
   .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid rgba(127,127,127,.3); border-radius: 5px; cursor: pointer; user-select: none; transition: background .15s, border-color .15s; }
   .sensor-row:hover { background: rgba(21,128,61,.08); border-color: rgba(21,128,61,.4); }
@@ -88,16 +46,15 @@
   .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; accent-color: var(--leaf); }
   .sensor-row .label { font-weight: 600; }
   .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
-
-  /* --- Token fallback (manual paste) --------------------------------- */
+  .btn-group { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: .6rem 0; }
+  .cta.secondary { background: transparent; color: var(--leaf); border: 2px solid var(--leaf); padding: calc(.7rem - 2px) calc(1.3rem - 2px); }
+  .cta.secondary:hover { background: rgba(21,128,61,.1); color: var(--leaf-hi); border-color: var(--leaf-hi); }
+  .cta.secondary[aria-disabled="true"] { color: #94a3b8; border-color: #94a3b8; background: transparent; }
   .token-fallback { border: 1px solid rgba(245,158,11,.4); background: rgba(245,158,11,.06); border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
   .token-fallback summary { font-weight: 600; cursor: pointer; }
   .token-fallback input { margin-top: .5rem; }
-
-  /* --- i18n: show only the currently-selected language --- */
-  [data-lang] { display: none; }
-  html[lang="ja"] [data-lang="ja"],
-  html[lang="en"] [data-lang="en"] { display: revert; }
+  .copy-feedback { display: inline-block; margin-left: .8rem; color: var(--leaf); font-weight: 600; opacity: 0; transition: opacity .15s; }
+  .copy-feedback.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -105,216 +62,168 @@
 <div class="lang-toggle">
   <button onclick="setLang('ja')">日本語</button>
   <button onclick="setLang('en')">English</button>
-  <a href="/" style="margin-left: 1rem; font-size: .9em;">← <span data-lang="ja">ガイド</span><span data-lang="en">Guide</span></a>
+  <a href="/" style="margin-left: 1rem; font-size: .9em;">← ガイド / Guide</a>
 </div>
 
-<h1><span class="leaf" aria-hidden="true">🌱</span><span data-lang="ja">Sodat ファーストラン スニペット</span><span data-lang="en">Sodat firstrun snippet</span></h1>
-<p class="tagline">
-  <span data-lang="ja">SD カード 1 枚で農業センサー Pi を立ち上げ</span>
-  <span data-lang="en">Provision an agricultural-sensor Pi from one SD card</span>
+<!-- ============================== Japanese ============================== -->
+<section data-lang="ja" class="active">
+
+<h1><span class="leaf" aria-hidden="true">🌱</span>firstrun スニペット ダウンロード</h1>
+<p class="tagline">SD カード 1 枚で農業センサー Pi を立ち上げ</p>
+
+<div class="callout">
+  サービスアカウントキーは Vercel 側で保管済みです (環境変数 <code>SODAT_SERVICE_ACCOUNT_JSON_B64</code>)。研究者は鍵ファイルを持ち歩く必要がなく、ユーザ名を入力してダウンロードするだけです。
+</div>
+
+<h2>1. Pi Imager で設定するユーザー名</h2>
+
+<label for="user">ユーザー名 (小文字 + 数字 + アンダースコア・ハイフン)</label>
+<input type="text" id="user" value="sodat" placeholder="例: sodat" maxlength="32">
+
+<h2>2. インストールするセンサーを選択</h2>
+
+<p class="small">この Pi に物理的に接続するセンサーだけを残してください。未選択のセンサーは config.yaml から除外され、ログにエラーが出ません。デフォルトは全選択。</p>
+
+<div class="sensor-list" id="sensorList">
+  <!-- populated by JS from KNOWN_SENSORS -->
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="btn-group">
+  <button class="cta" id="sdBtn" type="button" hidden>📂 SD カードに直接書き込む</button>
+  <button class="cta" id="copyBtn" type="button">📋 クリップボードにコピー</button>
+  <a class="cta secondary" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">ファイルとしてダウンロード</a>
+  <span class="copy-feedback" id="copyFeedback" aria-live="polite"></span>
+</div>
+<p class="small" id="sdHelp" hidden>
+  📂 ボタンは、SD カードの <code>bootfs</code> フォルダをブラウザが直接読み書きします。
+  ブラウザの権限ダイアログで「許可」を選んでください (このタブを閉じれば失効)。
 </p>
 
-<!-- ============================== Step indicator =============================== -->
-<ol class="stepper" id="stepper">
-  <li>
-    <button type="button" data-goto="1" data-state="current">
-      <span class="circle"><span class="num">1</span></span>
-      <span class="ttl">
-        <span data-lang="ja">ユーザー名</span>
-        <span data-lang="en">Username</span>
-      </span>
-    </button>
-  </li>
-  <li>
-    <button type="button" data-goto="2" data-state="future">
-      <span class="circle"><span class="num">2</span></span>
-      <span class="ttl">
-        <span data-lang="ja">センサー選択</span>
-        <span data-lang="en">Sensors</span>
-      </span>
-    </button>
-  </li>
-  <li>
-    <button type="button" data-goto="3" data-state="future">
-      <span class="circle"><span class="num">3</span></span>
-      <span class="ttl">
-        <span data-lang="ja">SD 書き込み</span>
-        <span data-lang="en">Write to SD</span>
-      </span>
-    </button>
-  </li>
+<details class="token-fallback" id="tokenFallback">
+  <summary>トークン無しでこのページを開いてしまった場合 (手動入力)</summary>
+  <p class="small">管理者から受け取った <code>token=</code> の値をここに貼り付けて「適用」を押すと、URL にトークンを付けてリロードします。次回からは管理者から受け取った URL 全体で開く方が手間が無いので、URL もブックマークしておいてください。</p>
+  <label for="tokenInput">アクセストークン</label>
+  <input type="text" id="tokenInput" autocomplete="off" spellcheck="false" placeholder="lab admin から受け取った文字列">
+  <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('')">適用してリロード</button></p>
+</details>
+
+<h2>3. SD カードに反映する</h2>
+
+<p><strong>方法 A (推奨・自動): 📂 SD カードに直接書き込む</strong></p>
+<ol>
+  <li>microSD を PC に挿す (Mac なら自動で <code>bootfs</code> ボリュームがマウント)</li>
+  <li>上の <strong>📂 ボタン</strong>をクリック → フォルダ選択ダイアログで <code>bootfs</code> を選ぶ</li>
+  <li>ブラウザの「許可」を押す</li>
+  <li>「✓ SD に書き込み完了」の表示を確認したら SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
+</ol>
+<p class="small">※ Chrome / Edge / Safari 17.4 以降で対応。古い Safari / Firefox では 📂 ボタンが表示されないので、下の方法 B を使ってください。</p>
+
+<p style="margin-top:1.2rem"><strong>方法 B (手動): 📋 Copy + テキストエディタでペースト</strong></p>
+<ol>
+  <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
+  <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
+  <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>「📋 クリップボードにコピー」</strong> で取得した snippet を貼り付ける</li>
+  <li>保存 (改行コードは LF のまま、CRLF に変えない)</li>
+  <li>SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
 </ol>
 
-<!-- ============================== Step 1: Username ============================== -->
-<section class="step" data-step="1">
-  <h2><span data-lang="ja">Pi Imager で設定したユーザー名</span><span data-lang="en">The Pi Imager username</span></h2>
-
-  <p>
-    <span data-lang="ja">Pi Imager の「OS をカスタマイズ」で設定したユーザー名と同じものを入れてください (この snippet が初回起動でそのユーザーのホームに service_account.json を配置します)。</span>
-    <span data-lang="en">Enter the username you set in Pi Imager's "OS customisation" panel. The snippet will place service_account.json into that user's home on first boot.</span>
-  </p>
-
-  <label for="user">
-    <span data-lang="ja">ユーザー名 (小文字 + 数字 + アンダースコア・ハイフン)</span>
-    <span data-lang="en">Username (lowercase + digits + <code>_</code> / <code>-</code>)</span>
-  </label>
-  <input type="text" id="user" value="sodat" placeholder="sodat" maxlength="32" autocomplete="off">
-
-  <div class="status" id="userStatus"></div>
-
-  <div class="nav-row">
-    <span class="spacer"></span>
-    <button class="cta" type="button" data-next="2">
-      <span data-lang="ja">次へ: センサー選択 →</span>
-      <span data-lang="en">Next: pick sensors →</span>
-    </button>
-  </div>
-</section>
-
-<!-- ============================== Step 2: Sensors =============================== -->
-<section class="step" data-step="2">
-  <h2><span data-lang="ja">インストールするセンサーを選択</span><span data-lang="en">Pick sensors to install</span></h2>
-
-  <p class="small">
-    <span data-lang="ja">この Pi に物理的に接続するセンサーだけを残してください。未選択のセンサーは config.yaml から除外され、ログにエラーが出ません。デフォルトは全選択。</span>
-    <span data-lang="en">Check only the sensors physically connected to this Pi. Unchecked sensors are removed from config.yaml so they don't generate runtime errors. Defaults to all sensors selected.</span>
-  </p>
-
-  <div class="sensor-list" id="sensorList"></div>
-
-  <div class="status" id="sensorStatus"></div>
-
-  <div class="nav-row">
-    <button class="cta secondary" type="button" data-back="1">
-      <span data-lang="ja">← 戻る</span>
-      <span data-lang="en">← Back</span>
-    </button>
-    <span class="spacer"></span>
-    <button class="cta" type="button" data-next="3">
-      <span data-lang="ja">次へ: SD カードへ書き込み →</span>
-      <span data-lang="en">Next: write to SD card →</span>
-    </button>
-  </div>
-</section>
-
-<!-- ============================== Step 3: SD write ============================== -->
-<section class="step" data-step="3">
-  <h2><span data-lang="ja">SD カードに反映する</span><span data-lang="en">Apply to the SD card</span></h2>
-
-  <div class="status" id="writeStatus"></div>
-
-  <div class="btn-group">
-    <button class="cta" id="sdBtn" type="button" hidden>
-      <span data-lang="ja">📂 SD カードに直接書き込む</span>
-      <span data-lang="en">📂 Write directly to the SD card</span>
-    </button>
-    <button class="cta" id="copyBtn" type="button">
-      <span data-lang="ja">📋 クリップボードにコピー</span>
-      <span data-lang="en">📋 Copy to clipboard</span>
-    </button>
-    <a class="cta secondary" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">
-      <span data-lang="ja">ファイルとしてダウンロード</span>
-      <span data-lang="en">Download as file</span>
-    </a>
-    <span class="copy-feedback" id="copyFeedback" aria-live="polite"></span>
-  </div>
-
-  <p class="small" id="sdHelp" hidden>
-    <span data-lang="ja">📂 ボタンは、SD カードの <code>bootfs</code> フォルダをブラウザが直接読み書きします。ブラウザの権限ダイアログで「許可」を選んでください (このタブを閉じれば失効)。</span>
-    <span data-lang="en">📂 lets the browser read and write the SD card's <code>bootfs</code> folder directly. Grant permission when the browser asks (revoked when this tab closes).</span>
-  </p>
-
-  <div data-lang="ja">
-    <h3>方法 A (推奨): 📂 SD カードに直接書き込む</h3>
-    <ol>
-      <li>microSD を PC に挿す (Mac なら自動で <code>bootfs</code> ボリュームがマウント)</li>
-      <li>上の <strong>📂 ボタン</strong>をクリック → フォルダ選択ダイアログで <code>bootfs</code> を選ぶ</li>
-      <li>ブラウザの「許可」を押す</li>
-      <li>「✓ SD に書き込み完了」を確認したら SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
-    </ol>
-    <p class="small">※ Chrome / Edge / Safari 17.4 以降で対応。古い Safari / Firefox では 📂 ボタンが表示されないので、下の方法 B を使ってください。</p>
-
-    <h3>方法 B (手動): 📋 Copy + テキストエディタでペースト</h3>
-    <ol>
-      <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
-      <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
-      <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>📋 Copy</strong> で取得した snippet を貼り付ける</li>
-      <li>保存 (改行コードは LF のまま、CRLF に変えない)</li>
-      <li>SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
-    </ol>
-  </div>
-  <div data-lang="en">
-    <h3>Method A (recommended): 📂 Write directly to the SD card</h3>
-    <ol>
-      <li>Insert the microSD into your PC (on macOS the <code>bootfs</code> volume mounts automatically).</li>
-      <li>Click the <strong>📂 button</strong> above → in the folder picker, select <code>bootfs</code>.</li>
-      <li>Click Allow on the browser permission prompt.</li>
-      <li>When you see "✓ Wrote firstrun.sh", eject the SD card, insert it into the Pi, and power on.</li>
-    </ol>
-    <p class="small">Supported in Chrome / Edge / Safari 17.4+. On older Safari / Firefox the 📂 button is hidden; use Method B below.</p>
-
-    <h3>Method B (manual): 📋 Copy + paste in a text editor</h3>
-    <ol>
-      <li>Insert the microSD into your PC; open the <code>bootfs</code> partition.</li>
-      <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
-      <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet you grabbed with <strong>📋 Copy to clipboard</strong>.</li>
-      <li>Save the file. Keep line endings as LF (don't let your editor switch to CRLF).</li>
-      <li>Safely eject the SD card, insert it into the Pi, power on.</li>
-    </ol>
-  </div>
-
-  <div class="callout warn">
-    <span data-lang="ja">ダウンロード / コピーした snippet にはプロジェクトの service_account.json (base64) が含まれます。チャットやメール本文に貼らないでください。書き終わったら PC 上のダウンロードファイルも削除推奨。</span>
-    <span data-lang="en">The snippet (downloaded or copied) embeds the project's service_account.json (base64). Don't paste it into chat or email. Delete the downloaded copy from your PC once the SD card is written.</span>
-  </div>
-
-  <div class="nav-row">
-    <button class="cta secondary" type="button" data-back="2">
-      <span data-lang="ja">← 戻る</span>
-      <span data-lang="en">← Back</span>
-    </button>
-    <span class="spacer"></span>
-  </div>
-</section>
-
-<!-- ============================== Token fallback ================================ -->
-<details class="token-fallback" id="tokenFallback">
-  <summary>
-    <span data-lang="ja">トークン無しでこのページを開いてしまった場合 (手動入力)</span>
-    <span data-lang="en">Opened this page without a token? (manual entry)</span>
-  </summary>
-  <p class="small">
-    <span data-lang="ja">管理者から受け取った <code>token=</code> の値をここに貼り付けて「適用」を押すと、URL にトークンを付けてリロードします。</span>
-    <span data-lang="en">Paste the <code>token=</code> value you got from the lab admin and click Apply. The page will reload with the token attached.</span>
-  </p>
-  <label for="tokenInput">
-    <span data-lang="ja">アクセストークン</span>
-    <span data-lang="en">Access token</span>
-  </label>
-  <input type="text" id="tokenInput" autocomplete="off" spellcheck="false">
-  <p style="margin-top:.7rem">
-    <button class="cta" type="button" onclick="applyToken()">
-      <span data-lang="ja">適用してリロード</span>
-      <span data-lang="en">Apply and reload</span>
-    </button>
-  </p>
-</details>
+<div class="callout warn">
+  ダウンロードした <code>.sh</code> ファイルにはプロジェクトの service_account.json (base64) が含まれます。チャットやメール本文に貼らないでください。SD へ書き終わったら PC 上のダウンロードファイルも削除推奨。
+</div>
 
 <details>
-  <summary>
-    <span data-lang="ja">仕組み: 鍵がどこにあるか</span>
-    <span data-lang="en">How it works: where the key lives</span>
-  </summary>
+  <summary>仕組み: 鍵がどこにあるか</summary>
   <p class="small">
-    <span data-lang="ja">Vercel 上の Serverless Function (<code>/api/firstrun</code>) が、環境変数の SA キーと URL の <code>user</code> / <code>sensors</code> / <code>token</code> を <code>firstrun_snippet.sh.template</code> に差し込み、完成済みの <code>.sh</code> を返します。アクセストークン検証は <code>node:crypto.timingSafeEqual</code> による定数時間比較。</span>
-    <span data-lang="en">A Vercel Serverless Function (<code>/api/firstrun</code>) injects the env-var SA key and the URL's <code>user</code> / <code>sensors</code> / <code>token</code> into <code>firstrun_snippet.sh.template</code> and returns a finished <code>.sh</code>. Token check is constant-time via <code>node:crypto.timingSafeEqual</code>.</span>
+    Vercel 上の Serverless Function (<code>/api/firstrun</code>) が、環境変数の SA キーとリクエストの <code>user</code> パラメータを <code>firstrun_snippet.sh.template</code> に差し込み、完成済みの <code>.sh</code> を返します。このページはアクセス制限下にあるため (Vercel Deployment Protection)、URL を知っているだけでは鍵を取り出せません。
   </p>
 </details>
 
+</section>
+
+<!-- ============================== English ============================== -->
+<section data-lang="en">
+
+<h1><span class="leaf" aria-hidden="true">🌱</span>firstrun snippet download</h1>
+<p class="tagline">Provision an agricultural-sensor Pi from one SD card</p>
+
+<div class="callout">
+  The service-account key is stored on Vercel as an environment variable (<code>SODAT_SERVICE_ACCOUNT_JSON_B64</code>). You don't need to carry the key file around — just enter the Pi Imager username and download.
+</div>
+
+<h2>1. The Pi Imager username</h2>
+
+<label for="userEn">Username (lowercase + digits + <code>_</code>/<code>-</code>)</label>
+<input type="text" id="userEn" value="sodat" placeholder="e.g. sodat" maxlength="32">
+
+<h2>2. Pick sensors to install</h2>
+
+<p class="small">Check only the sensors physically connected to this Pi. Unchecked sensors are removed from config.yaml so they don't generate runtime errors. Defaults to all sensors selected.</p>
+
+<div class="sensor-list" id="sensorListEn">
+  <!-- populated by JS from KNOWN_SENSORS -->
+</div>
+
+<div class="status" id="statusEn"></div>
+
+<div class="btn-group">
+  <button class="cta" id="sdBtnEn" type="button" hidden>📂 Write directly to the SD card</button>
+  <button class="cta" id="copyBtnEn" type="button">📋 Copy to clipboard</button>
+  <a class="cta secondary" id="dlBtnEn" href="#" download="sodat-firstrun-snippet.sh">Download as file</a>
+  <span class="copy-feedback" id="copyFeedbackEn" aria-live="polite"></span>
+</div>
+<p class="small" id="sdHelpEn" hidden>
+  📂 lets the browser read and write the SD card's <code>bootfs</code> folder directly.
+  Grant permission when the browser asks (revoked when this tab closes).
+</p>
+
+<details class="token-fallback" id="tokenFallbackEn">
+  <summary>Opened this page without a token? (manual entry)</summary>
+  <p class="small">Paste the <code>token=</code> value you got from the lab admin and click Apply. The page will reload with the token attached. Bookmark the resulting URL so you don't need to do this again.</p>
+  <label for="tokenInputEn">Access token</label>
+  <input type="text" id="tokenInputEn" autocomplete="off" spellcheck="false" placeholder="the string the lab admin gave you">
+  <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('En')">Apply and reload</button></p>
+</details>
+
+<h2>3. Apply to the SD card</h2>
+
+<p><strong>Method A (recommended, automatic): 📂 Write directly to the SD card</strong></p>
+<ol>
+  <li>Insert the microSD into your PC (on macOS the <code>bootfs</code> volume mounts automatically).</li>
+  <li>Click the <strong>📂 button</strong> above → in the folder picker, select <code>bootfs</code>.</li>
+  <li>Click Allow on the browser permission prompt.</li>
+  <li>When you see "✓ Wrote firstrun.sh", eject the SD card, insert it into the Pi, and power on.</li>
+</ol>
+<p class="small">Supported in Chrome / Edge / Safari 17.4+. On older Safari / Firefox the 📂 button is hidden; use Method B below.</p>
+
+<p style="margin-top:1.2rem"><strong>Method B (manual): 📋 Copy + paste in a text editor</strong></p>
+<ol>
+  <li>Insert the microSD into your PC; open the <code>bootfs</code> partition.</li>
+  <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
+  <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet you grabbed with <strong>📋 Copy to clipboard</strong>.</li>
+  <li>Save the file. Keep line endings as LF (don't let your editor switch to CRLF).</li>
+  <li>Safely eject the SD card, insert it into the Pi, power on.</li>
+</ol>
+
+<div class="callout warn">
+  The downloaded <code>.sh</code> file contains the project's <code>service_account.json</code> (base64). Don't paste it into chat or email. Delete the downloaded copy from your PC after the SD card is written.
+</div>
+
+<details>
+  <summary>How it works: where the key lives</summary>
+  <p class="small">
+    A Vercel Serverless Function at <code>/api/firstrun</code> injects the environment-variable SA key and the request's <code>user</code> parameter into <code>firstrun_snippet.sh.template</code> and returns a finished <code>.sh</code>. This page is behind Vercel Deployment Protection, so simply knowing the URL doesn't expose the key.
+  </p>
+</details>
+
+</section>
+
 <script>
-// ============================== i18n ==============================
 function setLang(lang) {
-  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.classList.toggle('active', el.dataset.lang === lang);
+  });
   try { localStorage.setItem('sodatLang', lang); } catch (e) {}
 }
 (function () {
@@ -324,108 +233,37 @@ function setLang(lang) {
   setLang(initial);
 })();
 
-// ============================== Constants ==============================
+// Sensor types the project currently supports.
 // MUST stay in sync with KNOWN_SENSORS in api/firstrun.js and with
-// @register_sensor(...) decorators in src/sensors/*.py.
+// the @register_sensor(...) decorators in src/sensors/*.py.
+// (Mock is intentionally excluded — it's a test fixture, not a field sensor.)
 const KNOWN_SENSORS = [
-  { type: 'BME280',     ja: 'BME280',      en: 'BME280',      descJa: 'I2C 温湿度・気圧',     descEn: 'I2C temp/humidity/pressure' },
-  { type: 'TDSN7200',   ja: 'TDSN-7200',   en: 'TDSN-7200',   descJa: 'USB 温湿度・気圧',     descEn: 'USB temp/humidity/pressure' },
-  { type: 'TDSN7300',   ja: 'TDSN-7300',   en: 'TDSN-7300',   descJa: 'USB CO2・温湿度',      descEn: 'USB CO2/temp/humidity' },
-  { type: 'IWS660CS',   ja: 'IWS-660CS',   en: 'IWS-660CS',   descJa: 'USB 照度',              descEn: 'USB illuminance' },
-  { type: 'Camera',     ja: 'Camera',      en: 'Camera',      descJa: 'USB Webカメラ',          descEn: 'USB webcam' },
+  { type: 'BME280',     ja: 'BME280',      en: 'BME280',      descJa: 'I2C 温湿度・気圧', descEn: 'I2C temp/humidity/pressure' },
+  { type: 'TDSN7200',   ja: 'TDSN-7200',   en: 'TDSN-7200',   descJa: 'USB 温湿度・気圧', descEn: 'USB temp/humidity/pressure' },
+  { type: 'TDSN7300',   ja: 'TDSN-7300',   en: 'TDSN-7300',   descJa: 'USB CO2・温湿度',  descEn: 'USB CO2/temp/humidity' },
+  { type: 'IWS660CS',   ja: 'IWS-660CS',   en: 'IWS-660CS',   descJa: 'USB 照度',          descEn: 'USB illuminance' },
+  { type: 'Camera',     ja: 'Camera',      en: 'Camera',      descJa: 'USB Webカメラ',      descEn: 'USB webcam' },
   { type: 'SerialJSON', ja: 'SerialJSON',  en: 'SerialJSON',  descJa: 'Arduino 経由・拡張用', descEn: 'Arduino-attached probe (extensible)' },
 ];
 
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
-const STEP_COUNT = 3;
 
+// Pull the lab access token out of the page URL (?token=...). Researchers
+// reach this page via a shared URL that already has the token appended;
+// the JS forwards it to /api/firstrun so the user never types it. If
+// the page was opened without the token, the download button stays
+// disabled and the banner explains how to fix it.
 const PAGE_TOKEN = (function () {
-  try { return new URLSearchParams(window.location.search).get('token') || ''; }
-  catch (e) { return ''; }
+  try { return new URLSearchParams(window.location.search).get("token") || ""; }
+  catch (e) { return ""; }
 })();
 
-function curLang() { return document.documentElement.lang === 'en' ? 'en' : 'ja'; }
-function t(ja, en) { return curLang() === 'en' ? en : ja; }
-
-// ============================== State ==============================
-const state = {
-  step: 1,
-  user: 'sodat',
-  sensors: KNOWN_SENSORS.map(s => s.type),
-};
-
-function maxReachableStep() {
-  if (!USER_RE.test(state.user)) return 1;
-  if (state.sensors.length === 0) return 2;
-  return STEP_COUNT;
-}
-
-// ============================== Step indicator + routing ==============================
-let _initialized = false;
-
-function gotoStep(n) {
-  n = Math.max(1, Math.min(STEP_COUNT, n | 0));
-  // Don't let researcher skip ahead past a still-invalid step
-  if (n > maxReachableStep()) n = maxReachableStep();
-  state.step = n;
-  for (const sec of document.querySelectorAll('.step')) {
-    sec.classList.toggle('active', Number(sec.dataset.step) === n);
-  }
-  for (const btn of document.querySelectorAll('.stepper button[data-goto]')) {
-    const i = Number(btn.dataset.goto);
-    let s;
-    if (i < n) s = 'done';
-    else if (i === n) s = 'current';
-    else s = 'future';
-    btn.dataset.state = s;
-    const reachable = i <= maxReachableStep();
-    btn.setAttribute('aria-disabled', reachable ? 'false' : 'true');
-  }
-  // Reflect in URL hash so the browser back/forward buttons move between
-  // steps. Preserve query string (?token=...). Use replaceState the very
-  // first time to avoid a phantom history entry on initial load.
-  const newHash = '#step-' + n;
-  if (window.location.hash !== newHash) {
-    const newUrl = window.location.pathname + window.location.search + newHash;
-    if (_initialized) {
-      history.pushState(null, '', newUrl);
-    } else {
-      history.replaceState(null, '', newUrl);
-    }
-  }
-  _initialized = true;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ============================== Step 1: username ==============================
-const userInput = document.getElementById('user');
-const userStatus = document.getElementById('userStatus');
-const sensorList = document.getElementById('sensorList');
-const sensorStatus = document.getElementById('sensorStatus');
-const writeStatus = document.getElementById('writeStatus');
-
-function validateUser() {
-  const v = (userInput.value || '').trim();
-  state.user = v;
-  if (!USER_RE.test(v)) {
-    userStatus.className = 'status err';
-    userStatus.textContent = t(
-      `ユーザー名が不正です "${v}"。${USER_RE} を満たしてください。`,
-      `Invalid username "${v}". Must match ${USER_RE}.`
-    );
-    return false;
-  }
-  userStatus.className = 'status';
-  userStatus.textContent = '';
-  return true;
-}
-
-// ============================== Step 2: sensors ==============================
-let checkboxes = [];
-function buildSensorList() {
-  sensorList.innerHTML = '';
-  checkboxes = KNOWN_SENSORS.map((s) => {
-    const id = `sensor-${s.type}`;
+function buildSensorList(containerId, lang) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  container.innerHTML = '';
+  return KNOWN_SENSORS.map((s) => {
+    const id = `sensor-${lang}-${s.type}`;
     const row = document.createElement('label');
     row.className = 'sensor-row';
     row.setAttribute('for', id);
@@ -434,62 +272,45 @@ function buildSensorList() {
     cb.type = 'checkbox';
     cb.id = id;
     cb.value = s.type;
-    cb.checked = state.sensors.includes(s.type);
+    cb.checked = true;  // default: all sensors selected
     row.appendChild(cb);
 
     const label = document.createElement('span');
     label.className = 'label';
-    const labelJa = document.createElement('span');
-    labelJa.dataset.lang = 'ja';
-    labelJa.textContent = s.ja;
-    const labelEn = document.createElement('span');
-    labelEn.dataset.lang = 'en';
-    labelEn.textContent = s.en;
-    label.appendChild(labelJa);
-    label.appendChild(labelEn);
+    label.textContent = lang === 'en' ? s.en : s.ja;
     row.appendChild(label);
 
     const desc = document.createElement('span');
     desc.className = 'desc';
-    const descJa = document.createElement('span');
-    descJa.dataset.lang = 'ja';
-    descJa.textContent = ` (${s.descJa})`;
-    const descEn = document.createElement('span');
-    descEn.dataset.lang = 'en';
-    descEn.textContent = ` (${s.descEn})`;
-    desc.appendChild(descJa);
-    desc.appendChild(descEn);
+    desc.textContent = lang === 'en' ? `(${s.descEn})` : `(${s.descJa})`;
     row.appendChild(desc);
 
-    sensorList.appendChild(row);
+    container.appendChild(row);
     return cb;
   });
-  checkboxes.forEach((c) => c.addEventListener('change', validateSensors));
 }
 
-function validateSensors() {
-  state.sensors = checkboxes.filter((c) => c.checked).map((c) => c.value);
-  if (state.sensors.length === 0) {
-    sensorStatus.className = 'status err';
-    sensorStatus.textContent = t(
-      'センサーを 1 つ以上選択してください。',
-      'Pick at least one sensor.'
-    );
-    return false;
-  }
-  sensorStatus.className = 'status';
-  sensorStatus.textContent = '';
-  return true;
-}
+// Manual-entry fallback: triggered by the "Apply and reload" button inside
+// the <details class="token-fallback"> block. Lets researchers paste a
+// token they got out-of-band and reload the page with ?token=... attached.
+window.applyToken = function (suffix) {
+  const inp = document.getElementById('tokenInput' + suffix);
+  const v = (inp && inp.value || '').trim();
+  if (!v) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('token', v);
+  window.location.href = url.toString();
+};
 
-// ============================== Step 3: API + writes ==============================
-function buildApiUrl() {
-  const sensorsParam = state.sensors.length === KNOWN_SENSORS.length ? 'all' : state.sensors.join(',');
-  return `/api/firstrun?user=${encodeURIComponent(state.user)}`
+function buildApiUrl(user, sensorsParam, token) {
+  return `/api/firstrun?user=${encodeURIComponent(user)}`
        + `&sensors=${encodeURIComponent(sensorsParam)}`
-       + `&token=${encodeURIComponent(PAGE_TOKEN)}`;
+       + `&token=${encodeURIComponent(token)}`;
 }
 
+// Splice `snippet` into Pi Imager's auto-generated firstrun.sh in the right
+// place. Idempotent: if a previous BEGIN/END block from this tool is already
+// present, it's replaced rather than duplicated. Returns the new file body.
 function spliceFirstrun(existing, snippet) {
   const beginRe = /^# >>> BEGIN PASTE.*$/m;
   const endRe = /^# <<< END PASTE.*$/m;
@@ -500,6 +321,7 @@ function spliceFirstrun(existing, snippet) {
     const afterEnd = existing.slice(endMatch.index + endMatch[0].length).replace(/^\n+/, '');
     return before + snippet.trimEnd() + '\n\n' + afterEnd;
   }
+  // No prior block — insert right above Pi Imager's self-deletion / exit line.
   const insertRe = /^(rm -f \/boot(?:\/firmware)?\/firstrun\.sh.*|exit 0\s*)$/m;
   const insertMatch = existing.match(insertRe);
   if (insertMatch) {
@@ -507,184 +329,205 @@ function spliceFirstrun(existing, snippet) {
          + snippet.trimEnd() + '\n\n'
          + existing.slice(insertMatch.index);
   }
+  // Pi Imager's expected anchors aren't there — safest fallback is appending.
   return existing.trimEnd() + '\n\n' + snippet.trimEnd() + '\n';
 }
 
-const sdBtn = document.getElementById('sdBtn');
-const sdHelp = document.getElementById('sdHelp');
-const copyBtn = document.getElementById('copyBtn');
-const dlBtn = document.getElementById('dlBtn');
-const copyFeedback = document.getElementById('copyFeedback');
-const tokenFallback = document.getElementById('tokenFallback');
+function wire(suffix, lang) {
+  const $ = (id) => document.getElementById(id + suffix);
+  const inp = $('user');
+  const dl = $('dlBtn');
+  const copyBtn = $('copyBtn');
+  const sdBtn = $('sdBtn');
+  const sdHelp = $('sdHelp');
+  const copyFeedback = $('copyFeedback');
+  const tokenFallback = $('tokenFallback');
+  const status = $('status');
+  const checkboxes = buildSensorList(lang === 'en' ? 'sensorListEn' : 'sensorList', lang);
 
-const hasFS = typeof window.showDirectoryPicker === 'function';
-if (hasFS) { sdBtn.hidden = false; sdHelp.hidden = false; }
+  // Reveal the SD button + help text only when the browser actually supports
+  // the directory picker (Chrome / Edge / Safari 17.4+).
+  const hasFS = typeof window.showDirectoryPicker === 'function';
+  if (hasFS && sdBtn) {
+    sdBtn.hidden = false;
+    if (sdHelp) sdHelp.hidden = false;
+  }
 
-function setStep3Buttons(disabled) {
-  for (const el of [copyBtn, sdBtn, dlBtn]) {
-    if (!el) continue;
+  // Track the validated request URL so the Copy/SD buttons can reach it
+  // without recomputing.
+  let currentApiUrl = '';
+
+  function setDisabled(disabled) {
     if (disabled) {
-      el.setAttribute('aria-disabled', 'true');
-      if (el.tagName === 'BUTTON') el.disabled = true;
-      else el.removeAttribute('href');
+      dl.setAttribute('aria-disabled', 'true');
+      dl.removeAttribute('href');
+      copyBtn.setAttribute('aria-disabled', 'true');
+      copyBtn.disabled = true;
+      if (sdBtn) { sdBtn.setAttribute('aria-disabled', 'true'); sdBtn.disabled = true; }
     } else {
-      el.removeAttribute('aria-disabled');
-      if (el.tagName === 'BUTTON') el.disabled = false;
-    }
-  }
-}
-
-function refreshStep3() {
-  writeStatus.className = 'status';
-  writeStatus.textContent = '';
-  if (!PAGE_TOKEN) {
-    setStep3Buttons(true);
-    writeStatus.className = 'status err';
-    writeStatus.textContent = t(
-      'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直すか、下の欄に直接貼り付けてください。',
-      'Access token missing — open this page via the lab-admin URL (it contains ?token=…), or paste it below.'
-    );
-    if (tokenFallback) tokenFallback.open = true;
-    return;
-  }
-  setStep3Buttons(false);
-  dlBtn.href = buildApiUrl();
-}
-
-async function onCopy() {
-  if (copyBtn.disabled) return;
-  const original = copyBtn.innerHTML;
-  copyBtn.disabled = true;
-  copyBtn.textContent = t('コピー中…', 'Copying…');
-  try {
-    const resp = await fetch(buildApiUrl(), { cache: 'no-store' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
-    const text = await resp.text();
-    await navigator.clipboard.writeText(text);
-    copyBtn.textContent = t('✓ コピー完了', '✓ Copied');
-    copyFeedback.textContent = t('SD カードの firstrun.sh に貼り付けてください。', 'Now paste into firstrun.sh on the SD card.');
-    copyFeedback.classList.add('show');
-    setTimeout(() => {
-      copyBtn.innerHTML = original;
+      dl.removeAttribute('aria-disabled');
+      copyBtn.removeAttribute('aria-disabled');
       copyBtn.disabled = false;
-      copyFeedback.classList.remove('show');
-    }, 3500);
-  } catch (e) {
-    copyBtn.innerHTML = original;
-    copyBtn.disabled = false;
-    writeStatus.className = 'status err';
-    writeStatus.textContent = t('コピー失敗: ', 'Copy failed: ') + e.message;
+      if (sdBtn) { sdBtn.removeAttribute('aria-disabled'); sdBtn.disabled = false; }
+    }
   }
-}
 
-async function onWriteSd() {
-  if (!sdBtn || sdBtn.disabled) return;
-  const original = sdBtn.innerHTML;
-  sdBtn.disabled = true;
-  try {
-    sdBtn.textContent = t('bootfs を選択中…', 'Pick bootfs…');
-    let dirHandle;
+  function refresh() {
+    currentApiUrl = '';
+    const v = (inp.value || '').trim();
+    if (!USER_RE.test(v)) {
+      setDisabled(true);
+      status.className = 'status err';
+      status.textContent = lang === 'en'
+        ? `Invalid username "${v}". Must match ${USER_RE}.`
+        : `ユーザー名が不正です "${v}"。${USER_RE} を満たしてください。`;
+      return;
+    }
+
+    const selected = checkboxes.filter((c) => c.checked).map((c) => c.value);
+    if (selected.length === 0) {
+      setDisabled(true);
+      status.className = 'status err';
+      status.textContent = lang === 'en'
+        ? 'Pick at least one sensor.'
+        : 'センサーを 1 つ以上選択してください。';
+      return;
+    }
+
+    if (!PAGE_TOKEN) {
+      setDisabled(true);
+      status.className = 'status err';
+      status.textContent = lang === 'en'
+        ? 'Access token missing — open this page via the lab-admin URL (it contains ?token=…), or paste it below.'
+        : 'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直すか、下の欄に直接貼り付けてください。';
+      if (tokenFallback) tokenFallback.open = true;
+      return;
+    }
+
+    const sensorsParam = selected.length === KNOWN_SENSORS.length ? 'all' : selected.join(',');
+    currentApiUrl = buildApiUrl(v, sensorsParam, PAGE_TOKEN);
+    setDisabled(false);
+    dl.href = currentApiUrl;
+    status.className = 'status';
+    status.textContent = '';
+  }
+
+  // One-click copy: fetch the snippet and write it to the clipboard. Saves
+  // the researcher the "Downloads -> open .sh -> select all -> copy" round
+  // trip; they just paste straight into firstrun.sh.
+  async function onCopy() {
+    if (!currentApiUrl || copyBtn.disabled) return;
+    const originalLabel = copyBtn.textContent;
+    copyBtn.disabled = true;
+    copyBtn.textContent = lang === 'en' ? 'Copying…' : 'コピー中…';
     try {
-      dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    } catch (e) {
-      if (e && e.name === 'AbortError') {
-        sdBtn.innerHTML = original; sdBtn.disabled = false; return;
+      const resp = await fetch(currentApiUrl, { cache: 'no-store' });
+      if (!resp.ok) {
+        const detail = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${detail.slice(0, 200)}`);
       }
-      throw e;
-    }
-
-    sdBtn.textContent = t('firstrun.sh 読み込み中…', 'Reading firstrun.sh…');
-    let fileHandle;
-    try {
-      fileHandle = await dirHandle.getFileHandle('firstrun.sh', { create: false });
+      const text = await resp.text();
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = lang === 'en' ? '✓ Copied' : '✓ コピー完了';
+      copyFeedback.textContent = lang === 'en'
+        ? 'Now paste into firstrun.sh on the SD card.'
+        : 'SD カードの firstrun.sh に貼り付けてください。';
+      copyFeedback.classList.add('show');
+      setTimeout(() => {
+        copyBtn.textContent = originalLabel;
+        copyBtn.disabled = false;
+        copyFeedback.classList.remove('show');
+      }, 3500);
     } catch (e) {
-      throw new Error(t(
-        `「${dirHandle.name}」の中に firstrun.sh が見つかりません。bootfs パーティションを選択していますか? (Pi Imager の OS カスタマイズが実行されていますか?)`,
-        `Could not find firstrun.sh in "${dirHandle.name}". Did you pick the bootfs partition? (Also: did Pi Imager's OS customisation actually run?)`
-      ));
+      copyBtn.textContent = originalLabel;
+      copyBtn.disabled = false;
+      status.className = 'status err';
+      status.textContent = (lang === 'en' ? 'Copy failed: ' : 'コピー失敗: ') + e.message;
     }
-
-    sdBtn.textContent = t('snippet 取得中…', 'Fetching snippet…');
-    const resp = await fetch(buildApiUrl(), { cache: 'no-store' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
-    const snippet = await resp.text();
-
-    sdBtn.textContent = t('書き込み中…', 'Writing…');
-    const existingFile = await fileHandle.getFile();
-    const existing = await existingFile.text();
-    const updated = spliceFirstrun(existing, snippet);
-    const writable = await fileHandle.createWritable();
-    await writable.write(updated);
-    await writable.close();
-
-    sdBtn.textContent = t('✓ SD に書き込み完了', '✓ Wrote firstrun.sh');
-    copyFeedback.textContent = t('SD カードを取り出して Raspberry Pi に挿してください。', 'Eject the SD card and insert it into the Pi.');
-    copyFeedback.classList.add('show');
-    setTimeout(() => {
-      sdBtn.innerHTML = original; sdBtn.disabled = false; copyFeedback.classList.remove('show');
-    }, 5000);
-  } catch (e) {
-    sdBtn.innerHTML = original; sdBtn.disabled = false;
-    writeStatus.className = 'status err';
-    writeStatus.textContent = t('SD 書き込み失敗: ', 'SD write failed: ') + e.message;
   }
+
+  // Direct SD-card write: browser → bootfs/firstrun.sh. Replaces the
+  // "download + open in editor + paste" round trip with two clicks.
+  async function onWriteSd() {
+    if (!currentApiUrl || !sdBtn || sdBtn.disabled) return;
+    const originalLabel = sdBtn.textContent;
+    sdBtn.disabled = true;
+    try {
+      // 1. Folder picker — researcher selects the SD card's bootfs partition.
+      sdBtn.textContent = lang === 'en' ? 'Pick bootfs…' : 'bootfs を選択中…';
+      let dirHandle;
+      try {
+        dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      } catch (e) {
+        if (e && e.name === 'AbortError') {
+          // user cancelled the picker — no error UI, just reset
+          sdBtn.textContent = originalLabel;
+          sdBtn.disabled = false;
+          return;
+        }
+        throw e;
+      }
+
+      // 2. Locate firstrun.sh in the chosen folder. If it isn't there,
+      //    the researcher probably picked the SD's root or the wrong volume.
+      sdBtn.textContent = lang === 'en' ? 'Reading firstrun.sh…' : 'firstrun.sh 読み込み中…';
+      let fileHandle;
+      try {
+        fileHandle = await dirHandle.getFileHandle('firstrun.sh', { create: false });
+      } catch (e) {
+        throw new Error(
+          lang === 'en'
+            ? `Could not find firstrun.sh in "${dirHandle.name}". Did you pick the bootfs partition? (Also: did Pi Imager's OS customisation actually run?)`
+            : `「${dirHandle.name}」の中に firstrun.sh が見つかりません。bootfs パーティションを選択していますか? (Pi Imager の OS カスタマイズが実行されていますか?)`
+        );
+      }
+
+      // 3. Fetch the latest snippet from the API.
+      sdBtn.textContent = lang === 'en' ? 'Fetching snippet…' : 'snippet 取得中…';
+      const resp = await fetch(currentApiUrl, { cache: 'no-store' });
+      if (!resp.ok) {
+        const detail = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${detail.slice(0, 200)}`);
+      }
+      const snippet = await resp.text();
+
+      // 4. Read existing firstrun.sh, splice in the snippet, write back.
+      sdBtn.textContent = lang === 'en' ? 'Writing…' : '書き込み中…';
+      const existingFile = await fileHandle.getFile();
+      const existing = await existingFile.text();
+      const updated = spliceFirstrun(existing, snippet);
+      const writable = await fileHandle.createWritable();
+      await writable.write(updated);
+      await writable.close();
+
+      // 5. Done.
+      sdBtn.textContent = lang === 'en' ? '✓ Wrote firstrun.sh' : '✓ SD に書き込み完了';
+      copyFeedback.textContent = lang === 'en'
+        ? 'Eject the SD card and insert it into the Pi.'
+        : 'SD カードを取り出して Raspberry Pi に挿してください。';
+      copyFeedback.classList.add('show');
+      setTimeout(() => {
+        sdBtn.textContent = originalLabel;
+        sdBtn.disabled = false;
+        copyFeedback.classList.remove('show');
+      }, 5000);
+    } catch (e) {
+      sdBtn.textContent = originalLabel;
+      sdBtn.disabled = false;
+      status.className = 'status err';
+      status.textContent = (lang === 'en' ? 'SD write failed: ' : 'SD 書き込み失敗: ') + e.message;
+    }
+  }
+
+  inp.addEventListener('input', refresh);
+  checkboxes.forEach((c) => c.addEventListener('change', refresh));
+  copyBtn.addEventListener('click', onCopy);
+  if (sdBtn) sdBtn.addEventListener('click', onWriteSd);
+  refresh();
 }
 
-// ============================== Token fallback ==============================
-window.applyToken = function () {
-  const inp = document.getElementById('tokenInput');
-  const v = (inp && inp.value || '').trim();
-  if (!v) return;
-  const url = new URL(window.location.href);
-  url.searchParams.set('token', v);
-  window.location.href = url.toString();
-};
-
-// ============================== Wiring ==============================
-userInput.addEventListener('input', () => {
-  validateUser();
-  // re-evaluate step indicator availability without changing visible step
-  gotoStep(state.step);
-});
-
-buildSensorList();
-validateUser();
-validateSensors();
-refreshStep3();
-
-copyBtn.addEventListener('click', onCopy);
-if (sdBtn) sdBtn.addEventListener('click', onWriteSd);
-
-// Step indicator clicks
-for (const btn of document.querySelectorAll('.stepper button[data-goto]')) {
-  btn.addEventListener('click', () => {
-    if (btn.getAttribute('aria-disabled') === 'true') return;
-    gotoStep(Number(btn.dataset.goto));
-  });
-}
-
-// Next / back buttons inside step panels — also validate as we move forward.
-for (const btn of document.querySelectorAll('button[data-next]')) {
-  btn.addEventListener('click', () => {
-    const target = Number(btn.dataset.next);
-    if (target === 2 && !validateUser()) return;
-    if (target === 3 && (!validateUser() || !validateSensors())) return;
-    if (target === 3) refreshStep3();
-    gotoStep(target);
-  });
-}
-for (const btn of document.querySelectorAll('button[data-back]')) {
-  btn.addEventListener('click', () => gotoStep(Number(btn.dataset.back)));
-}
-
-// Initial step from hash (deep link / back-button support)
-function stepFromHash() {
-  const m = (window.location.hash || '').match(/^#step-(\d)$/);
-  return m ? Number(m[1]) : 1;
-}
-window.addEventListener('hashchange', () => gotoStep(stepFromHash()));
-window.addEventListener('popstate', () => gotoStep(stepFromHash()));
-gotoStep(stepFromHash());
+wire('', 'ja');
+wire('En', 'en');
 </script>
 
 </body>

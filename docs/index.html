@@ -7,32 +7,70 @@
 <style>
   :root {
     color-scheme: light dark;
-    --leaf:      #15803d;   /* CTA — deep agricultural green (green-700) */
-    --leaf-hi:   #166534;   /* CTA hover (green-800) */
-    --leaf-soft: #86efac;   /* light leaf accent (green-300) */
+    --leaf:      #15803d;
+    --leaf-hi:   #166534;
+    --leaf-soft: #86efac;
+    --muted:     #94a3b8;
   }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
   h1 { border-bottom: 3px solid var(--leaf); padding-bottom: .3rem; }
   h1 .leaf { color: var(--leaf); margin-right: .3em; }
   .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 600; letter-spacing: .02em; }
-  h2 { margin-top: 2.5rem; }
+  h2 { margin-top: 1.5rem; }
   a { color: var(--leaf); }
   a:hover { color: var(--leaf-hi); }
   ol li, ul li { margin: .35rem 0; }
   code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
   code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 4px; }
   pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
-  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); }
+  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); z-index: 5; }
   @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
-  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; }
+  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; font: inherit; }
   .lang-toggle button:hover { background: rgba(21,128,61,.1); }
-  .cta { display: inline-block; padding: .6rem 1.1rem; background: var(--leaf); color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; }
+
+  .cta { display: inline-block; padding: .65rem 1.2rem; font-size: 1rem; font-weight: 600; background: var(--leaf); color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; font-family: inherit; }
   .cta:hover { background: var(--leaf-hi); color: #fff; }
+  .cta.secondary { background: transparent; color: var(--leaf); border: 2px solid var(--leaf); padding: calc(.65rem - 2px) calc(1.2rem - 2px); }
+  .cta.secondary:hover { background: rgba(21,128,61,.1); color: var(--leaf-hi); border-color: var(--leaf-hi); }
+
   .callout { border-left: 4px solid #f59e0b; padding: .6rem 1rem; background: rgba(245,158,11,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
   .callout.danger { border-color: #dc2626; background: rgba(220,38,38,.1); }
-  [data-lang] { display: none; }
-  [data-lang].active { display: block; }
   kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
+
+  /* --- Step indicator -------------------------------------------------- */
+  .stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
+  .stepper li { display: contents; }
+  .stepper button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .4rem .2rem; position: relative; color: inherit; font: inherit; text-align: center; }
+  .stepper button:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; border-radius: 6px; }
+  .stepper .circle { width: 2.2rem; height: 2.2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; border: 2px solid var(--muted); color: var(--muted); background: transparent; transition: all .2s; }
+  .stepper .ttl { font-size: .76rem; font-weight: 600; color: var(--muted); text-align: center; line-height: 1.25; }
+  .stepper [data-state="current"] .circle { border-color: var(--leaf); color: var(--leaf); background: rgba(21,128,61,.08); box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
+  .stepper [data-state="current"] .ttl { color: var(--leaf); }
+  .stepper [data-state="done"] .circle { border-color: var(--leaf); background: var(--leaf); color: #fff; }
+  .stepper [data-state="done"] .circle::before { content: "✓"; }
+  .stepper [data-state="done"] .circle .num { display: none; }
+  .stepper [data-state="done"] .ttl { color: var(--leaf); }
+  .stepper button:hover .circle { transform: scale(1.05); }
+  /* Connecting line between dots */
+  .stepper li:not(:last-child) button::after {
+    content: ""; position: absolute; top: 1.15rem; left: calc(50% + 1.4rem); right: calc(-50% + 1.4rem); height: 2px; background: var(--muted); z-index: -1;
+  }
+  .stepper [data-state="done"] + li button::after,
+  .stepper li:has(+ li [data-state="current"]) button::after,
+  .stepper li:has(+ li [data-state="done"]) button::after { background: var(--leaf); }
+
+  /* --- Step panels (only one visible at a time) ------------------------ */
+  .step { display: none; }
+  .step.active { display: block; animation: fade .2s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.2); }
+  .nav-row .spacer { flex: 1; }
+
+  /* --- i18n: show only the currently-selected language --- */
+  [data-lang] { display: none; }
+  html[lang="ja"] [data-lang="ja"],
+  html[lang="en"] [data-lang="en"] { display: revert; }
 </style>
 </head>
 <body>
@@ -42,162 +80,293 @@
   <button onclick="setLang('en')">English</button>
 </div>
 
-<!-- ============================== Japanese ============================== -->
-<section data-lang="ja" class="active">
+<h1>
+  <span class="leaf" aria-hidden="true">🌱</span>
+  <span data-lang="ja">Sodat Sensor SFC — SD カードセットアップ</span>
+  <span data-lang="en">Sodat Sensor SFC — SD Card Setup</span>
+</h1>
+<p class="tagline">
+  <span data-lang="ja">農業・園芸現場のセンサーデータを Raspberry Pi で集めて Google Drive へ</span>
+  <span data-lang="en">Field-sensor data collection for agriculture &amp; horticulture, on a Raspberry Pi → Google Drive</span>
+</p>
 
-<h1><span class="leaf" aria-hidden="true">🌱</span>Sodat Sensor SFC — SD カードセットアップ</h1>
-<p class="tagline">農業・園芸現場のセンサーデータを Raspberry Pi で集めて Google Drive へ</p>
-
-<p>このページの手順通りに 1 枚の microSD を作れば、Raspberry Pi に挿して電源を入れるだけでセンサ収集が始まり、Google Drive / Sheets へのアップロードまで動きます。SSH や <code>scp</code> は不要です。</p>
-
-<h2>用意するもの</h2>
-<ul>
-  <li>Raspberry Pi (Zero 2 W / 3 / 4 / 5 のいずれか)</li>
-  <li>microSD カード (8 GB 以上推奨)</li>
-  <li>SD カードリーダ付きの PC (Windows / macOS / Linux いずれも可)</li>
-  <li>プロジェクト管理者から受け取った <code>service_account.json</code> (Google サービスアカウント鍵)</li>
-</ul>
-
-<h2>手順 1. Raspberry Pi Imager をインストール (1 回だけ)</h2>
-<p><a class="cta" href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">Raspberry Pi Imager をダウンロード</a></p>
-<p>各 OS のインストーラに従ってインストールしてください。</p>
-
-<h2>手順 2. Pi Imager で SD カードを書き込み</h2>
-<ol>
-  <li>Pi Imager を起動し、左の <strong>「デバイスを選ぶ」</strong> で使う Raspberry Pi の機種を選ぶ。</li>
-  <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> を選ぶ (フル版推奨。より軽量にしたい場合は <strong>Raspberry Pi OS Lite (64-bit)</strong> でも動作します)。</li>
-  <li>右の <strong>「ストレージを選ぶ」</strong> で microSD を選ぶ。</li>
-  <li><strong>「次へ」</strong>を押すと「OS をカスタマイズしますか?」と聞かれるので <kbd>設定を編集する</kbd> を選ぶ。</li>
-  <li>「一般」タブで次を設定:
-    <ul>
-      <li>ホスト名 = 機器名: <code>s01</code>, <code>s02</code> ... (SFC に設置する場合) / <code>a01</code>, <code>a02</code> ... (API 機構に設置する場合)。<strong>機器ごとに必ず変える</strong>。Pi Imager 側は小文字で入力 (DNS 規約)、初回起動で大文字化されて <code>device_id</code> (<code>S01</code> / <code>A01</code>) に自動反映される</li>
-      <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。後で SSH する可能性があるなら覚えておく</li>
-      <li>無線 LAN: SSID / パスワード / 国 (JP) を設定</li>
-      <li>ロケール: タイムゾーン <code>Asia/Tokyo</code></li>
-    </ul>
+<!-- ============================== Step indicator =============================== -->
+<ol class="stepper" id="stepper">
+  <li>
+    <button type="button" data-goto="1" data-state="current">
+      <span class="circle"><span class="num">1</span></span>
+      <span class="ttl"><span data-lang="ja">準備</span><span data-lang="en">Prepare</span></span>
+    </button>
   </li>
-  <li>「サービス」タブで <strong>SSH を有効化</strong> (パスワード認証で可)。</li>
-  <li><kbd>保存</kbd> → <kbd>はい</kbd> で書き込み開始。書き込み + 検証で 5〜10 分。</li>
+  <li>
+    <button type="button" data-goto="2" data-state="future">
+      <span class="circle"><span class="num">2</span></span>
+      <span class="ttl"><span data-lang="ja">Pi Imager</span><span data-lang="en">Pi Imager</span></span>
+    </button>
+  </li>
+  <li>
+    <button type="button" data-goto="3" data-state="future">
+      <span class="circle"><span class="num">3</span></span>
+      <span class="ttl"><span data-lang="ja">SD 焼き</span><span data-lang="en">Flash SD</span></span>
+    </button>
+  </li>
+  <li>
+    <button type="button" data-goto="4" data-state="future">
+      <span class="circle"><span class="num">4</span></span>
+      <span class="ttl"><span data-lang="ja">Snippet</span><span data-lang="en">Snippet</span></span>
+    </button>
+  </li>
+  <li>
+    <button type="button" data-goto="5" data-state="future">
+      <span class="circle"><span class="num">5</span></span>
+      <span class="ttl"><span data-lang="ja">起動 + 確認</span><span data-lang="en">Boot + verify</span></span>
+    </button>
+  </li>
 </ol>
 
-<h2>手順 3. firstrun snippet を SD カードに乗せる</h2>
+<!-- ============================== Step 1: Prepare ============================== -->
+<section class="step" data-step="1">
+  <h2><span data-lang="ja">用意するもの</span><span data-lang="en">What you need</span></h2>
 
-<p>書き込みが終わったら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。</p>
+  <p>
+    <span data-lang="ja">このページのステップに沿って 1 枚の microSD を作れば、Raspberry Pi に挿して電源を入れるだけでセンサ収集が始まり、Google Drive / Sheets へのアップロードまで動きます。SSH や <code>scp</code> は不要です。</span>
+    <span data-lang="en">Follow these steps to prepare one microSD card. Insert it into a Raspberry Pi, power on, and sensor collection + Google Drive / Sheets upload starts automatically — no SSH or <code>scp</code> required.</span>
+  </p>
 
-<p>下のページに進み、Pi Imager で設定したユーザー名を入力 → <strong>「snippet をダウンロード」</strong> をクリック → ダウンロードされた <code>sodat-firstrun-snippet.sh</code> の本体行を <code>bootfs/firstrun.sh</code> に貼り付けるだけです。<strong>service_account.json は Vercel 側で管理されているため、研究者の PC では一切扱いません</strong>。</p>
+  <ul data-lang="ja">
+    <li>Raspberry Pi (Zero 2 W / 3 / 4 / 5 のいずれか)</li>
+    <li>microSD カード (8 GB 以上推奨)</li>
+    <li>SD カードリーダ付きの PC (Windows / macOS / Linux いずれも可)</li>
+    <li>研究室管理者から受け取った <strong>アクセストークン付き URL</strong> (このページがその URL で開けていれば OK)</li>
+  </ul>
+  <ul data-lang="en">
+    <li>A Raspberry Pi (Zero 2 W / 3 / 4 / 5)</li>
+    <li>A microSD card (8 GB+ recommended)</li>
+    <li>A PC with an SD-card reader (Windows / macOS / Linux)</li>
+    <li>The <strong>access-token URL</strong> from your lab admin (if you opened this page via that URL, you're set)</li>
+  </ul>
 
-<p><a class="cta cta-generator" href="firstrun-generator">firstrun snippet ダウンロードページを開く →</a></p>
+  <p class="callout" data-lang="ja">
+    <strong>service_account.json は Vercel 側で管理されています</strong>。研究者の PC で鍵ファイルを扱う必要はありません。
+  </p>
+  <p class="callout" data-lang="en">
+    <strong>The Google service_account.json is managed centrally on Vercel.</strong> You never need to handle the key file on your own PC.
+  </p>
 
-<div class="callout">
-  <strong>取り扱い注意:</strong> ダウンロードされた <code>.sh</code> ファイルにはプロジェクトの service_account.json が base64 で含まれます。チャットや公開リポジトリに貼らないでください。SD への書き込みが終わったら PC 上のダウンロードファイルも削除推奨。
-</div>
-
-<h2>手順 4. Pi に挿して電源 ON</h2>
-<p><code>bootfs</code> をアンマウント / 取り出して、microSD を Raspberry Pi に挿してください。電源を入れると初回起動が始まり、自動で:</p>
-<ol>
-  <li>Wi-Fi に接続 (Pi Imager の設定)</li>
-  <li>service_account.json を所定位置に展開</li>
-  <li>GitHub からリポジトリを取得しインストール</li>
-  <li>ホスト名から device_id を導出 (<code>s05</code> → <code>S05</code>、<code>a01</code> → <code>A01</code>)</li>
-  <li>センサ収集サービスを起動</li>
-</ol>
-<p>所要時間は 8〜15 分程度。インターネット回線次第です。</p>
-
-<h2>動作確認</h2>
-<p>同じネットワーク上の PC から:</p>
-<pre><code>ssh &lt;ユーザー名&gt;@sNN.local      # 例: ssh sodat@s05.local
-sudo systemctl status sensor_sfc</code></pre>
-<p><code>active (running)</code> になっていれば成功です。ログは <code>journalctl -u sensor_sfc -f</code> で追えます。</p>
-
-<h2>トラブルシュート</h2>
-<ul>
-  <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
-  <li><strong><code>sNN.local</code> / <code>aNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
-  <li><strong>もう一度やり直したい:</strong> SD を PC で再フォーマットして手順 2 から。</li>
-</ul>
-
+  <div class="nav-row">
+    <span class="spacer"></span>
+    <button class="cta" type="button" data-next="2">
+      <span data-lang="ja">次へ: Pi Imager の準備 →</span>
+      <span data-lang="en">Next: install Pi Imager →</span>
+    </button>
+  </div>
 </section>
 
-<!-- ============================== English ============================== -->
-<section data-lang="en">
+<!-- ============================== Step 2: Pi Imager ============================== -->
+<section class="step" data-step="2">
+  <h2><span data-lang="ja">Raspberry Pi Imager をインストール (1 回だけ)</span><span data-lang="en">Install Raspberry Pi Imager (one-time)</span></h2>
 
-<h1><span class="leaf" aria-hidden="true">🌱</span>Sodat Sensor SFC — SD Card Setup</h1>
-<p class="tagline">Field-sensor data collection for agriculture &amp; horticulture, on a Raspberry Pi → Google Drive</p>
+  <p>
+    <span data-lang="ja">Pi Imager は、Raspberry Pi 公式の SD カード書き込みツールです。すでにインストール済みなら次へ進んでください。</span>
+    <span data-lang="en">Pi Imager is the Raspberry Pi Foundation's official SD-card writer. Skip ahead if you already have it installed.</span>
+  </p>
 
-<p>Follow the steps below to prepare one microSD card. Insert it into a Raspberry Pi, power on, and sensor collection + Google Drive / Sheets upload starts automatically — no SSH or <code>scp</code> required.</p>
+  <p>
+    <a class="cta" href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">
+      <span data-lang="ja">Raspberry Pi Imager をダウンロード →</span>
+      <span data-lang="en">Download Raspberry Pi Imager →</span>
+    </a>
+  </p>
 
-<h2>What you need</h2>
-<ul>
-  <li>A Raspberry Pi (Zero 2 W / 3 / 4 / 5)</li>
-  <li>A microSD card (8 GB+ recommended)</li>
-  <li>A PC with an SD-card reader (Windows / macOS / Linux)</li>
-  <li>The project's <code>service_account.json</code> (Google service-account key — obtain from your project lead)</li>
-</ul>
+  <p class="small" style="opacity:.8">
+    <span data-lang="ja">各 OS のインストーラに従ってインストール (Mac は <code>.dmg</code>、Win は <code>.exe</code>、Linux は <code>apt install rpi-imager</code> など)。</span>
+    <span data-lang="en">Use the installer for your OS (macOS <code>.dmg</code>, Windows <code>.exe</code>, or Linux <code>apt install rpi-imager</code>).</span>
+  </p>
 
-<h2>Step 1. Install Raspberry Pi Imager (one-time)</h2>
-<p><a class="cta" href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">Download Raspberry Pi Imager</a></p>
+  <div class="nav-row">
+    <button class="cta secondary" type="button" data-back="1">
+      <span data-lang="ja">← 戻る</span>
+      <span data-lang="en">← Back</span>
+    </button>
+    <span class="spacer"></span>
+    <button class="cta" type="button" data-next="3">
+      <span data-lang="ja">次へ: SD カードを焼く →</span>
+      <span data-lang="en">Next: flash the SD card →</span>
+    </button>
+  </div>
+</section>
 
-<h2>Step 2. Write the SD card with Pi Imager</h2>
-<ol>
-  <li>Open Pi Imager. Under <strong>Choose device</strong>, pick your Pi model.</li>
-  <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> (full version recommended; <strong>Raspberry Pi OS Lite (64-bit)</strong> also works for a lighter footprint).</li>
-  <li>Under <strong>Choose storage</strong>, pick the microSD card.</li>
-  <li>Click <strong>Next</strong>. When asked "Would you like to apply OS customisation settings?", choose <kbd>Edit Settings</kbd>.</li>
-  <li>On the <em>General</em> tab:
-    <ul>
-      <li>Hostname = device name: <code>s01</code>, <code>s02</code>, ... (devices at SFC) or <code>a01</code>, <code>a02</code>, ... (devices in the API building). <strong>Must be unique per device.</strong> Enter in lowercase (DNS rules); first boot uppercases it into the <code>device_id</code> (<code>S01</code> / <code>A01</code>).</li>
-      <li>Username and password: e.g. <code>sodat</code>. Remember these — you may need them for SSH later.</li>
-      <li>Wireless LAN: SSID / password / country.</li>
-      <li>Locale: set the timezone (e.g. <code>Asia/Tokyo</code>).</li>
-    </ul>
-  </li>
-  <li>On the <em>Services</em> tab: enable SSH (password auth is fine).</li>
-  <li>Click <kbd>Save</kbd> → <kbd>Yes</kbd> to start writing. Write + verify takes 5–10 minutes.</li>
-</ol>
+<!-- ============================== Step 3: Flash SD ============================== -->
+<section class="step" data-step="3">
+  <h2><span data-lang="ja">Pi Imager で SD カードを書き込み</span><span data-lang="en">Write the SD card with Pi Imager</span></h2>
 
-<h2>Step 3. Place the firstrun snippet on the SD card</h2>
+  <ol data-lang="ja">
+    <li>Pi Imager を起動し、左の <strong>「デバイスを選ぶ」</strong> で使う Raspberry Pi の機種を選ぶ。</li>
+    <li>真ん中の <strong>「OS を選ぶ」</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> を選ぶ (フル版推奨。より軽量にしたい場合は <strong>Raspberry Pi OS Lite (64-bit)</strong> でも動作します)。</li>
+    <li>右の <strong>「ストレージを選ぶ」</strong> で microSD を選ぶ。</li>
+    <li><strong>「次へ」</strong>を押すと「OS をカスタマイズしますか?」と聞かれるので <kbd>設定を編集する</kbd> を選ぶ。</li>
+    <li>「一般」タブで次を設定:
+      <ul>
+        <li>ホスト名 = 機器名: <code>s01</code>, <code>s02</code> ... (SFC に設置する場合) / <code>a01</code>, <code>a02</code> ... (API 機構に設置する場合)。<strong>機器ごとに必ず変える</strong>。Pi Imager 側は小文字で入力 (DNS 規約)、初回起動で大文字化されて <code>device_id</code> (<code>S01</code> / <code>A01</code>) に自動反映される</li>
+        <li>ユーザー名とパスワード: 任意 (例: ユーザー <code>sodat</code>)。<strong>次のステップで同じユーザー名を入力する</strong>ので覚えておく</li>
+        <li>無線 LAN: SSID / パスワード / 国 (JP) を設定</li>
+        <li>ロケール: タイムゾーン <code>Asia/Tokyo</code></li>
+      </ul>
+    </li>
+    <li>「サービス」タブで <strong>SSH を有効化</strong> (パスワード認証で可)。</li>
+    <li><kbd>保存</kbd> → <kbd>はい</kbd> で書き込み開始。書き込み + 検証で 5〜10 分。</li>
+    <li>書き込みが終わったら microSD を一旦取り出し、<strong>もう一度 PC に挿し直してください</strong>。<code>bootfs</code> という名前のパーティションが見えるはずです。</li>
+  </ol>
+  <ol data-lang="en">
+    <li>Open Pi Imager. Under <strong>Choose device</strong>, pick your Pi model.</li>
+    <li>Under <strong>Choose OS</strong> → <strong>Raspberry Pi OS (other)</strong> → <strong>Raspberry Pi OS (64-bit)</strong> (full version recommended; <strong>Raspberry Pi OS Lite (64-bit)</strong> also works for a lighter footprint).</li>
+    <li>Under <strong>Choose storage</strong>, pick the microSD card.</li>
+    <li>Click <strong>Next</strong>. When asked "Would you like to apply OS customisation settings?", choose <kbd>Edit Settings</kbd>.</li>
+    <li>On the <em>General</em> tab:
+      <ul>
+        <li>Hostname = device name: <code>s01</code>, <code>s02</code>, ... (devices at SFC) or <code>a01</code>, <code>a02</code>, ... (devices in the API building). <strong>Must be unique per device.</strong> Enter in lowercase (DNS rules); first boot uppercases it into the <code>device_id</code> (<code>S01</code> / <code>A01</code>).</li>
+        <li>Username and password: e.g. <code>sodat</code>. <strong>You'll re-enter this same username on the next step</strong>, so remember it.</li>
+        <li>Wireless LAN: SSID / password / country.</li>
+        <li>Locale: set the timezone (e.g. <code>Asia/Tokyo</code>).</li>
+      </ul>
+    </li>
+    <li>On the <em>Services</em> tab: enable SSH (password auth is fine).</li>
+    <li>Click <kbd>Save</kbd> → <kbd>Yes</kbd> to start writing. Write + verify takes 5–10 minutes.</li>
+    <li>When writing finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code>.</li>
+  </ol>
 
-<p>When writing finishes, eject and <strong>re-insert</strong> the microSD on your PC. You should see a partition called <code>bootfs</code>.</p>
+  <div class="nav-row">
+    <button class="cta secondary" type="button" data-back="2">
+      <span data-lang="ja">← 戻る</span>
+      <span data-lang="en">← Back</span>
+    </button>
+    <span class="spacer"></span>
+    <button class="cta" type="button" data-next="4">
+      <span data-lang="ja">次へ: snippet を SD に書き込む →</span>
+      <span data-lang="en">Next: write snippet to SD →</span>
+    </button>
+  </div>
+</section>
 
-<p>On the next page, enter the Pi Imager username and click <strong>Download snippet</strong>. The downloaded <code>sodat-firstrun-snippet.sh</code> body is pasted into <code>bootfs/firstrun.sh</code>. <strong>The service_account.json is managed centrally on Vercel</strong> — researchers don't handle the key file themselves.</p>
+<!-- ============================== Step 4: Snippet ============================== -->
+<section class="step" data-step="4">
+  <h2><span data-lang="ja">firstrun snippet を SD カードに乗せる</span><span data-lang="en">Place the firstrun snippet on the SD card</span></h2>
 
-<p><a class="cta cta-generator" href="firstrun-generator">Open the firstrun snippet download page →</a></p>
+  <p>
+    <span data-lang="ja">次のページで Pi Imager と同じユーザー名を入力 → センサーを選択 → <strong>「📂 SD カードに直接書き込む」</strong> または <strong>「📋 クリップボードにコピー」</strong> で <code>bootfs/firstrun.sh</code> に反映します。</span>
+    <span data-lang="en">On the next page, enter the same Pi Imager username, pick sensors, then click <strong>"📂 Write directly to the SD card"</strong> or <strong>"📋 Copy to clipboard"</strong> to apply the snippet to <code>bootfs/firstrun.sh</code>.</span>
+  </p>
 
-<div class="callout">
-  <strong>Handle with care:</strong> the downloaded <code>.sh</code> file embeds the project's <code>service_account.json</code> (base64). Don't paste it into chat or a public repo. Delete the downloaded copy from your PC after the SD card is written.
-</div>
+  <p>
+    <a class="cta cta-generator" href="firstrun-generator">
+      <span data-lang="ja">firstrun snippet ダウンロードページを開く →</span>
+      <span data-lang="en">Open the firstrun snippet download page →</span>
+    </a>
+  </p>
 
-<h2>Step 4. Boot the Pi</h2>
-<p>Unmount/eject <code>bootfs</code>, insert the microSD into the Raspberry Pi, and power on. The first boot will automatically:</p>
-<ol>
-  <li>Connect to Wi-Fi (from Pi Imager settings).</li>
-  <li>Place service_account.json at the right location.</li>
-  <li>Clone the repo from GitHub and run the installer.</li>
-  <li>Derive <code>device_id</code> from the hostname (<code>s05</code> → <code>S05</code>, <code>a01</code> → <code>A01</code>).</li>
-  <li>Start the sensor-collection service.</li>
-</ol>
-<p>This takes ~8–15 minutes depending on your internet speed.</p>
+  <div class="callout">
+    <span data-lang="ja"><strong>取り扱い注意:</strong> snippet (ダウンロードまたはコピーしたテキスト) にはプロジェクトの <code>service_account.json</code> が base64 で含まれます。チャットや公開リポジトリに貼らないでください。書き終わったら PC 上のダウンロードファイルも削除推奨。</span>
+    <span data-lang="en"><strong>Handle with care:</strong> the snippet (downloaded or copied) embeds the project's <code>service_account.json</code> (base64). Don't paste it into chat or a public repo. Delete the downloaded copy from your PC after the SD card is written.</span>
+  </div>
 
-<h2>Verify</h2>
-<p>From a PC on the same network:</p>
-<pre><code>ssh &lt;username&gt;@sNN.local      # e.g. ssh sodat@s05.local
+  <p class="small" style="margin-top:1rem">
+    <span data-lang="ja">snippet を SD に書き終わったら、この画面に戻って「次へ」を押してください。</span>
+    <span data-lang="en">Once the snippet is on the SD card, come back here and click Next.</span>
+  </p>
+
+  <div class="nav-row">
+    <button class="cta secondary" type="button" data-back="3">
+      <span data-lang="ja">← 戻る</span>
+      <span data-lang="en">← Back</span>
+    </button>
+    <span class="spacer"></span>
+    <button class="cta" type="button" data-next="5">
+      <span data-lang="ja">次へ: Pi 起動と動作確認 →</span>
+      <span data-lang="en">Next: boot the Pi + verify →</span>
+    </button>
+  </div>
+</section>
+
+<!-- ============================== Step 5: Boot + verify ============================== -->
+<section class="step" data-step="5">
+  <h2><span data-lang="ja">Pi に挿して電源 ON</span><span data-lang="en">Boot the Pi</span></h2>
+
+  <p>
+    <span data-lang="ja"><code>bootfs</code> をアンマウント / 取り出して、microSD を Raspberry Pi に挿してください。電源を入れると初回起動が始まり、自動で:</span>
+    <span data-lang="en">Unmount/eject <code>bootfs</code>, insert the microSD into the Raspberry Pi, and power on. The first boot will automatically:</span>
+  </p>
+
+  <ol data-lang="ja">
+    <li>Wi-Fi に接続 (Pi Imager の設定)</li>
+    <li>service_account.json を所定位置に展開</li>
+    <li>GitHub からリポジトリを取得しインストール</li>
+    <li>ホスト名から device_id を導出 (<code>s05</code> → <code>S05</code>、<code>a01</code> → <code>A01</code>)</li>
+    <li>センサ収集サービスを起動</li>
+  </ol>
+  <ol data-lang="en">
+    <li>Connect to Wi-Fi (from Pi Imager settings).</li>
+    <li>Place service_account.json at the right location.</li>
+    <li>Clone the repo from GitHub and run the installer.</li>
+    <li>Derive <code>device_id</code> from the hostname (<code>s05</code> → <code>S05</code>, <code>a01</code> → <code>A01</code>).</li>
+    <li>Start the sensor-collection service.</li>
+  </ol>
+
+  <p>
+    <span data-lang="ja">所要時間は 8〜15 分程度。インターネット回線次第です。</span>
+    <span data-lang="en">This takes ~8–15 minutes depending on your internet speed.</span>
+  </p>
+
+  <h2><span data-lang="ja">動作確認</span><span data-lang="en">Verify</span></h2>
+
+  <p>
+    <span data-lang="ja">同じネットワーク上の PC から:</span>
+    <span data-lang="en">From a PC on the same network:</span>
+  </p>
+
+  <pre data-lang="ja"><code>ssh &lt;ユーザー名&gt;@sNN.local      # 例: ssh sodat@s05.local
 sudo systemctl status sensor_sfc</code></pre>
-<p>Look for <code>active (running)</code>. Logs: <code>journalctl -u sensor_sfc -f</code>.</p>
+  <pre data-lang="en"><code>ssh &lt;username&gt;@sNN.local      # e.g. ssh sodat@s05.local
+sudo systemctl status sensor_sfc</code></pre>
 
-<h2>Troubleshooting</h2>
-<ul>
-  <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and <code>journalctl -u sensor_sfc -n 200</code>.</li>
-  <li><strong>Can't reach <code>sNN.local</code> / <code>aNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
-  <li><strong>Want to start over:</strong> reformat the SD card on your PC and repeat from Step 2.</li>
-</ul>
+  <p>
+    <span data-lang="ja"><code>active (running)</code> になっていれば成功です。ログは <code>journalctl -u sensor_sfc -f</code> で追えます。</span>
+    <span data-lang="en">Look for <code>active (running)</code>. Logs: <code>journalctl -u sensor_sfc -f</code>.</span>
+  </p>
 
+  <details>
+    <summary>
+      <span data-lang="ja">トラブルシュート</span>
+      <span data-lang="en">Troubleshooting</span>
+    </summary>
+    <ul data-lang="ja">
+      <li><strong>起動しても Google Drive にデータが来ない:</strong> <code>/var/log/sodat-firstrun.log</code> を確認。<code>journalctl -u sensor_sfc -n 200</code> も参照。</li>
+      <li><strong><code>sNN.local</code> / <code>aNN.local</code> で繋がらない:</strong> ルータの管理画面で IP を確認、または Pi にディスプレイを繋いで <code>ip a</code> で確認。</li>
+      <li><strong>もう一度やり直したい:</strong> SD を PC で再フォーマットして手順 2 から。</li>
+    </ul>
+    <ul data-lang="en">
+      <li><strong>Service running but no data in Drive:</strong> check <code>/var/log/sodat-firstrun.log</code> and <code>journalctl -u sensor_sfc -n 200</code>.</li>
+      <li><strong>Can't reach <code>sNN.local</code> / <code>aNN.local</code>:</strong> find the Pi's IP via your router, or connect a display and run <code>ip a</code>.</li>
+      <li><strong>Want to start over:</strong> reformat the SD card on your PC and repeat from Step 2.</li>
+    </ul>
+  </details>
+
+  <div class="nav-row">
+    <button class="cta secondary" type="button" data-back="4">
+      <span data-lang="ja">← 戻る</span>
+      <span data-lang="en">← Back</span>
+    </button>
+    <span class="spacer"></span>
+    <span style="color: var(--leaf); font-weight: 600;">
+      <span data-lang="ja">✓ セットアップ完了</span>
+      <span data-lang="en">✓ Setup complete</span>
+    </span>
+  </div>
 </section>
 
 <script>
+// ============================== i18n ==============================
 function setLang(lang) {
-  document.querySelectorAll('[data-lang]').forEach(el => {
-    el.classList.toggle('active', el.dataset.lang === lang);
-  });
+  document.documentElement.lang = lang;
   try { localStorage.setItem('sodatLang', lang); } catch (e) {}
 }
 (function () {
@@ -207,9 +376,63 @@ function setLang(lang) {
   setLang(initial);
 })();
 
+// ============================== Step indicator + routing ==============================
+const STEP_COUNT = 5;
+let _initialized = false;
+let _currentStep = 1;
+
+function gotoStep(n) {
+  n = Math.max(1, Math.min(STEP_COUNT, n | 0));
+  _currentStep = n;
+  for (const sec of document.querySelectorAll('.step')) {
+    sec.classList.toggle('active', Number(sec.dataset.step) === n);
+  }
+  for (const btn of document.querySelectorAll('.stepper button[data-goto]')) {
+    const i = Number(btn.dataset.goto);
+    let s;
+    if (i < n) s = 'done';
+    else if (i === n) s = 'current';
+    else s = 'future';
+    btn.dataset.state = s;
+  }
+  // Mirror to URL hash so back/forward buttons walk the wizard. Preserve
+  // ?token=... and any other query string.
+  const newHash = '#step-' + n;
+  if (window.location.hash !== newHash) {
+    const newUrl = window.location.pathname + window.location.search + newHash;
+    if (_initialized) history.pushState(null, '', newUrl);
+    else history.replaceState(null, '', newUrl);
+  }
+  _initialized = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function stepFromHash() {
+  const m = (window.location.hash || '').match(/^#step-(\d)$/);
+  return m ? Number(m[1]) : 1;
+}
+
+// Step indicator buttons
+for (const btn of document.querySelectorAll('.stepper button[data-goto]')) {
+  btn.addEventListener('click', () => gotoStep(Number(btn.dataset.goto)));
+}
+
+// Next / back buttons inside step panels
+for (const btn of document.querySelectorAll('button[data-next]')) {
+  btn.addEventListener('click', () => gotoStep(Number(btn.dataset.next)));
+}
+for (const btn of document.querySelectorAll('button[data-back]')) {
+  btn.addEventListener('click', () => gotoStep(Number(btn.dataset.back)));
+}
+
+window.addEventListener('hashchange', () => gotoStep(stepFromHash()));
+window.addEventListener('popstate', () => gotoStep(stepFromHash()));
+gotoStep(stepFromHash());
+
+// ============================== Token forwarding ==============================
 // Forward the lab access token from this page's URL to the snippet generator,
-// so researchers don't lose it when navigating between Step 1-2 (this page)
-// and Step 3 (firstrun-generator).
+// so researchers don't lose it when navigating between Step 4 (this page) and
+// the firstrun-generator page.
 (function () {
   let token = '';
   try { token = new URLSearchParams(window.location.search).get('token') || ''; } catch (e) {}
@@ -217,6 +440,8 @@ function setLang(lang) {
   for (const a of document.querySelectorAll('a.cta-generator')) {
     const url = new URL(a.getAttribute('href'), window.location.href);
     url.searchParams.set('token', token);
+    // Bring the user back to step 5 (boot + verify) when they return from
+    // the generator via the generator's "← Guide" link.
     a.setAttribute('href', url.pathname + url.search);
   }
 })();
