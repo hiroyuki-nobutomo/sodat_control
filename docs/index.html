@@ -97,6 +97,14 @@
   html[lang="ja"] [data-lang="ja"],
   html[lang="en"] [data-lang="en"] { display: revert; }
 </style>
+<!--
+  js-yaml is used by the wizard to merge our cloud-init snippet into the
+  existing bootfs/user-data. Pi Imager v2 may already populate runcmd: /
+  write_files: at the top level, and YAML's duplicate-key rules would
+  silently drop one side under naive concatenation — so we parse, merge
+  arrays, and re-serialize instead.
+-->
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -592,33 +600,80 @@ function buildApiUrl(user, sensorsParam, token) {
        + `&token=${encodeURIComponent(token)}`;
 }
 
-// Append the cloud-init snippet to an existing user-data file. Idempotent:
-// if a previous SODAT block (bounded by the BEGIN/END SODAT PASTE markers)
-// is present, replace it. After stripping any old block, refuse to append
-// if user-data still has its own top-level `write_files:` or `runcmd:`
-// keys — those would silently clobber ours under YAML merge rules.
+// Merge the cloud-init snippet from /api/firstrun into the existing
+// bootfs/user-data file. Pi Imager v2 already populates top-level keys
+// like users:, ssh_pwauth:, runcmd:, write_files: — naive append would
+// produce duplicate YAML keys, and cloud-init's parser (PyYAML safe_load)
+// silently keeps only one occurrence, dropping the other side.
+//
+// So we parse both as YAML, strip any prior Sodat entries from write_files /
+// runcmd (identified by their canonical paths / command), concat in the
+// new entries, and serialize back. Idempotent on repeat applications.
+const SODAT_FILE_PATHS = new Set([
+  '/etc/sodat-firstrun.env',
+  '/etc/sodat-firstrun/service_account.json',
+  '/usr/local/sbin/sodat-firstrun.sh',
+]);
+const SODAT_RUNCMD_TOKEN = '/usr/local/sbin/sodat-firstrun.sh';
+
+function isSodatRuncmd(c) {
+  if (typeof c === 'string') return c.includes(SODAT_RUNCMD_TOKEN);
+  if (Array.isArray(c)) return c.some((x) => typeof x === 'string' && x.includes(SODAT_RUNCMD_TOKEN));
+  return false;
+}
+
 function spliceUserData(existing, snippet) {
-  const beginRe = /^# >>> BEGIN SODAT PASTE.*$/m;
-  const endRe = /^# <<< END SODAT PASTE.*$/m;
-  const beginMatch = existing.match(beginRe);
-  const endMatch = existing.match(endRe);
-
-  let stripped = existing;
-  if (beginMatch && endMatch && beginMatch.index < endMatch.index) {
-    const before = existing.slice(0, beginMatch.index).replace(/\n+$/, '');
-    const afterEnd = existing.slice(endMatch.index + endMatch[0].length).replace(/^\n+/, '');
-    stripped = afterEnd ? before + '\n\n' + afterEnd : before + '\n';
-  }
-
-  if (/^write_files:/m.test(stripped) || /^runcmd:/m.test(stripped)) {
+  if (typeof window === 'undefined' || !window.jsyaml) {
     throw new Error(t(
-      'user-data に既に write_files: または runcmd: のトップレベルブロックがあります。Sodat snippet と YAML キーが衝突するため、自動追記できません。Pi Imager で OS カスタマイズ以外の追加設定をしていないか確認してください。',
-      'user-data already has a top-level write_files: or runcmd: block. Cannot auto-append because the YAML keys would conflict with the Sodat snippet. Check whether you added extra cloud-init settings in Pi Imager beyond the standard customisation tabs.'
+      'YAML パーサ (js-yaml) のロードに失敗しました。ネットワーク接続を確認してページを再読み込みしてください。',
+      'YAML parser (js-yaml) failed to load. Check your network connection and reload the page.'
     ));
   }
+  let doc, snip;
+  try {
+    doc = window.jsyaml.load(existing) || {};
+  } catch (e) {
+    throw new Error(t(
+      '既存の user-data を YAML として解析できませんでした: ',
+      'Could not parse the existing user-data as YAML: '
+    ) + e.message);
+  }
+  if (typeof doc !== 'object' || Array.isArray(doc)) {
+    throw new Error(t(
+      '既存の user-data がトップレベル mapping ではありません — bootfs/user-data ではなく別ファイルを選んでいませんか?',
+      'Existing user-data is not a top-level YAML mapping — did you select a file other than bootfs/user-data?'
+    ));
+  }
+  try {
+    snip = window.jsyaml.load(snippet) || {};
+  } catch (e) {
+    throw new Error('Sodat snippet parse error: ' + e.message);
+  }
 
-  const base = stripped.replace(/\n+$/, '') + '\n\n';
-  return base + snippet.trimEnd() + '\n';
+  // Strip any prior Sodat entries from the existing arrays (idempotent re-apply).
+  if (Array.isArray(doc.write_files)) {
+    doc.write_files = doc.write_files.filter((w) => !(w && SODAT_FILE_PATHS.has(w.path)));
+  }
+  if (Array.isArray(doc.runcmd)) {
+    doc.runcmd = doc.runcmd.filter((c) => !isSodatRuncmd(c));
+  }
+
+  // Concat in the snippet's entries.
+  const snipFiles = Array.isArray(snip.write_files) ? snip.write_files : [];
+  const snipRun = Array.isArray(snip.runcmd) ? snip.runcmd : [];
+  doc.write_files = [...(Array.isArray(doc.write_files) ? doc.write_files : []), ...snipFiles];
+  doc.runcmd = [...(Array.isArray(doc.runcmd) ? doc.runcmd : []), ...snipRun];
+
+  // Drop empty arrays so the serialized file doesn't carry no-op keys.
+  if (doc.write_files.length === 0) delete doc.write_files;
+  if (doc.runcmd.length === 0) delete doc.runcmd;
+
+  // lineWidth: -1 — never wrap long scalars (the base64 SA key must stay on one line).
+  // noRefs   : true — disable YAML anchors/aliases (cloud-init does not always handle them).
+  const out = window.jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
+  // cloud-init looks for the `#cloud-config` first-line marker; js-yaml.dump
+  // never emits it, so we always re-prepend it on the merged output.
+  return '#cloud-config\n' + out;
 }
 
 let checkboxes = [];
