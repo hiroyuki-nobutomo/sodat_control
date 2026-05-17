@@ -91,10 +91,15 @@
 <div class="status" id="status"></div>
 
 <div class="btn-group">
+  <button class="cta" id="sdBtn" type="button" hidden>📂 SD カードに直接書き込む</button>
   <button class="cta" id="copyBtn" type="button">📋 クリップボードにコピー</button>
   <a class="cta secondary" id="dlBtn" href="#" download="sodat-firstrun-snippet.sh">ファイルとしてダウンロード</a>
   <span class="copy-feedback" id="copyFeedback" aria-live="polite"></span>
 </div>
+<p class="small" id="sdHelp" hidden>
+  📂 ボタンは、SD カードの <code>bootfs</code> フォルダをブラウザが直接読み書きします。
+  ブラウザの権限ダイアログで「許可」を選んでください (このタブを閉じれば失効)。
+</p>
 
 <details class="token-fallback" id="tokenFallback">
   <summary>トークン無しでこのページを開いてしまった場合 (手動入力)</summary>
@@ -104,12 +109,22 @@
   <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('')">適用してリロード</button></p>
 </details>
 
-<h2>3. SD カードに貼り付ける</h2>
+<h2>3. SD カードに反映する</h2>
 
+<p><strong>方法 A (推奨・自動): 📂 SD カードに直接書き込む</strong></p>
+<ol>
+  <li>microSD を PC に挿す (Mac なら自動で <code>bootfs</code> ボリュームがマウント)</li>
+  <li>上の <strong>📂 ボタン</strong>をクリック → フォルダ選択ダイアログで <code>bootfs</code> を選ぶ</li>
+  <li>ブラウザの「許可」を押す</li>
+  <li>「✓ SD に書き込み完了」の表示を確認したら SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
+</ol>
+<p class="small">※ Chrome / Edge / Safari 17.4 以降で対応。古い Safari / Firefox では 📂 ボタンが表示されないので、下の方法 B を使ってください。</p>
+
+<p style="margin-top:1.2rem"><strong>方法 B (手動): 📋 Copy + テキストエディタでペースト</strong></p>
 <ol>
   <li>microSD を PC に挿し、<code>bootfs</code> パーティションを開く</li>
   <li><code>firstrun.sh</code> をテキストエディタで開く (Win: メモ帳、Mac: テキストエディット の<em>標準テキストモード</em>)</li>
-  <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>「📋 クリップボードにコピー」</strong> で取得した snippet (or ダウンロードした <code>.sh</code> ファイルの本体行) を貼り付ける</li>
+  <li>ファイル末尾の <code>rm -f /boot/firstrun.sh</code> (もしくは <code>exit 0</code>) の<strong>直前</strong>に、<strong>「📋 クリップボードにコピー」</strong> で取得した snippet を貼り付ける</li>
   <li>保存 (改行コードは LF のまま、CRLF に変えない)</li>
   <li>SD を取り出して Raspberry Pi に挿入 → 電源 ON</li>
 </ol>
@@ -153,10 +168,15 @@
 <div class="status" id="statusEn"></div>
 
 <div class="btn-group">
+  <button class="cta" id="sdBtnEn" type="button" hidden>📂 Write directly to the SD card</button>
   <button class="cta" id="copyBtnEn" type="button">📋 Copy to clipboard</button>
   <a class="cta secondary" id="dlBtnEn" href="#" download="sodat-firstrun-snippet.sh">Download as file</a>
   <span class="copy-feedback" id="copyFeedbackEn" aria-live="polite"></span>
 </div>
+<p class="small" id="sdHelpEn" hidden>
+  📂 lets the browser read and write the SD card's <code>bootfs</code> folder directly.
+  Grant permission when the browser asks (revoked when this tab closes).
+</p>
 
 <details class="token-fallback" id="tokenFallbackEn">
   <summary>Opened this page without a token? (manual entry)</summary>
@@ -166,12 +186,22 @@
   <p style="margin-top:.7rem"><button class="cta" type="button" onclick="applyToken('En')">Apply and reload</button></p>
 </details>
 
-<h2>3. Place on the SD card</h2>
+<h2>3. Apply to the SD card</h2>
 
+<p><strong>Method A (recommended, automatic): 📂 Write directly to the SD card</strong></p>
+<ol>
+  <li>Insert the microSD into your PC (on macOS the <code>bootfs</code> volume mounts automatically).</li>
+  <li>Click the <strong>📂 button</strong> above → in the folder picker, select <code>bootfs</code>.</li>
+  <li>Click Allow on the browser permission prompt.</li>
+  <li>When you see "✓ Wrote firstrun.sh", eject the SD card, insert it into the Pi, and power on.</li>
+</ol>
+<p class="small">Supported in Chrome / Edge / Safari 17.4+. On older Safari / Firefox the 📂 button is hidden; use Method B below.</p>
+
+<p style="margin-top:1.2rem"><strong>Method B (manual): 📋 Copy + paste in a text editor</strong></p>
 <ol>
   <li>Insert the microSD into your PC; open the <code>bootfs</code> partition.</li>
   <li>Open <code>firstrun.sh</code> in a text editor (Notepad on Windows, TextEdit in <em>plain-text mode</em> on macOS).</li>
-  <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet — either via <strong>📋 Copy to clipboard</strong>, or by opening the downloaded <code>.sh</code> file (everything between the <code># &gt;&gt;&gt; BEGIN ...</code> and <code># &lt;&lt;&lt; END</code> markers).</li>
+  <li>Near the end you'll find <code>rm -f /boot/firstrun.sh</code> (or <code>exit 0</code>). <strong>Immediately above that</strong>, paste the snippet you grabbed with <strong>📋 Copy to clipboard</strong>.</li>
   <li>Save the file. Keep line endings as LF (don't let your editor switch to CRLF).</li>
   <li>Safely eject the SD card, insert it into the Pi, power on.</li>
 </ol>
@@ -278,18 +308,53 @@ function buildApiUrl(user, sensorsParam, token) {
        + `&token=${encodeURIComponent(token)}`;
 }
 
+// Splice `snippet` into Pi Imager's auto-generated firstrun.sh in the right
+// place. Idempotent: if a previous BEGIN/END block from this tool is already
+// present, it's replaced rather than duplicated. Returns the new file body.
+function spliceFirstrun(existing, snippet) {
+  const beginRe = /^# >>> BEGIN PASTE.*$/m;
+  const endRe = /^# <<< END PASTE.*$/m;
+  const beginMatch = existing.match(beginRe);
+  const endMatch = existing.match(endRe);
+  if (beginMatch && endMatch && beginMatch.index < endMatch.index) {
+    const before = existing.slice(0, beginMatch.index);
+    const afterEnd = existing.slice(endMatch.index + endMatch[0].length).replace(/^\n+/, '');
+    return before + snippet.trimEnd() + '\n\n' + afterEnd;
+  }
+  // No prior block — insert right above Pi Imager's self-deletion / exit line.
+  const insertRe = /^(rm -f \/boot(?:\/firmware)?\/firstrun\.sh.*|exit 0\s*)$/m;
+  const insertMatch = existing.match(insertRe);
+  if (insertMatch) {
+    return existing.slice(0, insertMatch.index)
+         + snippet.trimEnd() + '\n\n'
+         + existing.slice(insertMatch.index);
+  }
+  // Pi Imager's expected anchors aren't there — safest fallback is appending.
+  return existing.trimEnd() + '\n\n' + snippet.trimEnd() + '\n';
+}
+
 function wire(suffix, lang) {
   const $ = (id) => document.getElementById(id + suffix);
   const inp = $('user');
   const dl = $('dlBtn');
   const copyBtn = $('copyBtn');
+  const sdBtn = $('sdBtn');
+  const sdHelp = $('sdHelp');
   const copyFeedback = $('copyFeedback');
   const tokenFallback = $('tokenFallback');
   const status = $('status');
   const checkboxes = buildSensorList(lang === 'en' ? 'sensorListEn' : 'sensorList', lang);
 
-  // Track the validated request URL so the Copy button can reach it without
-  // recomputing.
+  // Reveal the SD button + help text only when the browser actually supports
+  // the directory picker (Chrome / Edge / Safari 17.4+).
+  const hasFS = typeof window.showDirectoryPicker === 'function';
+  if (hasFS && sdBtn) {
+    sdBtn.hidden = false;
+    if (sdHelp) sdHelp.hidden = false;
+  }
+
+  // Track the validated request URL so the Copy/SD buttons can reach it
+  // without recomputing.
   let currentApiUrl = '';
 
   function setDisabled(disabled) {
@@ -298,10 +363,12 @@ function wire(suffix, lang) {
       dl.removeAttribute('href');
       copyBtn.setAttribute('aria-disabled', 'true');
       copyBtn.disabled = true;
+      if (sdBtn) { sdBtn.setAttribute('aria-disabled', 'true'); sdBtn.disabled = true; }
     } else {
       dl.removeAttribute('aria-disabled');
       copyBtn.removeAttribute('aria-disabled');
       copyBtn.disabled = false;
+      if (sdBtn) { sdBtn.removeAttribute('aria-disabled'); sdBtn.disabled = false; }
     }
   }
 
@@ -379,9 +446,83 @@ function wire(suffix, lang) {
     }
   }
 
+  // Direct SD-card write: browser → bootfs/firstrun.sh. Replaces the
+  // "download + open in editor + paste" round trip with two clicks.
+  async function onWriteSd() {
+    if (!currentApiUrl || !sdBtn || sdBtn.disabled) return;
+    const originalLabel = sdBtn.textContent;
+    sdBtn.disabled = true;
+    try {
+      // 1. Folder picker — researcher selects the SD card's bootfs partition.
+      sdBtn.textContent = lang === 'en' ? 'Pick bootfs…' : 'bootfs を選択中…';
+      let dirHandle;
+      try {
+        dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      } catch (e) {
+        if (e && e.name === 'AbortError') {
+          // user cancelled the picker — no error UI, just reset
+          sdBtn.textContent = originalLabel;
+          sdBtn.disabled = false;
+          return;
+        }
+        throw e;
+      }
+
+      // 2. Locate firstrun.sh in the chosen folder. If it isn't there,
+      //    the researcher probably picked the SD's root or the wrong volume.
+      sdBtn.textContent = lang === 'en' ? 'Reading firstrun.sh…' : 'firstrun.sh 読み込み中…';
+      let fileHandle;
+      try {
+        fileHandle = await dirHandle.getFileHandle('firstrun.sh', { create: false });
+      } catch (e) {
+        throw new Error(
+          lang === 'en'
+            ? `Could not find firstrun.sh in "${dirHandle.name}". Did you pick the bootfs partition? (Also: did Pi Imager's OS customisation actually run?)`
+            : `「${dirHandle.name}」の中に firstrun.sh が見つかりません。bootfs パーティションを選択していますか? (Pi Imager の OS カスタマイズが実行されていますか?)`
+        );
+      }
+
+      // 3. Fetch the latest snippet from the API.
+      sdBtn.textContent = lang === 'en' ? 'Fetching snippet…' : 'snippet 取得中…';
+      const resp = await fetch(currentApiUrl, { cache: 'no-store' });
+      if (!resp.ok) {
+        const detail = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${detail.slice(0, 200)}`);
+      }
+      const snippet = await resp.text();
+
+      // 4. Read existing firstrun.sh, splice in the snippet, write back.
+      sdBtn.textContent = lang === 'en' ? 'Writing…' : '書き込み中…';
+      const existingFile = await fileHandle.getFile();
+      const existing = await existingFile.text();
+      const updated = spliceFirstrun(existing, snippet);
+      const writable = await fileHandle.createWritable();
+      await writable.write(updated);
+      await writable.close();
+
+      // 5. Done.
+      sdBtn.textContent = lang === 'en' ? '✓ Wrote firstrun.sh' : '✓ SD に書き込み完了';
+      copyFeedback.textContent = lang === 'en'
+        ? 'Eject the SD card and insert it into the Pi.'
+        : 'SD カードを取り出して Raspberry Pi に挿してください。';
+      copyFeedback.classList.add('show');
+      setTimeout(() => {
+        sdBtn.textContent = originalLabel;
+        sdBtn.disabled = false;
+        copyFeedback.classList.remove('show');
+      }, 5000);
+    } catch (e) {
+      sdBtn.textContent = originalLabel;
+      sdBtn.disabled = false;
+      status.className = 'status err';
+      status.textContent = (lang === 'en' ? 'SD write failed: ' : 'SD 書き込み失敗: ') + e.message;
+    }
+  }
+
   inp.addEventListener('input', refresh);
   checkboxes.forEach((c) => c.addEventListener('change', refresh));
   copyBtn.addEventListener('click', onCopy);
+  if (sdBtn) sdBtn.addEventListener('click', onWriteSd);
   refresh();
 }
 
