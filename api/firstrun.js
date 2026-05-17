@@ -1,8 +1,12 @@
 // Vercel Serverless Function: GET /api/firstrun?user=<unix-username>&token=<access-token>
 //
-// Returns the SD-card firstrun snippet pre-filled with the project's
+// Returns a cloud-init user-data snippet pre-filled with the project's
 // service-account key (read from the SODAT_SERVICE_ACCOUNT_JSON_B64 env var,
 // set in the Vercel dashboard) and the requested Pi Imager username.
+//
+// The endpoint is still called /api/firstrun for URL stability with the
+// older firstrun.sh flow — the payload is now YAML (cloud-init user-data),
+// because Raspberry Pi Imager v2.0+ ships cloud-init instead of firstrun.sh.
 //
 // Access is gated by a shared lab token (SODAT_ACCESS_TOKEN env var). Lab
 // admins distribute the token to researchers as part of the URL:
@@ -17,7 +21,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_PATH = join(__dirname, "..", "firstrun_snippet.sh.template");
+const TEMPLATE_PATH = join(__dirname, "..", "user_data_snippet.yaml.template");
 
 // Linux usernames: lowercase letter first, then [a-z0-9_-], up to 32 chars.
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
@@ -67,6 +71,14 @@ function fail(res, status, message) {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.status(status).send(`# sodat-firstrun error: ${message}\n`);
+}
+
+// Cloud-init's b64 decoder is lenient about whitespace, but YAML parsers
+// don't like a multi-kilobyte scalar that wraps awkwardly. Strip any
+// whitespace/newlines from the env-var value so the rendered user-data has
+// a clean single-line base64 string under `content:`.
+function normalizeB64(s) {
+  return s.replace(/\s+/g, "");
 }
 
 export default function handler(req, res) {
@@ -141,18 +153,18 @@ export default function handler(req, res) {
     template = readFileSync(TEMPLATE_PATH, "utf-8");
   } catch (e) {
     return fail(res, 500,
-      `Could not read firstrun_snippet.sh.template from the deployment bundle: ${e.message}. ` +
+      `Could not read user_data_snippet.yaml.template from the deployment bundle: ${e.message}. ` +
       "Check that vercel.json's functions.includeFiles is configured."
     );
   }
 
   const filled = template
     .replace("__SODAT_USER__", rawUser)
-    .replace("__SA_JSON_B64__", saB64)
+    .replace("__SA_JSON_B64__", normalizeB64(saB64))
     .replace("__SODAT_SENSORS__", sensorsValue);
 
-  res.setHeader("Content-Type", "text/x-shellscript; charset=utf-8");
-  res.setHeader("Content-Disposition", 'attachment; filename="sodat-firstrun-snippet.sh"');
+  res.setHeader("Content-Type", "text/yaml; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="sodat-user-data-snippet.yaml"');
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.status(200).send(filled);
 }
