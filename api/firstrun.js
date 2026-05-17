@@ -82,6 +82,24 @@ function normalizeB64(s) {
 }
 
 export default function handler(req, res) {
+  try {
+    return handleImpl(req, res);
+  } catch (e) {
+    // Surface uncaught exceptions instead of letting Vercel return its
+    // generic FUNCTION_INVOCATION_FAILED page — the original cause is
+    // otherwise only visible in Vercel logs.
+    const detail = (e && (e.stack || e.message)) || String(e);
+    try {
+      return fail(res, 500, `unhandled in /api/firstrun: ${detail}`);
+    } catch {
+      // If even `fail` blows up (e.g. headers already sent), let Vercel
+      // do its default 500 — there's nothing more we can do.
+      throw e;
+    }
+  }
+}
+
+function handleImpl(req, res) {
   if (req.method !== "GET") {
     return fail(res, 405, "Method not allowed (use GET).");
   }
