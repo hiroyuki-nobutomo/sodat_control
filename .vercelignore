@@ -1,7 +1,7 @@
 # Files Vercel doesn't need: keep docs/ (static site), api/ (serverless
-# functions), vercel.json, and user_data_snippet.yaml.template (read at
-# request time by api/firstrun.js). Everything else is Pi-side runtime code
-# or secrets and should not be uploaded.
+# functions), and vercel.json. Everything else is Pi-side runtime code or
+# secrets and should not be uploaded. (The cloud-init template is inlined
+# into api/firstrun.js, so no template file needs to be bundled.)
 
 # Python — Pi runtime, never executed on Vercel
 src/
@@ -22,12 +22,11 @@ arduino/
 data/
 secrets/
 
-# Config & misc — block by default, then un-ignore the one the function reads
+# Config & misc
 config.yaml
 config.yaml.template
 *.yaml
 *.yml
-!user_data_snippet.yaml.template
 *.db
 *.log
 mock_uploads.jsonl
