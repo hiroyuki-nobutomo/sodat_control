@@ -361,8 +361,8 @@
       <span data-lang="en">Opened this page without a token? (manual entry)</span>
     </summary>
     <p class="small">
-      <span data-lang="ja">管理者から受け取った <code>token=</code> の値をここに貼り付けて「適用」を押すと、URL にトークンを付けてリロードします。</span>
-      <span data-lang="en">Paste the <code>token=</code> value you got from the lab admin and click Apply. The page will reload with the token attached.</span>
+      <span data-lang="ja">管理者から受け取った <code>token=</code> の値をここに貼り付けて「適用」を押すと、URL にトークンを付けてリロードします。次回以降は URL にトークンが無くてもこのブラウザに記憶された値で動作します。</span>
+      <span data-lang="en">Paste the <code>token=</code> value you got from the lab admin and click Apply. The page will reload with the token attached, and this browser will remember it for future visits (even without the <code>?token=</code> in the URL).</span>
     </p>
     <label for="tokenInput">
       <span data-lang="ja">アクセストークン</span>
@@ -494,8 +494,21 @@ const KNOWN_SENSORS = [
 ];
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 const STEP_COUNT = 4;
+// URL ?token=... is the primary source. We also persist it in localStorage
+// so the wizard keeps working if the researcher later opens the page
+// without the query (browser session restore, bookmark without token,
+// query-stripping extension, etc.). The token holder already has access,
+// so caching it on the same browser doesn't broaden the trust boundary.
+const TOKEN_STORAGE_KEY = 'sodatToken';
 const PAGE_TOKEN = (function () {
-  try { return new URLSearchParams(window.location.search).get('token') || ''; }
+  let fromUrl = '';
+  try { fromUrl = new URLSearchParams(window.location.search).get('token') || ''; }
+  catch (e) {}
+  if (fromUrl) {
+    try { localStorage.setItem(TOKEN_STORAGE_KEY, fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem(TOKEN_STORAGE_KEY) || ''; }
   catch (e) { return ''; }
 })();
 
@@ -670,7 +683,7 @@ function refreshSnippetForm() {
     setSnippetButtonsDisabled(true);
     writeStatus.className = 'status err';
     writeStatus.textContent = t(
-      'アクセストークンが URL にありません — 管理者から受け取った ?token=... 付き URL で開き直すか、下の欄に直接貼り付けてください。',
+      'アクセストークンが見つかりません — 管理者から受け取った ?token=... 付き URL で開き直すか、下の欄に直接貼り付けてください。',
       'Access token missing — open this page via the lab-admin URL (it contains ?token=…), or paste it below.'
     );
     if (tokenFallback) tokenFallback.open = true;
@@ -782,6 +795,7 @@ window.applyToken = function () {
   const inp = document.getElementById('tokenInput');
   const v = (inp && inp.value || '').trim();
   if (!v) return;
+  try { localStorage.setItem(TOKEN_STORAGE_KEY, v); } catch (e) {}
   const url = new URL(window.location.href);
   url.searchParams.set('token', v);
   window.location.href = url.toString();
