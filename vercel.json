@@ -6,11 +6,6 @@
   "outputDirectory": "docs",
   "cleanUrls": true,
   "trailingSlash": false,
-  "functions": {
-    "api/firstrun.js": {
-      "includeFiles": "user_data_snippet.yaml.template"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
