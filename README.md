@@ -10,11 +10,11 @@ The easiest way to provision a new device is the **web setup page**, which walks
 
 👉 **Open the web setup:** https://sodat-control.vercel.app/
 
-What the page covers:
-1. Install Raspberry Pi Imager (one-time, on your PC)
-2. Flash Raspberry Pi OS (64-bit) to a microSD with hostname `sNN` (SFC) or `aNN` (API building), Wi-Fi, and your SSH user — all done inside Pi Imager's customisation panel. (Lite 64-bit also works if you prefer a smaller image.)
-3. On the web page, enter the Pi Imager username and click **Download snippet** — the page calls `/api/firstrun`, which injects the project's `service_account.json` (stored as a Vercel environment variable, not on researcher PCs) into the snippet
-4. Paste the downloaded snippet into the SD card's `firstrun.sh`, eject, boot the Pi — done
+The page is a 4-step wizard:
+1. Install Raspberry Pi Imager (one-time, on your PC).
+2. Flash Raspberry Pi OS (64-bit) to a microSD with hostname `sNN` (SFC) or `aNN` (API building), Wi-Fi, and your SSH user — all done inside Pi Imager's customisation panel. (Lite 64-bit also works.)
+3. Enter the Pi Imager username + pick sensors, then write the snippet to the SD card. The page fetches `/api/firstrun`, which injects the project's `service_account.json` (stored as a Vercel env var, not on researcher PCs) into the snippet, and writes it straight into `bootfs/firstrun.sh` via the File System Access API (📂) — or via copy / download as fallbacks for older browsers.
+4. Eject the SD card, insert it into the Pi, power on — done.
 
 The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in Pi Imager, so there's no per-device config edit.
 
@@ -29,7 +29,7 @@ The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in
 > 5. Redeploy so both env vars take effect.
 > 6. Share the **guide** URL with lab members in the form:
 >    `https://sodat-control.vercel.app/?token=<the-SODAT_ACCESS_TOKEN-value>`
->    Researchers land on the step-by-step guide (Pi Imager → SD card → boot) and the snippet-generator link inside it carries the token through automatically. Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
+>    Researchers land on the 4-step wizard (Pi Imager → SD flash → snippet → boot); Step 3 picks up the token from the URL automatically. Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
 
 Researchers never see the `service_account.json` file with this setup. Rotating the token = update `SODAT_ACCESS_TOKEN` in Vercel, redeploy — old links die instantly. Rotating the SA key itself = generate a new key in Cloud Console, update `SODAT_SERVICE_ACCOUNT_JSON_B64`, redeploy.
 
@@ -143,11 +143,11 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 
 👉 **Web セットアップを開く:** https://sodat-control.vercel.app/
 
-ページでカバーする内容:
-1. Raspberry Pi Imager をインストール (PC 側、1 回のみ)
+ページは 4 ステップウィザード:
+1. Raspberry Pi Imager をインストール (PC 側、1 回だけ)
 2. Pi Imager で Raspberry Pi OS (64-bit) を microSD に書き込み、Pi Imager のカスタマイズ画面でホスト名 `sNN` (SFC) / `aNN` (API 機構) / Wi-Fi / SSH ユーザを設定 (より小さいイメージが良ければ Lite 64-bit も可)
-3. Web ページで Pi Imager で設定したユーザ名を入力 → **「snippet をダウンロード」** をクリック。`/api/firstrun` が Vercel 環境変数の `service_account.json` を埋め込んで完成版を返す (鍵は研究者の PC に渡らない)
-4. ダウンロードした snippet を SD カード上の `firstrun.sh` に貼り付け、取り出して Pi を起動 — 以上
+3. Pi Imager で設定したユーザ名 + センサーを指定し、SD カードに snippet を書き込み。ページが `/api/firstrun` を fetch し、Vercel 環境変数の `service_account.json` を埋め込んだ snippet を File System Access API (📂) で `bootfs/firstrun.sh` に直書き込み (鍵は研究者の PC に渡らない)。古いブラウザはコピー / ダウンロードのフォールバックあり
+4. SD を取り出して Pi に挿入 → 電源 ON — 以上
 
 `device_id` (`S01`, `S02`, ...) は Pi Imager で設定したホスト名から自動導出されるので、機器ごとに config を編集する必要はありません。
 
@@ -162,7 +162,7 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 > 5. 再デプロイで両方の env var が反映される
 > 6. ラボメンバーには**ガイドページ**の URL を共有:
 >    `https://sodat-control.vercel.app/?token=<SODAT_ACCESS_TOKEN の値>`
->    研究者は手順 1〜4 のガイド (Pi Imager → SD カード → 起動) に着地し、ガイド内の snippet ダウンロード CTA が自動的にトークンを引き継ぎます。この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
+>    研究者は 4 ステップウィザード (Pi Imager → SD 焼き → snippet → 起動) に着地し、Step 3 が URL のトークンを自動で使います。この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
 
 研究者は `service_account.json` を直接触る必要がありません。トークンローテーション = Vercel の `SODAT_ACCESS_TOKEN` を更新して再デプロイ、で旧 URL が即無効化。SA キー本体のローテーション = Cloud Console で新規発行 → `SODAT_SERVICE_ACCOUNT_JSON_B64` を更新 → 再デプロイ。
 
