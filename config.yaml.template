@@ -24,8 +24,13 @@ sensors:
   k_constant: 10.0
 uploader:
   type: GoogleDrive
-  data_folder_id: 1P7JW2SwfLpMFoELkBya8IsPC-nA6J-w2
-  images_folder_id: 1DimUE8NX4_hvoAZbWcUwMP2mDPaw00Rg
+  # These IDs must point at folders inside a Google Workspace **Shared Drive**
+  # (not personal "My Drive" folders), and the project Service Account must be
+  # added to the Shared Drive as Content Manager. Service Accounts have no
+  # personal storage quota, so any upload into a regular My Drive folder fails
+  # with 403 storageQuotaExceeded. See README "One-time project setup".
+  data_folder_id: 1PmAWC1bDYRS8Okg7cI2k_6u50BxF4Dnm
+  images_folder_id: 1mSPfmhywhFbYU9m8MS7WrokJPJrgHiv7
   credentials_file: secrets/service_account.json
   interval_seconds: 1800
   log_interval_seconds: 600

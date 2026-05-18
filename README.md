@@ -22,12 +22,13 @@ The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in
 >
 > 1. In Google Cloud Console, create a Service Account, then generate a JSON key.
 > 2. Note its email (`xxx@xxx.iam.gserviceaccount.com`).
-> 3. Share the target Google Drive folder(s) and Spreadsheet with that email, granting **Editor** access.
-> 4. In the Vercel dashboard for this repo, add two Environment Variables (**Project Settings → Environment Variables**, apply to Production + Preview):
+> 3. **Create a Shared Drive** in Google Workspace (left sidebar of drive.google.com → "Shared drives" → "+ New"). A regular My Drive folder will *not* work — Service Accounts have no personal storage quota, so any image/log upload into a My Drive folder fails with `403 storageQuotaExceeded`. The Shared Drive's own quota is what gets used. Inside the Shared Drive create two folders (e.g. `DATA/` and `Images/`); the per-device subfolders (`sensor/<device_id>/`, `logs/<device_id>/`, `<device_id>/`) are auto-created on first upload. Open each folder, copy the ID from the URL (the long string after `/folders/`), and paste them into `config.yaml.template`'s `data_folder_id` and `images_folder_id`.
+> 4. **Add the Service Account email to that Shared Drive as Content Manager** (Shared Drive → Manage members → paste the SA email, set role to "Content manager"). Editor is not enough for nested folder creation.
+> 5. In the Vercel dashboard for this repo, add two Environment Variables (**Project Settings → Environment Variables**, apply to Production + Preview):
 >    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — value is the output of `base64 < service_account.json | tr -d '\n'`
 >    - `SODAT_ACCESS_TOKEN` — any random string you generate (e.g. `openssl rand -hex 24`). This is the shared lab "password" that gates the `/api/firstrun` endpoint.
-> 5. Redeploy so both env vars take effect.
-> 6. Share the **guide** URL with lab members in the form:
+> 6. Redeploy so both env vars take effect.
+> 7. Share the **guide** URL with lab members in the form:
 >    `https://sodat-control.vercel.app/?token=<the-SODAT_ACCESS_TOKEN-value>`
 >    Researchers land on the 4-step wizard (Pi Imager → SD flash → snippet → boot); Step 3 picks up the token from the URL automatically. Knowing this URL = ability to download a Drive-editing credential, so treat it like a password (1Password / Bitwarden / lab Slack DM, not a public channel).
 
@@ -155,12 +156,13 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 >
 > 1. Google Cloud Console で Service Account を作成し、JSON キーを発行
 > 2. その Service Account のメールアドレス (`xxx@xxx.iam.gserviceaccount.com`) を控える
-> 3. 出力先の Google Drive フォルダおよびスプレッドシートを、そのメールアドレスに **編集者**権限で共有
-> 4. Vercel ダッシュボードで環境変数を 2 つ追加 (**Project Settings → Environment Variables**、Production + Preview にチェック):
+> 3. **共有ドライブ (Shared Drive) を Google Workspace で作成** (drive.google.com 左サイドバー「共有ドライブ」→ 「+ 新規」)。通常の My Drive 配下のフォルダは**使えません** — Service Account は個人ストレージ quota を持たないので、My Drive 配下にアップロードしようとすると必ず `403 storageQuotaExceeded` で失敗します。共有ドライブを使うとそのドライブ自身の quota が消費される仕組み。共有ドライブの中に `DATA/` と `Images/` のような 2 つのフォルダを作る (機器別サブフォルダ `sensor/<device_id>/`, `logs/<device_id>/`, `<device_id>/` は初回アップロード時に自動作成)。各フォルダを開いて URL の `/folders/` 以降の ID を控え、`config.yaml.template` の `data_folder_id` と `images_folder_id` に貼り付ける
+> 4. **その共有ドライブのメンバーに、上記 Service Account のメールアドレスを「コンテンツ管理者 (Content Manager)」権限で追加** (共有ドライブ → メンバーを管理 → SA メール貼り付け → ロール「コンテンツ管理者」)。「編集者」では下位フォルダ作成ができないので不可
+> 5. Vercel ダッシュボードで環境変数を 2 つ追加 (**Project Settings → Environment Variables**、Production + Preview にチェック):
 >    - `SODAT_SERVICE_ACCOUNT_JSON_B64` — 値は `base64 < service_account.json | tr -d '\n'` の結果 (1 行の base64 文字列)
 >    - `SODAT_ACCESS_TOKEN` — ランダム文字列 (例: `openssl rand -hex 24` の出力)。これが `/api/firstrun` のアクセスゲートのトークン
-> 5. 再デプロイで両方の env var が反映される
-> 6. ラボメンバーには**ガイドページ**の URL を共有:
+> 6. 再デプロイで両方の env var が反映される
+> 7. ラボメンバーには**ガイドページ**の URL を共有:
 >    `https://sodat-control.vercel.app/?token=<SODAT_ACCESS_TOKEN の値>`
 >    研究者は 4 ステップウィザード (Pi Imager → SD 焼き → snippet → 起動) に着地し、Step 3 が URL のトークンを自動で使います。この URL を知っている = Drive 編集権限の鍵を取得できる、と同義。Slack の DM・1Password・対面など安全な経路で配布
 
