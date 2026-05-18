@@ -78,21 +78,44 @@ write_files:
     content: |
       #!/bin/bash
       # Sodat first-boot bootstrap, invoked by cloud-init's runcmd phase.
+      # cloud-init runs runcmd as root, so we don't need sudo here — Pi Imager
+      # v2's user-data does not grant the created user NOPASSWD sudo, and a
+      # plain "sudo bash" inside this script would block on a password prompt
+      # with no tty (which is what happened on the first deploy).
       set -u
       SODAT_LOG=/var/log/sodat-firstrun.log
       exec >>"$SODAT_LOG" 2>&1
-      echo "=== sodat firstrun: $(date -Is) ==="
+      echo "=== sodat firstrun: $(date -Is) (clock may be unsynced) ==="
 
       # Load SODAT_USER / SODAT_SENSORS written above.
       . /etc/sodat-firstrun.env
 
-      # Wait for the network (cloud-init starts very early).
+      # 1. Trigger NTP and wait for the clock to actually sync. Pi 5 boots with
+      # an unset RTC, so the first cloud-init runcmd typically runs ~4 weeks in
+      # the past, which then breaks apt's sig-validity check and HTTPS certs.
+      timedatectl set-ntp true 2>/dev/null || true
       for i in $(seq 1 60); do
-          getent hosts github.com >/dev/null 2>&1 && break
-          sleep 2
+          [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" = "yes" ] && break
+          sleep 5
       done
+      echo "post-ntp wait: $(date -Is) (NTPSynchronized=$(timedatectl show -p NTPSynchronized --value 2>/dev/null))"
 
-      # Locate the user's home (created by cloud-init's cc_users_groups,
+      # 2. Wait for actual outbound HTTPS reachability — DNS-only checks can
+      # succeed against a stale cache while the route isn't usable.
+      REACHED=no
+      for i in $(seq 1 60); do
+          if curl -fsS --max-time 5 -o /dev/null https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/VERSION; then
+              REACHED=yes; break
+          fi
+          sleep 5
+      done
+      echo "post-reach wait: $(date -Is) REACHED=$REACHED"
+      if [ "$REACHED" != "yes" ] ; then
+          echo "sodat firstrun: never reached raw.githubusercontent.com; aborting bootstrap."
+          exit 0
+      fi
+
+      # 3. Locate the user's home (created by cloud-init's cc_users_groups,
       # which runs before runcmd).
       SODAT_HOME=$(getent passwd "$SODAT_USER" | cut -d: -f6)
       if [ -z "$SODAT_HOME" ]; then
@@ -100,7 +123,7 @@ write_files:
           exit 0
       fi
 
-      # Move the service-account key into the user's secrets dir.
+      # 4. Move the service-account key into the user's secrets dir.
       SECRETS_DIR="$SODAT_HOME/sensor_sfc/secrets"
       install -d -o "$SODAT_USER" -g "$SODAT_USER" -m 700 "$SECRETS_DIR"
       SA_PATH="$SECRETS_DIR/service_account.json"
@@ -109,11 +132,18 @@ write_files:
       chown "$SODAT_USER":"$SODAT_USER" "$SA_PATH"
       chmod 600 "$SA_PATH"
 
-      # Run the Sodat web installer as the real user (sudo'd internally).
-      runuser -u "$SODAT_USER" -- bash -c \
-        'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash'
+      # 5. Run the Sodat web installer. We're already root from cloud-init, so
+      # we don't sudo. SUDO_USER is what bootstrap.sh inspects to figure out
+      # which non-root account owns the install — set it explicitly.
+      echo "running bootstrap as root with SUDO_USER=$SODAT_USER ..."
+      if ! SUDO_USER="$SODAT_USER" bash -c \
+          'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'; then
+          echo "sodat firstrun: bootstrap.sh failed (exit=$?). Re-run later with:"
+          echo "  SUDO_USER=$SODAT_USER bash -c 'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'"
+          exit 0
+      fi
 
-      # Derive device_id from hostname (s05 -> S05, a01 -> A01).
+      # 6. Derive device_id from hostname (s05 -> S05, a01 -> A01).
       HOSTNAME_DERIVED=$(hostname | tr '[:lower:]' '[:upper:]' | sed -nE 's/^([A-Z][0-9]+)$/\1/p')
       if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
           runuser -u "$SODAT_USER" -- \
@@ -122,7 +152,7 @@ write_files:
               --device-id "$HOSTNAME_DERIVED" || true
       fi
 
-      # Trim config.yaml's sensors[] to the researcher-selected subset.
+      # 7. Trim config.yaml's sensors[] to the researcher-selected subset.
       if [ -n "$SODAT_SENSORS" ] && [ "$SODAT_SENSORS" != "all" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
           runuser -u "$SODAT_USER" -- \
               "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
@@ -131,7 +161,7 @@ write_files:
               --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
       fi
 
-      # Pick up the new device_id / sensor set.
+      # 8. Pick up the new device_id / sensor set.
       systemctl restart sensor_sfc 2>/dev/null || true
 
       echo "=== sodat firstrun: done $(date -Is) ==="
