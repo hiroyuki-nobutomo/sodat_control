@@ -161,10 +161,14 @@ write_files:
               --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
       fi
 
-      # 8. Pick up the new device_id / sensor set.
-      systemctl restart sensor_sfc 2>/dev/null || true
-
-      echo "=== sodat firstrun: done $(date -Is) ==="
+      # 8. Reboot so the firmware re-reads /boot/firmware/config.txt — 01_install_update.sh
+      # appends 'dtparam=i2c_arm=on' to enable I2C, but the kernel/firmware only picks
+      # that up on the NEXT boot, which means BME280 (the I2C sensor) returns
+      # "No such file or directory: '/dev/i2c-1'" until then. Bouncing here makes
+      # the very first cloud-init pass a complete, runnable install.
+      # cloud-init tracks instance-id; the post-reboot boot does not re-run runcmd.
+      echo "=== sodat firstrun: rebooting to apply firmware-level config (I2C) $(date -Is) ==="
+      systemctl reboot
 
 runcmd:
   - [ /usr/local/sbin/sodat-firstrun.sh ]
