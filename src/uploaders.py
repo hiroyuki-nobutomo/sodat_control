@@ -136,9 +136,16 @@ class GoogleSheetsUploader(Uploader):
     @robust_retry()
     def _retry_get_or_create_subfolder(self, parent_id, folder_name):
         query = f"name = '{folder_name}' and '{parent_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-        results = self.drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        # supportsAllDrives + includeItemsFromAllDrives are required when any of
+        # the target folders live in a Shared Drive — Service Accounts have no
+        # personal storage quota, so the only way to upload images/logs is to
+        # use a Shared Drive (the quota is the drive's, not the SA's).
+        results = self.drive_service.files().list(
+            q=query, spaces='drive', fields='files(id, name)',
+            supportsAllDrives=True, includeItemsFromAllDrives=True,
+        ).execute()
         files = results.get('files', [])
-        
+
         if files:
             return files[0]['id']
         else:
@@ -147,7 +154,10 @@ class GoogleSheetsUploader(Uploader):
                 'mimeType': 'application/vnd.google-apps.folder',
                 'parents': [parent_id]
             }
-            file = self.drive_service.files().create(body=file_metadata, fields='id').execute()
+            file = self.drive_service.files().create(
+                body=file_metadata, fields='id',
+                supportsAllDrives=True,
+            ).execute()
             logging.info(f"Created new subfolder '{folder_name}' ({file.get('id')})")
             return file.get('id')
 
@@ -180,9 +190,12 @@ class GoogleSheetsUploader(Uploader):
     @robust_retry()
     def _retry_resolve_spreadsheet(self, target_name):
         query = f"name = '{target_name}' and '{self.device_data_folder_id}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false"
-        results = self.drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        results = self.drive_service.files().list(
+            q=query, spaces='drive', fields='files(id, name)',
+            supportsAllDrives=True, includeItemsFromAllDrives=True,
+        ).execute()
         files = results.get('files', [])
-        
+
         if files:
             self.spreadsheet_id = files[0]['id']
             logging.info(f"Found existing spreadsheet: {target_name} ({self.spreadsheet_id})")
@@ -193,10 +206,13 @@ class GoogleSheetsUploader(Uploader):
                 'mimeType': 'application/vnd.google-apps.spreadsheet',
                 'parents': [self.device_data_folder_id]
             }
-            file = self.drive_service.files().create(body=file_metadata, fields='id').execute()
+            file = self.drive_service.files().create(
+                body=file_metadata, fields='id',
+                supportsAllDrives=True,
+            ).execute()
             self.spreadsheet_id = file.get('id')
             logging.info(f"Created new spreadsheet: {target_name} ({self.spreadsheet_id})")
-            
+
             # Add headers immediately
             self._ensure_headers()
 
@@ -239,9 +255,10 @@ class GoogleSheetsUploader(Uploader):
         file = self.drive_service.files().create(
             body=file_metadata,
             media_body=media,
-            fields='id, webViewLink'
+            fields='id, webViewLink',
+            supportsAllDrives=True,
         ).execute()
-        
+
         logging.info(f"Uploaded image {filename} to Drive (ID: {file.get('id')})")
         return file.get('webViewLink'), file.get('id')
 
@@ -287,18 +304,22 @@ class GoogleSheetsUploader(Uploader):
     def _retry_upload_log(self, log_path, filename):
         # Check if file exists to update it, otherwise create
         query = f"name = '{filename}' and '{self.device_logs_folder_id}' in parents and trashed = false"
-        results = self.drive_service.files().list(q=query, spaces='drive', fields='files(id)').execute()
+        results = self.drive_service.files().list(
+            q=query, spaces='drive', fields='files(id)',
+            supportsAllDrives=True, includeItemsFromAllDrives=True,
+        ).execute()
         files = results.get('files', [])
-        
+
         # Use resumable=False to prevent HttpError 400 on small files
         media = MediaFileUpload(log_path, mimetype='text/plain', resumable=False)
-        
+
         if files:
             # Update existing file
             file_id = files[0]['id']
             self.drive_service.files().update(
                 fileId=file_id,
-                media_body=media
+                media_body=media,
+                supportsAllDrives=True,
             ).execute()
             logging.info(f"Updated log file {filename} in Drive (ID: {file_id})")
         else:
@@ -310,7 +331,8 @@ class GoogleSheetsUploader(Uploader):
             file = self.drive_service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields='id'
+                fields='id',
+                supportsAllDrives=True,
             ).execute()
             logging.info(f"Created log file {filename} in Drive (ID: {file.get('id')})")
 
