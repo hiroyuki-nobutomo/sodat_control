@@ -55,18 +55,6 @@ def main():
     
     # 5. Initialize Uploader
     uploader_type = cm.get("uploader.type", "Mock")
-    
-    # Pre-calculate headers for Google Sheets
-    initial_headers = []
-    for sensor in sensors:
-        try:
-            keys = sensor.get_measurement_keys()
-            for k in keys:
-                display_key = k.replace("_", " ").title()
-                header_name = f"{display_key} ({sensor.sensor_type} - {sensor.sensor_id})"
-                initial_headers.append(header_name)
-        except Exception as e:
-            logging.warning(f"Could not determine headers for sensor {sensor.sensor_id}: {e}")
 
     if uploader_type == "GoogleDrive":
         logging.info("Using Google Sheets Uploader.")
@@ -75,12 +63,15 @@ def main():
             "uploader.credentials_file",
             cm.get("uploader.token_file", "secrets/service_account.json"),
         )
+        # Master spreadsheet ID is required — every device writes long-form
+        # rows into the lab-wide 'All' / 'Images' tabs. Missing config here
+        # is a hard error (see GoogleSheetsUploader.__init__).
         uploader = GoogleSheetsUploader(
             credentials_path=credentials_path,
-            folder_id=cm.get("uploader.images_folder_id"),    # New Config
-            data_folder_id=cm.get("uploader.data_folder_id"), # New Config
+            spreadsheet_id=cm.get("uploader.spreadsheet_id"),
+            folder_id=cm.get("uploader.images_folder_id"),
+            data_folder_id=cm.get("uploader.data_folder_id"),
             device_id=device_id,
-            initial_headers=initial_headers
         )
     else:
         logging.info("Using Mock Uploader.")

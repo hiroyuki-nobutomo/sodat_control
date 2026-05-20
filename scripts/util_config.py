@@ -30,6 +30,13 @@ def update_device_id(config, device_id):
     print(f"Updating Device ID: {config.get('device_id')} -> {device_id}")
     config['device_id'] = device_id
 
+def update_spreadsheet_id(config, spreadsheet_id):
+    if 'uploader' not in config:
+        config['uploader'] = {}
+    current = config['uploader'].get('spreadsheet_id')
+    print(f"Updating uploader.spreadsheet_id: {current} -> {spreadsheet_id}")
+    config['uploader']['spreadsheet_id'] = spreadsheet_id
+
 def update_retention(config, days):
     if 'storage' in config and 'retention' in config['storage']:
         print(f"Updating Retention Policy: {days} days")
@@ -65,16 +72,17 @@ def update_intervals(config, sensor_int, camera_int, upload_int, upload_offset):
 def main():
     parser = argparse.ArgumentParser(description="Configure Sensor SFC Device Settings")
     parser.add_argument("--device-id", help="Set the unique Device ID (e.g., S01, A01)")
+    parser.add_argument("--spreadsheet-id", help="Set the lab-wide master spreadsheet ID (uploader.spreadsheet_id)")
     parser.add_argument("--retention-days", type=int, help="Set local data retention period (days)")
     parser.add_argument("--sensor-interval", type=int, help="Set environmental sensor interval (seconds)")
     parser.add_argument("--camera-interval", type=int, help="Set camera interval (seconds)")
     parser.add_argument("--upload-interval", type=int, help="Set upload interval (seconds)")
     parser.add_argument("--upload-offset", type=int, help="Set upload start offset (seconds)")
     parser.add_argument("--config", default=CONFIG_FILE, help=f"Path to config file (default: {CONFIG_FILE})")
-    
+
     args = parser.parse_args()
 
-    if not any([args.device_id, args.retention_days, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset]):
+    if not any([args.device_id, args.spreadsheet_id, args.retention_days, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset]):
         parser.print_help()
         sys.exit(0)
 
@@ -82,10 +90,13 @@ def main():
 
     if args.device_id:
         update_device_id(config, args.device_id)
-    
+
+    if args.spreadsheet_id:
+        update_spreadsheet_id(config, args.spreadsheet_id)
+
     if args.retention_days:
         update_retention(config, args.retention_days)
-    
+
     update_intervals(config, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset)
 
     save_config(args.config, config)

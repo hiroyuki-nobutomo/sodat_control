@@ -23,6 +23,40 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
 ]
 
+# Tab names inside the lab-wide master spreadsheet. Both must exist before the
+# uploader runs; this code never creates them (the QUERY-based view tabs such
+# as 'S01' that researchers consume must not be touched).
+SHEET_SCALAR = "All"
+SHEET_IMAGES = "Images"
+
+# Long-form ("tidy") layout. Every scalar measurement becomes one row in
+# `All`; every camera capture becomes one row in `Images`. Layouts are
+# verified at startup but never written by code — Operators maintain them.
+EXPECTED_HEADERS_SCALAR = [
+    "Timestamp (JST)", "Device ID", "Sensor Type", "Sensor ID",
+    "Metric", "Value", "Unit",
+]
+EXPECTED_HEADERS_IMAGES = [
+    "Timestamp (JST)", "Device ID", "Sensor ID", "webViewLink", "directLink",
+]
+
+# Metric → unit suffix shown in the Unit column. Unknown metric names
+# (e.g., custom keys from Arduino over SerialJSON) get an empty Unit cell
+# rather than a guess — researchers can fill those in via the master sheet
+# if/when conventions stabilise.
+UNIT_BY_METRIC = {
+    "temperature": "℃",
+    "humidity":    "%",
+    "pressure":    "hPa",
+    "illuminance": "lx",
+    "co2":         "ppm",
+}
+
+# Camera readings carry a local file path under value["image_path"] before
+# upload; that key signals "this is a camera capture, not a scalar metric"
+# and routes the row to the Images sheet instead of All.
+CAMERA_VALUE_KEY = "image_path"
+
 def robust_retry():
     """Retry network operations for up to 120s with exponential backoff."""
     return retry(
@@ -69,37 +103,48 @@ class MockUploader(Uploader):
         logging.info(f"MockUploader: Would upload log file {log_path} now.")
 
 class GoogleSheetsUploader(Uploader):
-    def __init__(self, credentials_path: str, folder_id: Optional[str] = None,
-                 data_folder_id: Optional[str] = None, device_id: str = "Unknown",
-                 initial_headers: Optional[List[str]] = None):
+    def __init__(self, credentials_path: str, spreadsheet_id: str,
+                 folder_id: Optional[str] = None,
+                 data_folder_id: Optional[str] = None,
+                 device_id: str = "Unknown"):
         if not HAS_GOOGLE:
             raise RuntimeError("Google libraries not installed.")
+        # spreadsheet_id is mandatory — refuse to start rather than silently
+        # create a stray per-device file (the master sheet is human-managed).
+        if not spreadsheet_id:
+            raise ValueError(
+                "uploader.spreadsheet_id is required. Set it in config.yaml "
+                "(under 'uploader:') to the ID of the lab-wide master sheet "
+                "that contains the 'All' and 'Images' tabs."
+            )
 
         self.credentials_path = credentials_path
-        self.images_root_id = folder_id      # Config: images_folder_id (DATA/Images)
-        self.data_root_id = data_folder_id   # Config: data_folder_id (DATA)
+        self.images_root_id = folder_id      # Config: images_folder_id (DATA/Images), still used to organise image uploads per device
+        self.data_root_id = data_folder_id   # Config: data_folder_id (DATA), still used for the log-upload destination
         self.device_id = device_id
-        self.initial_headers = initial_headers or []
-        
+        self.spreadsheet_id = spreadsheet_id
+
         self.gc = None
         self.drive_service = None
-        self.spreadsheet_id = None
-        
-        # Subfolder IDs
-        self.device_data_folder_id = None
+        self.spreadsheet = None              # cached gspread Spreadsheet handle
+        self.scalar_ws = None                # cached 'All' worksheet
+        self.images_ws = None                # cached 'Images' worksheet
+
+        # Per-device Drive subfolder IDs (images + logs only; sensor data no
+        # longer needs its own subfolder because all devices write into the
+        # same master spreadsheet).
         self.device_images_folder_id = None
         self.device_logs_folder_id = None
-        
-        # Authenticate immediately (with retry)
+
+        # Authenticate immediately (with retry). We deliberately swallow
+        # failures so the app can keep running and self-heal on the next
+        # upload cycle (e.g., if Wi-Fi or NTP isn't ready yet at boot).
         try:
             self._authenticate()
             self._resolve_folder_structure()
-            self._resolve_spreadsheet()
+            self._open_sheets()
         except Exception as e:
             logging.error(f"Initialization failed (Network or Auth): {e}")
-            # We don't crash here so the app can start and try again later? 
-            # Or we let it crash and systemd restarts?
-            # For robustness, we log and proceed, but instance might be broken until self-healed.
             pass
 
     @robust_retry()
@@ -162,77 +207,87 @@ class GoogleSheetsUploader(Uploader):
             return file.get('id')
 
     def _resolve_folder_structure(self):
-        """Resolves/Creates the directory structure in Drive."""
-        # 1. Images: DATA/Images/{device_id}
+        """Resolve per-device Drive subfolders for images + logs.
+
+        Sensor data no longer needs a per-device folder — every device writes
+        into the same master spreadsheet (identified by spreadsheet_id) — so
+        the old DATA/sensor/{device_id}/ traversal is gone.
+        """
+        # Images: DATA/Images/{device_id}
         self.device_images_folder_id = self._get_or_create_subfolder(self.images_root_id, self.device_id)
 
-        # 2. Sensor Data: DATA/sensor/{device_id}
-        sensor_root_id = self._get_or_create_subfolder(self.data_root_id, "sensor")
-        self.device_data_folder_id = self._get_or_create_subfolder(sensor_root_id, self.device_id)
-        
-        # 3. Logs: DATA/logs/{device_id}
+        # Logs: DATA/logs/{device_id}
         logs_root_id = self._get_or_create_subfolder(self.data_root_id, "logs")
         self.device_logs_folder_id = self._get_or_create_subfolder(logs_root_id, self.device_id)
 
-    def _resolve_spreadsheet(self):
-        """Finds existing spreadsheet for this device or creates a new one."""
-        if not self.device_data_folder_id:
-            logging.warning("No device_data_folder_id available. Cannot resolve spreadsheet.")
-            return
+    def _open_sheets(self):
+        """Open the master spreadsheet and resolve the All + Images tabs.
 
-        target_name = f"SensorData_{self.device_id}"
-        
+        Both tabs are expected to exist (operators maintain them, including
+        the QUERY-based per-device view tabs which this code must never
+        touch). A WorksheetNotFound here is a hard configuration error.
+        """
         try:
-            self._retry_resolve_spreadsheet(target_name)
+            self._retry_open_sheets()
         except Exception as e:
-            logging.error(f"Failed to resolve spreadsheet after retries: {e}")
+            logging.error(f"Failed to open master spreadsheet {self.spreadsheet_id}: {e}")
+            # Leave scalar_ws / images_ws as None — _ensure_initialized retries.
 
     @robust_retry()
-    def _retry_resolve_spreadsheet(self, target_name):
-        query = f"name = '{target_name}' and '{self.device_data_folder_id}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false"
-        results = self.drive_service.files().list(
-            q=query, spaces='drive', fields='files(id, name)',
-            supportsAllDrives=True, includeItemsFromAllDrives=True,
-        ).execute()
-        files = results.get('files', [])
+    def _retry_open_sheets(self):
+        self.spreadsheet = self.gc.open_by_key(self.spreadsheet_id)
+        try:
+            self.scalar_ws = self.spreadsheet.worksheet(SHEET_SCALAR)
+        except gspread.exceptions.WorksheetNotFound:
+            raise RuntimeError(
+                f"Tab '{SHEET_SCALAR}' not found in spreadsheet {self.spreadsheet_id}. "
+                "Create it manually with the expected headers; this code never "
+                "creates sheet tabs."
+            )
+        try:
+            self.images_ws = self.spreadsheet.worksheet(SHEET_IMAGES)
+        except gspread.exceptions.WorksheetNotFound:
+            raise RuntimeError(
+                f"Tab '{SHEET_IMAGES}' not found in spreadsheet {self.spreadsheet_id}. "
+                "Create it manually with the expected headers; this code never "
+                "creates sheet tabs."
+            )
+        # Best-effort header sanity check — warn only, never rewrite, since
+        # the operator might intentionally have extra trailing columns.
+        self._warn_if_headers_mismatch(self.scalar_ws, EXPECTED_HEADERS_SCALAR, SHEET_SCALAR)
+        self._warn_if_headers_mismatch(self.images_ws, EXPECTED_HEADERS_IMAGES, SHEET_IMAGES)
+        logging.info(
+            f"Master spreadsheet opened: id={self.spreadsheet_id} "
+            f"tabs=[{SHEET_SCALAR}, {SHEET_IMAGES}]"
+        )
 
-        if files:
-            self.spreadsheet_id = files[0]['id']
-            logging.info(f"Found existing spreadsheet: {target_name} ({self.spreadsheet_id})")
-        else:
-            logging.info(f"Spreadsheet {target_name} not found. Creating new one...")
-            file_metadata = {
-                'name': target_name,
-                'mimeType': 'application/vnd.google-apps.spreadsheet',
-                'parents': [self.device_data_folder_id]
-            }
-            file = self.drive_service.files().create(
-                body=file_metadata, fields='id',
-                supportsAllDrives=True,
-            ).execute()
-            self.spreadsheet_id = file.get('id')
-            logging.info(f"Created new spreadsheet: {target_name} ({self.spreadsheet_id})")
-
-            # Add headers immediately
-            self._ensure_headers()
+    @staticmethod
+    def _warn_if_headers_mismatch(worksheet, expected, tab_name):
+        try:
+            actual = worksheet.row_values(1)
+        except Exception as e:
+            logging.warning(f"Could not read header row of '{tab_name}': {e}")
+            return
+        # Trim trailing empties so a sheet with extra blank cols still matches.
+        actual_trimmed = list(actual[:len(expected)])
+        if actual_trimmed != expected:
+            logging.warning(
+                f"Header row of '{tab_name}' differs from expected. "
+                f"Expected first {len(expected)} columns: {expected}. "
+                f"Got: {actual_trimmed}. Will append rows anyway — verify the "
+                "view sheets still produce sensible output."
+            )
 
     @robust_retry()
-    def _ensure_headers(self):
-        worksheet = self._get_sheet()
-        if not worksheet.row_values(1):
-            base_headers = ["Timestamp (JST)", "Device ID"]
-            # Combine and sort extra headers for consistency
-            extra_headers = sorted(list(set(self.initial_headers)))
-            headers = base_headers + extra_headers
-            
-            worksheet.insert_row(headers, index=1)
-            logging.info(f"Initialized headers for new spreadsheet: {headers}")
+    def _get_scalar_sheet(self):
+        if self.scalar_ws is None:
+            raise RuntimeError(f"Scalar worksheet '{SHEET_SCALAR}' is not initialized.")
+        return self.scalar_ws
 
-    @robust_retry()
-    def _get_sheet(self):
-        if self.spreadsheet_id:
-            return self.gc.open_by_key(self.spreadsheet_id).sheet1
-        raise ValueError("spreadsheet_id is not set. Check data_folder_id config.")
+    def _get_images_sheet(self):
+        if self.images_ws is None:
+            raise RuntimeError(f"Images worksheet '{SHEET_IMAGES}' is not initialized.")
+        return self.images_ws
     
     @robust_retry()
     def _upload_image(self, image_path: str) -> Optional[Tuple[str, str]]:
@@ -263,18 +318,20 @@ class GoogleSheetsUploader(Uploader):
         return file.get('webViewLink'), file.get('id')
 
     def _ensure_initialized(self):
-        """Ensures we have active credentials and target spreadsheet IDs."""
+        """Self-heal: re-authenticate / re-resolve folders / re-open sheets
+        if any of them are missing (typically because the first attempt at
+        boot raced Wi-Fi / NTP)."""
         if not self.gc or not self.drive_service:
-            logging.info("Attempting to re-authenticate with Google Drive...")
+            logging.info("Attempting to re-authenticate with Google...")
             self._authenticate()
-            
-        if not self.device_data_folder_id:
-            logging.info("Re-resolving folder structure...")
+
+        if not self.device_images_folder_id or not self.device_logs_folder_id:
+            logging.info("Re-resolving Drive folder structure...")
             self._resolve_folder_structure()
-            
-        if not self.spreadsheet_id:
-            logging.info("Re-resolving spreadsheet ID...")
-            self._resolve_spreadsheet()
+
+        if self.scalar_ws is None or self.images_ws is None:
+            logging.info("Re-opening master spreadsheet tabs...")
+            self._open_sheets()
 
     def upload_log(self, log_path: str):
         """Uploads (overwrites) the log file to Google Drive."""
@@ -355,159 +412,138 @@ class GoogleSheetsUploader(Uploader):
 
     @robust_retry()
     def _retry_upload_readings(self, readings: List[SensorReading]) -> List[str]:
-        worksheet = self._get_sheet()
-        
-        # 1. Get Current Headers
-        headers = worksheet.row_values(1)
-        if not headers:
-            # Initialize default headers if sheet is empty
-            headers = ["Timestamp (JST)", "Device ID"]
-            worksheet.insert_row(headers, index=1)
-            logging.info("Initialized base headers.")
+        """Long-form / tidy upload.
 
-        # 2. Group Readings by Time Window (60s)
-        # Structure: { rounded_timestamp: [reading1, reading2, ...] }
-        grouped_readings = {}
-        successful_timestamps = [] # We track all successful timestamps from the source list
+        - Every scalar metric (temperature, humidity, pressure, illuminance, co2,
+          plus any future / Arduino-emitted key) becomes one row in `All`:
+          [Timestamp (JST), Device ID, Sensor Type, Sensor ID, Metric, Value, Unit].
+        - Every camera capture becomes one row in `Images`:
+          [Timestamp (JST), Device ID, Sensor ID, webViewLink, directLink].
+        - Missing / null values do not produce empty rows — the metric is
+          skipped entirely.
+        - Readings within the same minute share one Timestamp string so
+          Looker Studio can pivot back to wide form when needed.
+        """
+        scalar_sheet = self._get_scalar_sheet()
+        images_sheet = self._get_images_sheet()
+
         jst = timezone(timedelta(hours=9))
+        successful_timestamps: List[str] = []
+        scalar_rows: List[list] = []
+        image_rows: List[list] = []
 
         for r in readings:
-            # Round to nearest minute to handle jitter
-            # This ensures 10:00:01 and 10:00:05 end up in the same row
+            # Normalise the timestamp into a stable per-minute JST string so
+            # all rows from the same upload cycle share a Timestamp value
+            # (lets the dashboard group/join scalar rows with image rows).
             ts = r.timestamp
-            # Guard against naive datetimes (no tzinfo).  All sensors
-            # should produce UTC, but corrupted DB rows or future sensor
-            # types might not — silently assuming local time would shift
-            # the displayed timestamp by hours.
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=timezone.utc)
             rounded_ts = ts.replace(second=0, microsecond=0)
             if ts.second >= 30:
                 rounded_ts += timedelta(minutes=1)
-            
-            if rounded_ts not in grouped_readings:
-                grouped_readings[rounded_ts] = []
-            grouped_readings[rounded_ts].append(r)
+            ts_jst_str = rounded_ts.astimezone(jst).strftime("%Y-%m-%d %H:%M:%S")
 
-        # 3. Identify Headers needed for this batch
-        # We need to scan ALL grouped readings to ensure headers exist before we start building rows
-        # Header Format: "Key (Type - ID)" e.g., "Temperature (TDSN7200 - env-02)"
-        
-        needed_headers = set()
-        for r in readings:
-            # Anticipate image_direct_link if image_path exists so it gets added to headers
-            if "image_path" in r.value and "image_direct_link" not in r.value:
-                r.value["image_direct_link"] = ""
-                
-            for k in r.value.keys():
-                # Format Key
-                display_key = k.replace("_", " ").title()
-                header_name = f"{display_key} ({r.sensor_type} - {r.sensor_id})"
-                needed_headers.add(header_name)
+            value_dict = r.value or {}
+            iso_ts = r.timestamp.isoformat()
 
-        # Update Sheet Headers if new ones found
-        new_headers_added = False
-        for h_name in sorted(list(needed_headers)):
-            found = False
-            for existing_h in headers:
-                if existing_h.lower() == h_name.lower():
-                    found = True
-                    break
-            
-            if not found:
-                headers.append(h_name)
-                worksheet.update_cell(1, len(headers), h_name)
-                logging.info(f"Added new column header: {h_name}")
-                new_headers_added = True
+            # ----- Camera readings → Images sheet -----
+            if CAMERA_VALUE_KEY in value_dict:
+                image_link = value_dict.get(CAMERA_VALUE_KEY)
 
-        # 4. Build Rows
-        rows_to_upload = []
-        header_map = {h: i for i, h in enumerate(headers)}
-
-        for rounded_ts, group in sorted(grouped_readings.items()):
-            # Initialize row with None
-            row = [None] * len(headers)
-            
-            # Set Timestamp (JST)
-            dt_jst = rounded_ts.astimezone(jst)
-            row[0] = dt_jst.strftime("%Y-%m-%d %H:%M:%S") # Assumes Timestamp is at index 0
-            
-            # Set Device ID (Assumes Device ID is at index 1)
-            if len(headers) > 1 and headers[1] == "Device ID":
-                row[1] = self.device_id
-            
-            # Fill Data from all readings in this group
-            for r in group:
-                v = r.value
-                image_link = v.get("image_path")
-
-                # Evict stale readings whose local image was already
-                # deleted (e.g. by the retention policy) before it
-                # could be uploaded.  Mark as "successful" so the DB
-                # row is purged, but do NOT add garbage to the Sheet.
+                # Stale reading: local file already trimmed by retention.
+                # Mark successful so the DB row goes away, but don't write
+                # garbage to Sheets.
                 if (image_link
-                        and not image_link.startswith("http")
+                        and not str(image_link).startswith("http")
                         and image_link != "IMAGE_UPLOAD_FAILED"
                         and not os.path.exists(image_link)):
                     logging.warning(
                         f"Evicting stale reading {r.timestamp}: "
                         f"local image no longer exists ({image_link})")
-                    successful_timestamps.append(r.timestamp.isoformat())
+                    successful_timestamps.append(iso_ts)
                     continue
 
-                # Image Upload Logic (Atomic per reading)
-                if image_link and not image_link.startswith("http") and image_link != "IMAGE_UPLOAD_FAILED":
+                web_view_link = None
+                direct_link = None
+
+                if image_link and not str(image_link).startswith("http") and image_link != "IMAGE_UPLOAD_FAILED":
+                    # Local path — upload to Drive now.
                     try:
                         upload_result = self._upload_image(image_link)
                         if upload_result:
-                            uploaded_link, file_id = upload_result
-                            v["image_path"] = uploaded_link
-                            v["image_direct_link"] = f"https://drive.google.com/uc?export=view&id={file_id}"
+                            web_view_link, file_id = upload_result
+                            direct_link = f"https://drive.google.com/uc?export=view&id={file_id}"
                         else:
-                            logging.warning(f"Image upload returned None for {r.timestamp}. Marking as failed.")
-                            v["image_path"] = "IMAGE_UPLOAD_FAILED"
-                            v["image_direct_link"] = "IMAGE_UPLOAD_FAILED"
+                            logging.warning(
+                                f"Image upload returned None for {r.timestamp}; skipping row.")
+                            # Don't append a row, don't mark successful — let the next cycle retry.
+                            continue
                     except Exception as e:
-                        logging.warning(f"Image upload exception for {r.timestamp}: {e}. Marking as failed.")
-                        v["image_path"] = "IMAGE_UPLOAD_FAILED"
-                        v["image_direct_link"] = "IMAGE_UPLOAD_FAILED"
-                elif image_link and image_link.startswith("http"):
-                    if "image_direct_link" not in v:
-                        match = re.search(r'/d/([a-zA-Z0-9_-]+)', image_link)
-                        if match:
-                            v["image_direct_link"] = f"https://drive.google.com/uc?export=view&id={match.group(1)}"
-                        else:
-                            v["image_direct_link"] = image_link
-                elif image_link == "IMAGE_UPLOAD_FAILED":
-                    v["image_direct_link"] = "IMAGE_UPLOAD_FAILED"
-                
-                # Populate Row
-                for key, val in v.items():
-                    display_key = key.replace("_", " ").title()
-                    header_name = f"{display_key} ({r.sensor_type} - {r.sensor_id})"
-                    
-                    target_index = -1
-                    # Find exact match in header map
-                    # (We did case-insensitive check for creation, but map creation is exact string if we rely on headers list)
-                    # Let's simple scan or use map.
-                    if header_name in header_map:
-                        row[header_map[header_name]] = val
+                        logging.warning(
+                            f"Image upload exception for {r.timestamp}: {e}; skipping row.")
+                        continue
+                elif image_link and str(image_link).startswith("http"):
+                    # Already-uploaded URL persisted from a previous cycle.
+                    web_view_link = image_link
+                    match = re.search(r'/d/([a-zA-Z0-9_-]+)', image_link)
+                    if match:
+                        direct_link = f"https://drive.google.com/uc?export=view&id={match.group(1)}"
                     else:
-                        # Fallback case-insensitive
-                        for h, idx in header_map.items():
-                            if h.lower() == header_name.lower():
-                                row[idx] = val
-                                break
-                
-                # Mark this reading as processed for return
-                successful_timestamps.append(r.timestamp.isoformat())
+                        direct_link = image_link
+                else:
+                    # image_link is empty / IMAGE_UPLOAD_FAILED — skip row.
+                    successful_timestamps.append(iso_ts)
+                    continue
 
-            rows_to_upload.append(row)
-        
-        if rows_to_upload:
-            worksheet.append_rows(rows_to_upload)
-            logging.info(f"Uploaded {len(rows_to_upload)} rows (merged from {len(readings)} readings) to Google Sheets.")
-            return successful_timestamps
-        else:
-            logging.info("No rows ready for upload (failures or empty).")
-            return []
+                image_rows.append([
+                    ts_jst_str, self.device_id, r.sensor_id,
+                    web_view_link, direct_link,
+                ])
+                successful_timestamps.append(iso_ts)
+                continue
+
+            # ----- Scalar readings → All sheet (one row per metric) -----
+            wrote_any = False
+            for metric, value in value_dict.items():
+                # Skip absent values — instruction #5: "値が取れなかった
+                # メトリックは行を作らない". None and empty string both count
+                # as missing; numeric 0 is a real value and is kept.
+                if value is None:
+                    continue
+                if isinstance(value, str) and value.strip() == "":
+                    continue
+                scalar_rows.append([
+                    ts_jst_str,
+                    self.device_id,
+                    r.sensor_type,
+                    r.sensor_id,
+                    metric,
+                    value,
+                    UNIT_BY_METRIC.get(metric, ""),
+                ])
+                wrote_any = True
+
+            # Whether or not the reading produced rows, mark it processed so
+            # we don't try again — readings with all-null metrics are a sensor
+            # health issue, not an upload failure.
+            successful_timestamps.append(iso_ts)
+            if not wrote_any:
+                logging.debug(
+                    f"Reading {r.sensor_id}@{r.timestamp} had no non-null metrics; "
+                    "no row appended.")
+
+        # Append in two separate batched calls. USER_ENTERED so numeric
+        # strings ("23.5") are stored as numbers, which Looker Studio needs
+        # for the Value column.
+        if scalar_rows:
+            scalar_sheet.append_rows(scalar_rows, value_input_option="USER_ENTERED")
+        if image_rows:
+            images_sheet.append_rows(image_rows, value_input_option="USER_ENTERED")
+
+        logging.info(
+            f"Uploaded {len(scalar_rows)} scalar rows to '{SHEET_SCALAR}' and "
+            f"{len(image_rows)} image rows to '{SHEET_IMAGES}' "
+            f"(from {len(readings)} readings)."
+        )
+        return successful_timestamps
