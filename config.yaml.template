@@ -24,11 +24,21 @@ sensors:
   k_constant: 10.0
 uploader:
   type: GoogleDrive
+  # ID of the lab-wide master spreadsheet that contains the 'All' and
+  # 'Images' tabs. EVERY device writes long-form rows into the same file
+  # — there is no per-device spreadsheet anymore. Operators maintain the
+  # tabs (including the QUERY-based per-device view tabs); this code never
+  # creates or rewrites them. Required: missing this value is a hard error
+  # at startup (uploaders.py raises in __init__).
+  spreadsheet_id: REPLACE_WITH_MASTER_SPREADSHEET_ID
   # These IDs must point at folders inside a Google Workspace **Shared Drive**
   # (not personal "My Drive" folders), and the project Service Account must be
   # added to the Shared Drive as Content Manager. Service Accounts have no
   # personal storage quota, so any upload into a regular My Drive folder fails
   # with 403 storageQuotaExceeded. See README "One-time project setup".
+  # data_folder_id is the parent of the per-device logs/<device_id>/ folder.
+  # images_folder_id is the parent of the per-device <device_id>/ folder
+  # where camera captures land before their URLs are recorded in 'Images'.
   data_folder_id: 1PmAWC1bDYRS8Okg7cI2k_6u50BxF4Dnm
   images_folder_id: 1mSPfmhywhFbYU9m8MS7WrokJPJrgHiv7
   credentials_file: secrets/service_account.json

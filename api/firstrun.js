@@ -41,7 +41,7 @@ const KNOWN_SENSORS = new Set([
 
 // Cloud-init user-data snippet. Use String.raw so backslash line-continuations
 // inside the embedded bash script survive intact. Placeholders __SODAT_USER__,
-// __SA_JSON_B64__, __SODAT_SENSORS__ are filled in below.
+// __SA_JSON_B64__, __SODAT_SENSORS__, __SPREADSHEET_ID__ are filled in below.
 const TEMPLATE = String.raw`# ============================================================================
 # Sodat Sensor SFC — cloud-init user-data snippet (zero-touch SD-card setup)
 # ============================================================================
@@ -67,6 +67,7 @@ write_files:
     content: |
       SODAT_USER=__SODAT_USER__
       SODAT_SENSORS=__SODAT_SENSORS__
+      SODAT_SPREADSHEET_ID=__SPREADSHEET_ID__
   - path: /etc/sodat-firstrun/service_account.json
     owner: root:root
     permissions: '0600'
@@ -161,6 +162,18 @@ write_files:
               --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
       fi
 
+      # 7b. Point this device at the lab-wide master spreadsheet (uploader.spreadsheet_id).
+      # SODAT_SPREADSHEET_ID is injected by /api/firstrun from the Vercel env var
+      # SODAT_SPREADSHEET_ID. If unset, fall back to whatever was baked into
+      # config.yaml.template (operator-edited) — the uploader will hard-error
+      # at startup if neither path produced a real ID.
+      if [ -n "$SODAT_SPREADSHEET_ID" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
+          runuser -u "$SODAT_USER" -- \
+              "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
+              "$SODAT_HOME/sensor_sfc/scripts/util_config.py" \
+              --spreadsheet-id "$SODAT_SPREADSHEET_ID" || true
+      fi
+
       # 8. Reboot so the firmware re-reads /boot/firmware/config.txt — 01_install_update.sh
       # appends 'dtparam=i2c_arm=on' to enable I2C, but the kernel/firmware only picks
       # that up on the NEXT boot, which means BME280 (the I2C sensor) returns
@@ -249,7 +262,8 @@ function handleImpl(req, res) {
       `node=${process.version}\n` +
       `template_bytes=${TEMPLATE.length}\n` +
       `has_access_token=${!!process.env.SODAT_ACCESS_TOKEN}\n` +
-      `has_sa_b64=${!!process.env.SODAT_SERVICE_ACCOUNT_JSON_B64}\n`
+      `has_sa_b64=${!!process.env.SODAT_SERVICE_ACCOUNT_JSON_B64}\n` +
+      `has_spreadsheet_id=${!!process.env.SODAT_SPREADSHEET_ID}\n`
     );
   }
 
@@ -318,7 +332,11 @@ function handleImpl(req, res) {
   const filled = TEMPLATE
     .replace("__SODAT_USER__", rawUser)
     .replace("__SA_JSON_B64__", normalizeB64(saB64))
-    .replace("__SODAT_SENSORS__", sensorsValue);
+    .replace("__SODAT_SENSORS__", sensorsValue)
+    // Empty string is fine: the firstrun bash skips util_config.py
+    // --spreadsheet-id when SODAT_SPREADSHEET_ID is empty, so the value
+    // baked into config.yaml.template wins by default.
+    .replace("__SPREADSHEET_ID__", process.env.SODAT_SPREADSHEET_ID || "");
 
   res.setHeader("Content-Type", "text/yaml; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="sodat-user-data-snippet.yaml"');
