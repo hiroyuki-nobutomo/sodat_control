@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Sodat Sensor Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Sodat Sensor SFC — research dashboard.
+
+  Public URL is on a hard-to-guess slug (sodat-<random>) so it's effectively
+  "share-link-only" — no auth gate. Don't ship this URL in public channels.
+
+  The page is intentionally a single static HTML file with vanilla JS so it
+  matches the rest of the docs/ tree (the firstrun wizard is the same
+  pattern). All data goes through /api/dashboard-data (server-side, SA-auth);
+  camera thumbnails go through /api/sensor-image proxy. No SA key or
+  spreadsheet ID is ever exposed in the bundle or in the network calls.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    color-scheme: light;
+    /* Brand + neutrals — mirror the firstrun wizard so the project reads as one */
+    --leaf:        #15803d;
+    --leaf-hi:     #166534;
+    --bg:          #f6f7f5;
+    --card:        #ffffff;
+    --card-edge:   #e3e6e0;
+    --ink:         #1f2421;
+    --ink-soft:    #4a524e;
+    --muted:       #9aa19c;
+
+    /* Metric palette — single source of truth, referenced by JS too */
+    --c-temperature:  #C75B39;
+    --c-humidity:     #2E7BA0;
+    --c-co2:          #6E8E3C;
+    --c-illuminance:  #D89A2E;
+    --c-pressure:     #5C6770;
+    --c-conductivity: #3F9E92;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* ---------- header ---------- */
+  header.app {
+    background: var(--card);
+    border-bottom: 1px solid var(--card-edge);
+    padding: 1rem 1.4rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header.app h1 {
+    margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: .02em;
+  }
+  header.app h1 .leaf { color: var(--leaf); margin-right: .35em; }
+  header.app .meta { font-size: .8rem; color: var(--muted); }
+  header.app .filters { margin-left: auto; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  header.app select {
+    font: inherit; font-size: .85rem; padding: .35rem .6rem;
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--card-edge); border-radius: 6px;
+    min-width: 9ch;
+  }
+  header.app select:focus { outline: 2px solid var(--leaf); outline-offset: 1px; }
+  header.app .filter-label { font-size: .78rem; color: var(--ink-soft); margin-right: .2rem; }
+  #status { font-size: .78rem; color: var(--muted); }
+  #status.err { color: #b03a2e; }
+
+  /* "Tools" — entry points for sibling features. The Pi setup wizard
+     used to be the project's single front page; it is now reorganised
+     as one of the tools accessed from the dashboard. */
+  header.app .tools { display: flex; gap: .5rem; align-items: center; padding-left: .8rem; border-left: 1px solid var(--card-edge); margin-left: .4rem; }
+  header.app .tools a {
+    font-size: .82rem; color: var(--leaf); text-decoration: none;
+    border: 1px solid rgba(21,128,61,.3); border-radius: 6px;
+    padding: .3rem .7rem;
+    transition: background .15s, border-color .15s;
+  }
+  header.app .tools a:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); color: var(--leaf-hi); }
+  header.app .tools a::after { content: " →"; opacity: .6; }
+
+  /* ---------- main grid ---------- */
+  main {
+    max-width: 1480px; margin: 0 auto;
+    padding: 1.2rem 1.4rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.2rem;
+  }
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+    aside.rail { order: 2; }
+  }
+
+  /* ---------- KPIs ---------- */
+  .kpis {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .75rem;
+  }
+  @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-left: 4px solid var(--card-edge);
+    border-radius: 10px;
+    padding: .85rem 1rem .9rem;
+    min-height: 92px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .kpi[data-metric="temperature"]  { border-left-color: var(--c-temperature); }
+  .kpi[data-metric="humidity"]     { border-left-color: var(--c-humidity); }
+  .kpi[data-metric="co2"]          { border-left-color: var(--c-co2); }
+  .kpi[data-metric="illuminance"]  { border-left-color: var(--c-illuminance); }
+  .kpi[data-metric="pressure"]     { border-left-color: var(--c-pressure); }
+  .kpi-label { font-size: .78rem; color: var(--ink-soft); letter-spacing: .04em; }
+  .kpi-value { font-size: 1.65rem; font-weight: 500; }
+  .kpi-value .unit { font-size: .95rem; color: var(--ink-soft); margin-left: .25em; font-weight: 400; }
+  .kpi-meta { font-size: .72rem; color: var(--muted); }
+  .kpi-meta .ts { margin-right: .4em; }
+
+  /* ---------- charts ---------- */
+  .charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: 10px;
+    padding: .9rem 1rem 1rem;
+  }
+  .card h2 {
+    margin: 0 0 .6rem;
+    font-size: .9rem; font-weight: 700; letter-spacing: .03em;
+    color: var(--ink);
+  }
+  .card.chart { display: flex; flex-direction: column; gap: .4rem; height: 290px; }
+  .card.chart .canvas-wrap { position: relative; flex: 1; min-height: 0; }
+  .card.chart canvas { width: 100% !important; height: 100% !important; }
+  .swatch {
+    display: inline-block; width: .55rem; height: .55rem; border-radius: 2px;
+    margin-right: .35em; vertical-align: middle;
+  }
+  .card h2 .swatch[data-metric="temperature"]  { background: var(--c-temperature); }
+  .card h2 .swatch[data-metric="humidity"]     { background: var(--c-humidity); }
+  .card h2 .swatch[data-metric="co2"]          { background: var(--c-co2); }
+  .card h2 .swatch[data-metric="illuminance"]  { background: var(--c-illuminance); }
+  .card h2 .swatch[data-metric="pressure"]     { background: var(--c-pressure); }
+
+  /* ---------- right rail (camera + work history) ---------- */
+  aside.rail { display: flex; flex-direction: column; gap: 1rem; }
+  .cameras {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .5rem;
+  }
+  .cameras .thumb {
+    aspect-ratio: 4/3;
+    background: #f2f1ed;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--card-edge);
+  }
+  .cameras .thumb img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .cameras .thumb .ts {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,.6));
+    color: #fff; font-size: .68rem; padding: 1rem .4rem .3rem;
+  }
+  .cameras .empty {
+    color: var(--muted); font-size: .8rem; padding: .5rem; grid-column: 1 / -1; text-align: center;
+  }
+  .history { font-size: .82rem; color: var(--ink-soft); }
+  .history .placeholder { color: var(--muted); font-style: italic; }
+
+  /* ---------- loading state ---------- */
+  .skel { background: #ececea; border-radius: 4px; min-height: 1em; display: inline-block; }
+  .skel.w-num { width: 4em; }
+  .skel.w-meta { width: 7em; }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1><span class="leaf" aria-hidden="true">🌱</span>Sodat Sensor Dashboard</h1>
+  <span class="meta mono" id="updatedAt"></span>
+  <nav class="tools" aria-label="Tools">
+    <!--
+      The Pi setup wizard at "/" is gated by ?token=… (SODAT_ACCESS_TOKEN).
+      Don't embed the token in this link — the dashboard URL itself is
+      effectively public (slug-protected). Researchers who already used
+      the wizard have the token cached in localStorage; first-timers paste
+      it via the wizard's existing fallback form.
+    -->
+    <a href="/" target="_blank" rel="noopener" title="新規 Pi セットアップ用ウィザードを開く">Pi セットアップ</a>
+  </nav>
+  <div class="filters" id="filters">
+    <span class="filter-label">Site</span>
+    <select id="filter-site"><option value="">All</option></select>
+    <span class="filter-label">Device</span>
+    <select id="filter-device"><option value="">All</option></select>
+    <span class="filter-label">Period</span>
+    <select id="filter-period">
+      <option value="24h">24h</option>
+      <option value="7d" selected>7d</option>
+      <option value="30d">30d</option>
+    </select>
+    <span id="status" aria-live="polite"></span>
+  </div>
+</header>
+
+<main>
+  <!-- KPIs -->
+  <section class="kpis" id="kpis">
+    <!-- 5 fixed tiles; order matches the spec -->
+    <div class="kpi" data-metric="temperature">
+      <div class="kpi-label">温度 / Temperature</div>
+      <div class="kpi-value"><span class="value mono"><span class="skel w-num"></span></span><span class="unit">℃</span></div>
+      <div class="kpi-meta"><span class="ts mono"></span><span class="src"></span></div>
+    </div>
+    <div class="kpi" data-metric="humidity">
+      <div class="kpi-label">湿度 / Humidity</div>
+      <div class="kpi-value"><span class="value mono"><span class="skel w-num"></span></span><span class="unit">%</span></div>
+      <div class="kpi-meta"><span class="ts mono"></span><span class="src"></span></div>
+    </div>
+    <div class="kpi" data-metric="co2">
+      <div class="kpi-label">CO₂</div>
+      <div class="kpi-value"><span class="value mono"><span class="skel w-num"></span></span><span class="unit">ppm</span></div>
+      <div class="kpi-meta"><span class="ts mono"></span><span class="src"></span></div>
+    </div>
+    <div class="kpi" data-metric="illuminance">
+      <div class="kpi-label">照度 / Illuminance</div>
+      <div class="kpi-value"><span class="value mono"><span class="skel w-num"></span></span><span class="unit">lx</span></div>
+      <div class="kpi-meta"><span class="ts mono"></span><span class="src"></span></div>
+    </div>
+    <div class="kpi" data-metric="pressure">
+      <div class="kpi-label">気圧 / Pressure</div>
+      <div class="kpi-value"><span class="value mono"><span class="skel w-num"></span></span><span class="unit">hPa</span></div>
+      <div class="kpi-meta"><span class="ts mono"></span><span class="src"></span></div>
+    </div>
+  </section>
+
+  <!-- Left: 2x2 charts -->
+  <section class="charts">
+    <div class="card chart">
+      <h2><span class="swatch" data-metric="temperature"></span>温度 / Temperature</h2>
+      <div class="canvas-wrap"><canvas id="chart-temperature"></canvas></div>
+    </div>
+    <div class="card chart">
+      <h2><span class="swatch" data-metric="humidity"></span>湿度 / Humidity</h2>
+      <div class="canvas-wrap"><canvas id="chart-humidity"></canvas></div>
+    </div>
+    <div class="card chart">
+      <h2><span class="swatch" data-metric="co2"></span>CO₂</h2>
+      <div class="canvas-wrap"><canvas id="chart-co2"></canvas></div>
+    </div>
+    <div class="card chart">
+      <h2><span class="swatch" data-metric="illuminance"></span>照度 / Illuminance</h2>
+      <div class="canvas-wrap"><canvas id="chart-illuminance"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Right rail: cameras + work history -->
+  <aside class="rail">
+    <div class="card">
+      <h2>カメラ / Camera</h2>
+      <div class="cameras" id="cameras">
+        <div class="empty">読み込み中…</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>作業履歴 / Work history</h2>
+      <div class="history" id="history">
+        <!--
+          TODO: when an `Operations` (or similar) tab is added to the
+          master spreadsheet, extend lib/sensor_data.js to read it and
+          render entries here. For now this is a static placeholder.
+        -->
+        <p class="placeholder">作業履歴用シートが定義されたら、ここに最新の出来事が並びます。</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- palette: must mirror the CSS custom properties above ----
+  const COLOR = {
+    temperature:  "#C75B39",
+    humidity:     "#2E7BA0",
+    co2:          "#6E8E3C",
+    illuminance:  "#D89A2E",
+    pressure:     "#5C6770",
+    conductivity: "#3F9E92",
+  };
+  // When the same metric is reported by multiple Sensor Types we want one
+  // visual family per metric but distinguishable lines. Index 0 = solid,
+  // 1 = dashed, 2 = dotted, plus a hue shift.
+  const SENSOR_STYLE = [
+    { dash: [],         alpha: 1.0  },
+    { dash: [6, 4],     alpha: 0.85 },
+    { dash: [2, 4],     alpha: 0.7  },
+    { dash: [10, 3, 2, 3], alpha: 0.6 },
+  ];
+
+  const PERIOD_HOURS = { "24h": 24, "7d": 24 * 7, "30d": 24 * 30 };
+
+  // KPI tiles use a single source per metric per device. When the filter
+  // narrows to one device we show its latest; otherwise we show the
+  // most-recent reading from any device in the filtered set.
+  const KPI_METRICS = ["temperature", "humidity", "co2", "illuminance", "pressure"];
+
+  // The 4 time-series charts. Pressure is intentionally KPI-only — its dynamic
+  // range over a day is too compressed for a line to add insight.
+  const CHART_METRICS = ["temperature", "humidity", "co2", "illuminance"];
+
+  const $ = (sel) => document.querySelector(sel);
+  const status = $("#status");
+
+  let state = {
+    raw: null,           // last /api/dashboard-data response
+    filters: { site: "", device: "", period: "7d" },
+    charts: {},          // id -> Chart instance
+  };
+
+  // ---------- parsing ----------
+  // The sheet stores timestamps as "YYYY-MM-DD HH:MM:SS" in JST. Treat as
+  // JST and convert to a real Date (UTC offset +09:00) so Chart.js's date
+  // scale is honest about TZ.
+  function parseJstTimestamp(s) {
+    if (!s) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(s);
+    if (!m) return null;
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6] || 0));
+  }
+
+  function tsLabel(s) {
+    const d = parseJstTimestamp(s);
+    if (!d) return s || "—";
+    const pad = (n) => String(n).padStart(2, "0");
+    // Show MM-DD HH:mm in JST
+    const jst = new Date(d.getTime() + 9 * 3600 * 1000);
+    return `${pad(jst.getUTCMonth() + 1)}-${pad(jst.getUTCDate())} ${pad(jst.getUTCHours())}:${pad(jst.getUTCMinutes())}`;
+  }
+
+  // ---------- filter UI ----------
+  function populateFilters(data) {
+    const siteSel = $("#filter-site");
+    const devSel = $("#filter-device");
+    siteSel.innerHTML = '<option value="">All</option>';
+    for (const s of (data.sites || [])) {
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = s;
+      siteSel.appendChild(opt);
+    }
+    devSel.innerHTML = '<option value="">All</option>';
+    for (const d of (data.devices || [])) {
+      const opt = document.createElement("option");
+      opt.value = d.id; opt.textContent = `${d.id} (${d.site})`;
+      devSel.appendChild(opt);
+    }
+  }
+
+  function deviceMatchesFilter(d) {
+    const { site, device } = state.filters;
+    if (device && d.id !== device) return false;
+    if (site && d.site !== site) return false;
+    return true;
+  }
+
+  function readingMatchesFilter(r, deviceById) {
+    const dev = deviceById[r.deviceId];
+    if (!dev) return false;
+    return deviceMatchesFilter(dev);
+  }
+
+  function isInPeriod(r, periodMs) {
+    if (!periodMs) return true;
+    const d = parseJstTimestamp(r.ts);
+    if (!d) return false;
+    return Date.now() - d.getTime() <= periodMs;
+  }
+
+  // ---------- KPI ----------
+  function updateKpis(filteredScalar) {
+    // For each metric pick the most-recent row in the filtered set.
+    const latestByMetric = {};
+    for (const r of filteredScalar) {
+      if (!KPI_METRICS.includes(r.metric)) continue;
+      const cur = latestByMetric[r.metric];
+      if (!cur || r.ts > cur.ts) latestByMetric[r.metric] = r;
+    }
+    for (const metric of KPI_METRICS) {
+      const tile = document.querySelector(`.kpi[data-metric="${metric}"]`);
+      if (!tile) continue;
+      const r = latestByMetric[metric];
+      const valEl = tile.querySelector(".value");
+      const tsEl = tile.querySelector(".ts");
+      const srcEl = tile.querySelector(".src");
+      if (!r) {
+        valEl.innerHTML = '<span style="color: var(--muted);">—</span>';
+        tsEl.textContent = "";
+        srcEl.textContent = "";
+        continue;
+      }
+      valEl.textContent = formatValue(metric, r.value);
+      tsEl.textContent = tsLabel(r.ts);
+      srcEl.textContent = `${r.deviceId} · ${r.sensorType}`;
+    }
+  }
+
+  function formatValue(metric, v) {
+    if (typeof v !== "number") return String(v ?? "—");
+    if (metric === "co2" || metric === "illuminance" || metric === "pressure") return v.toFixed(0);
+    return v.toFixed(1);
+  }
+
+  // ---------- charts ----------
+  function colorVariant(baseHex, alpha) {
+    // Convert the metric base color to rgba so we can shade lines per
+    // Sensor Type without doing per-metric brightness math.
+    const h = baseHex.replace("#", "");
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function makeDatasetsForMetric(filteredScalar, metric) {
+    // Group by (sensorType, deviceId) so we can compare across BME280 vs
+    // TDSN7300 (same metric, different sensor) at a glance, and across
+    // devices on the same sensor type.
+    const byKey = new Map();
+    for (const r of filteredScalar) {
+      if (r.metric !== metric) continue;
+      const key = `${r.sensorType}|${r.deviceId}`;
+      if (!byKey.has(key)) byKey.set(key, { sensorType: r.sensorType, deviceId: r.deviceId, points: [] });
+      const d = parseJstTimestamp(r.ts);
+      if (!d || typeof r.value !== "number") continue;
+      byKey.get(key).points.push({ x: d, y: r.value });
+    }
+    // Stable order — sensor type first (so the same-sensor lines stay together), then device id.
+    const groups = [...byKey.values()].sort((a, b) => {
+      if (a.sensorType !== b.sensorType) return a.sensorType.localeCompare(b.sensorType);
+      return a.deviceId.localeCompare(b.deviceId);
+    });
+    // One distinct style index per sensorType so within-metric line styles
+    // stay consistent even when filters change.
+    const typeIndex = new Map();
+    for (const g of groups) {
+      if (!typeIndex.has(g.sensorType)) typeIndex.set(g.sensorType, typeIndex.size);
+    }
+    const base = COLOR[metric] || "#666";
+    return groups.map((g) => {
+      const styleIdx = typeIndex.get(g.sensorType) % SENSOR_STYLE.length;
+      const style = SENSOR_STYLE[styleIdx];
+      g.points.sort((a, b) => a.x - b.x);
+      return {
+        label: `${g.deviceId} · ${g.sensorType}`,
+        data: g.points,
+        borderColor: colorVariant(base, style.alpha),
+        backgroundColor: colorVariant(base, style.alpha * 0.15),
+        borderDash: style.dash,
+        borderWidth: 1.6,
+        pointRadius: 0,
+        pointHoverRadius: 3,
+        tension: 0.2,
+        spanGaps: true,
+      };
+    });
+  }
+
+  function ensureChart(metric, datasets) {
+    const id = `chart-${metric}`;
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    const existing = state.charts[id];
+    if (existing) {
+      existing.data.datasets = datasets;
+      existing.update("none");
+      return;
+    }
+    state.charts[id] = new Chart(ctx, {
+      type: "line",
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: "nearest", intersect: false, axis: "x" },
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { boxWidth: 12, boxHeight: 2, font: { size: 10 } },
+          },
+          tooltip: {
+            callbacks: {
+              label: (item) => `${item.dataset.label}: ${formatValue(metric, item.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            type: "time",
+            time: { tooltipFormat: "MM-dd HH:mm", displayFormats: { hour: "MM-dd HH:mm", day: "MM-dd" } },
+            grid: { color: "rgba(0,0,0,.04)" },
+            ticks: { font: { size: 10 }, color: "#666", maxRotation: 0, autoSkip: true, autoSkipPadding: 24 },
+          },
+          y: {
+            grid: { color: "rgba(0,0,0,.04)" },
+            ticks: { font: { size: 10 }, color: "#666" },
+            beginAtZero: false,
+          },
+        },
+      },
+    });
+  }
+
+  // ---------- cameras ----------
+  function renderCameras(filteredImages) {
+    const root = $("#cameras");
+    root.innerHTML = "";
+    // Newest 4, newest first
+    const newest = [...filteredImages]
+      .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0))
+      .slice(0, 4);
+    if (newest.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "画像はまだありません";
+      root.appendChild(empty);
+      return;
+    }
+    for (const img of newest) {
+      const wrap = document.createElement("div");
+      wrap.className = "thumb";
+      const a = document.createElement("a");
+      a.href = img.webViewLink || "#";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      const el = document.createElement("img");
+      el.alt = `${img.deviceId} ${img.ts}`;
+      el.loading = "lazy";
+      // Route via the server-side proxy so the underlying Drive file does
+      // not need to be publicly shared.
+      el.src = `/api/sensor-image?id=${encodeURIComponent(img.fileId)}`;
+      el.onerror = () => { wrap.style.background = "#efe4dc"; };
+      a.appendChild(el);
+      wrap.appendChild(a);
+      const ts = document.createElement("div");
+      ts.className = "ts mono";
+      ts.textContent = `${img.deviceId} · ${tsLabel(img.ts)}`;
+      wrap.appendChild(ts);
+      root.appendChild(wrap);
+    }
+  }
+
+  // ---------- render orchestration ----------
+  function render() {
+    if (!state.raw) return;
+    const { timeseries, images, devices } = state.raw;
+    const deviceById = Object.fromEntries((devices || []).map((d) => [d.id, d]));
+    const periodMs = (PERIOD_HOURS[state.filters.period] || 24 * 7) * 3600 * 1000;
+
+    const filteredScalar = (timeseries || []).filter(
+      (r) => readingMatchesFilter(r, deviceById) && isInPeriod(r, periodMs)
+    );
+    const filteredImages = (images || []).filter(
+      (r) => readingMatchesFilter(r, deviceById) && isInPeriod(r, periodMs)
+    );
+
+    updateKpis(filteredScalar);
+    for (const m of CHART_METRICS) {
+      const ds = makeDatasetsForMetric(filteredScalar, m);
+      ensureChart(m, ds);
+    }
+    renderCameras(filteredImages);
+  }
+
+  // ---------- fetch / boot ----------
+  async function loadData() {
+    status.classList.remove("err");
+    status.textContent = "loading…";
+    try {
+      const resp = await fetch("/api/dashboard-data", { cache: "no-store" });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      state.raw = data;
+      $("#updatedAt").textContent = `updated ${tsLabel(data.updatedAt?.replace("T", " ").slice(0, 19))}`;
+      populateFilters(data);
+      render();
+      status.textContent = "";
+    } catch (e) {
+      status.classList.add("err");
+      status.textContent = `load failed: ${e.message}`;
+    }
+  }
+
+  $("#filter-site").addEventListener("change", (e) => {
+    state.filters.site = e.target.value;
+    // When the site narrows, prune the device dropdown so only matching
+    // devices stay selectable (without losing the "All devices" choice).
+    const devSel = $("#filter-device");
+    const cur = devSel.value;
+    devSel.innerHTML = '<option value="">All</option>';
+    for (const d of (state.raw?.devices || [])) {
+      if (state.filters.site && d.site !== state.filters.site) continue;
+      const opt = document.createElement("option");
+      opt.value = d.id; opt.textContent = `${d.id} (${d.site})`;
+      devSel.appendChild(opt);
+    }
+    // Restore selection if still valid; otherwise fall back to All.
+    if ([...devSel.options].some((o) => o.value === cur)) {
+      devSel.value = cur;
+    } else {
+      devSel.value = "";
+      state.filters.device = "";
+    }
+    render();
+  });
+  $("#filter-device").addEventListener("change", (e) => {
+    state.filters.device = e.target.value;
+    render();
+  });
+  $("#filter-period").addEventListener("change", (e) => {
+    state.filters.period = e.target.value;
+    render();
+  });
+
+  loadData();
+})();
+</script>
+
+</body>
+</html>
