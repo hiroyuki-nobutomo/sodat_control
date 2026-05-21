@@ -10,28 +10,31 @@
 <link rel="stylesheet" href="/app.css">
 <style>
   /* ---- wizard layout: centred long-form column on the shared beige bg ---- */
-  body {
+  /* The sticky chrome (.page-header) spans full width; the wizard's
+     reading-width column lives inside main.page-body underneath. */
+  main.page-body {
     max-width: 760px;
-    margin: 2rem auto;
+    margin: 1.5rem auto 3rem;
     padding: 0 1rem;
   }
-  h1 { border-bottom: 3px solid var(--leaf); padding-bottom: .3rem; }
-  h1 .leaf { color: var(--leaf); margin-right: .3em; }
-  .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 500; letter-spacing: .02em; }
+  .tagline { margin: .2rem 0 1.4rem; color: var(--leaf); font-weight: 500; letter-spacing: .02em; }
 
+  /* The language toggle now lives inside the sticky .page-header
+     (so the chrome is the only sticky element), so the toggle wrapper
+     is just inline buttons — no own background or border. */
   .lang-toggle {
-    position: sticky; top: 0; z-index: 5;
-    background: var(--bg);
-    padding: .5rem 0; margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(21,128,61,.15);
+    display: inline-flex;
+    gap: .35rem;
   }
   .lang-toggle button {
-    padding: .3rem .8rem; margin-right: .4rem; cursor: pointer;
+    padding: .3rem .75rem; cursor: pointer;
     border: 1px solid rgba(21,128,61,.4);
-    background: transparent; color: inherit;
-    border-radius: 4px; font: inherit;
+    background: transparent; color: var(--leaf);
+    border-radius: 6px; font: inherit;
+    font-size: .9rem;
+    transition: background .15s;
   }
-  .lang-toggle button:hover { background: rgba(21,128,61,.1); }
+  .lang-toggle button:hover { background: rgba(21,128,61,.08); }
 
   /* --- Step indicator -------------------------------------------------- */
   .stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
@@ -96,16 +99,26 @@
 </head>
 <body>
 
-<div class="lang-toggle">
-  <button onclick="setLang('ja')">日本語</button>
-  <button onclick="setLang('en')">English</button>
-</div>
+<!--
+  Sticky brand chrome — matches the dashboard's .page-header so both
+  surfaces read as one product. The lang toggle replaces the dashboard's
+  filter row in this same slot.
+-->
+<header class="page-header">
+  <h1>
+    <span class="leaf" aria-hidden="true">🌱</span>
+    <span data-lang="ja">Sodat Sensor SFC — SD カードセットアップ</span>
+    <span data-lang="en">Sodat Sensor SFC — SD Card Setup</span>
+  </h1>
+  <span class="spacer"></span>
+  <nav class="lang-toggle" aria-label="言語切替">
+    <button onclick="setLang('ja')">日本語</button>
+    <button onclick="setLang('en')">English</button>
+  </nav>
+</header>
 
-<h1>
-  <span class="leaf" aria-hidden="true">🌱</span>
-  <span data-lang="ja">Sodat Sensor SFC — SD カードセットアップ</span>
-  <span data-lang="en">Sodat Sensor SFC — SD Card Setup</span>
-</h1>
+<main class="page-body">
+
 <p class="tagline">
   <span data-lang="ja">農業・園芸現場のセンサーデータを Raspberry Pi で集めて Google Drive へ</span>
   <span data-lang="en">Field-sensor data collection for agriculture &amp; horticulture, on a Raspberry Pi → Google Drive</span>
@@ -890,5 +903,6 @@ window.addEventListener('popstate', () => gotoStep(stepFromHash()));
 gotoStep(stepFromHash());
 </script>
 
+</main>
 </body>
 </html>
