@@ -57,9 +57,9 @@
   .page-header .tools a::after { content: " →"; opacity: .6; }
 
   /* ---------- main grid ----------
-     Flat 3-column layout: each chart / camera card is its own grid item.
-     Row 1 = KPIs (spans all 3). Row 2 = temperature, humidity, camera.
-     Row 3 = CO₂, illuminance, pressure. */
+     Flat 3-column layout: each chart / camera / history card is its
+     own grid item. Row 1 = KPIs (spans all 3). Row 2 = temperature,
+     humidity, camera. Row 3 = CO₂, illuminance, work-history. */
   main {
     max-width: 1480px; margin: 0 auto;
     padding: 1.2rem 1.4rem 3rem;
@@ -251,9 +251,11 @@
     <h2><span class="swatch" data-metric="illuminance"></span>照度 / Illuminance</h2>
     <div class="canvas-wrap"><canvas id="chart-illuminance"></canvas></div>
   </div>
-  <div class="card chart">
-    <h2><span class="swatch" data-metric="pressure"></span>気圧 / Pressure</h2>
-    <div class="canvas-wrap"><canvas id="chart-pressure"></canvas></div>
+  <div class="card">
+    <h2>作業履歴 / Work history</h2>
+    <div class="history" id="history">
+      <p class="placeholder">作業履歴は未連携です。専用シートが追加されたら、ここに最新のイベントが並びます。</p>
+    </div>
   </div>
 </main>
 
@@ -284,8 +286,9 @@
 
   // Metrics shown as KPI tiles (most-recent reading in the filtered set).
   const KPI_METRICS = ["temperature", "humidity", "co2", "illuminance", "pressure"];
-  // Metrics with a time-series chart in the lower grid.
-  const CHART_METRICS = ["temperature", "humidity", "co2", "illuminance", "pressure"];
+  // Metrics with a time-series chart in the lower grid. Pressure stays
+  // KPI-only because its diurnal range is too small to make a useful line.
+  const CHART_METRICS = ["temperature", "humidity", "co2", "illuminance"];
 
   const $ = (sel) => document.querySelector(sel);
   const status = $("#status");
