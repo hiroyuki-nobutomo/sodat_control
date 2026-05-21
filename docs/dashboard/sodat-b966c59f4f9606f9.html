@@ -31,7 +31,7 @@
   /* Base sticky chrome comes from .page-header in app.css; only the
      dashboard-specific bits (filters, tools, status, select sizing) live
      here so the wizard's header stays visually identical. */
-  .page-header .filters { margin-left: auto; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .page-header .filters { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
   .page-header select {
     font: inherit; font-size: .92rem; padding: .35rem .6rem;
     background: var(--card); color: var(--ink);
@@ -43,18 +43,6 @@
   #status { font-size: .82rem; color: var(--muted); }
   #status.err { color: #b03a2e; }
 
-  /* "Tools" — entry points for sibling features. The Pi setup wizard
-     used to be the project's single front page; it is now reorganised
-     as one of the tools accessed from the dashboard. */
-  .page-header .tools { display: flex; gap: .5rem; align-items: center; padding-left: .8rem; border-left: 1px solid var(--card-edge); margin-left: .4rem; }
-  .page-header .tools a {
-    font-size: .9rem; color: var(--leaf); text-decoration: none;
-    border: 1px solid rgba(21,128,61,.3); border-radius: 6px;
-    padding: .3rem .7rem;
-    transition: background .15s, border-color .15s;
-  }
-  .page-header .tools a:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); color: var(--leaf-hi); }
-  .page-header .tools a::after { content: " →"; opacity: .6; }
 
   /* ---------- main grid ----------
      Flat 3-column layout: each chart / camera / history card is its
@@ -163,25 +151,27 @@
 </head>
 <body>
 
-<header class="page-header">
+<!-- Skip link: keyboard / screen-reader users press Tab once and jump
+     past the sticky chrome straight into the KPI grid. -->
+<a class="skip-to-main" href="#main">本文へスキップ / Skip to main content</a>
+
+<header class="page-header" role="banner">
   <h1><span class="leaf" aria-hidden="true">🌱</span>Sodat Sensor Dashboard</h1>
-  <span class="meta mono" id="updatedAt"></span>
-  <nav class="tools" aria-label="Tools">
-    <!--
-      The Pi setup wizard at "/" is gated by ?token=… (SODAT_ACCESS_TOKEN).
-      Don't embed the token in this link — the dashboard URL itself is
-      effectively public (slug-protected). Researchers who already used
-      the wizard have the token cached in localStorage; first-timers paste
-      it via the wizard's existing fallback form.
-    -->
-    <a href="/" target="_blank" rel="noopener" title="新規 Pi セットアップ用ウィザードを開く">Pi セットアップ</a>
-  </nav>
-  <div class="filters" id="filters">
-    <span class="filter-label">Site</span>
+  <span class="meta mono" id="updatedAt" aria-live="polite"></span>
+  <span class="spacer"></span>
+  <!-- The Pi setup wizard at "/" is gated by ?token=… so we don't embed
+       the token here. Researchers who have used the wizard once already
+       carry the token in localStorage. -->
+  <a class="nav-link" href="/" target="_blank" rel="noopener"
+     aria-label="Pi セットアップウィザードを新しいタブで開く">
+    Pi セットアップ <span aria-hidden="true">→</span>
+  </a>
+  <div class="filters" id="filters" role="group" aria-label="フィルタ / Filters">
+    <label class="filter-label" for="filter-site">Site</label>
     <select id="filter-site"><option value="">All</option></select>
-    <span class="filter-label">Device</span>
+    <label class="filter-label" for="filter-device">Device</label>
     <select id="filter-device"><option value="">All</option></select>
-    <span class="filter-label">Period</span>
+    <label class="filter-label" for="filter-period">Period</label>
     <select id="filter-period">
       <option value="24h">24h</option>
       <option value="7d" selected>7d</option>
@@ -191,7 +181,7 @@
   </div>
 </header>
 
-<main>
+<main id="main" role="main">
   <!-- KPIs -->
   <section class="kpis" id="kpis">
     <!-- 5 fixed tiles; order matches the spec -->

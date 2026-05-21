@@ -22,19 +22,27 @@
   /* The language toggle now lives inside the sticky .page-header
      (so the chrome is the only sticky element), so the toggle wrapper
      is just inline buttons — no own background or border. */
-  .lang-toggle {
-    display: inline-flex;
-    gap: .35rem;
-  }
+  .lang-toggle { display: inline-flex; gap: .35rem; }
   .lang-toggle button {
-    padding: .3rem .75rem; cursor: pointer;
-    border: 1px solid rgba(21,128,61,.4);
-    background: transparent; color: var(--leaf);
-    border-radius: 6px; font: inherit;
+    min-height: 36px;
+    padding: .3rem .85rem;
+    cursor: pointer;
+    border: 1px solid rgba(21,128,61,.3);
+    background: var(--glass-bg-soft);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--leaf);
+    border-radius: 999px;
+    font: inherit;
     font-size: .9rem;
-    transition: background .15s;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
   }
-  .lang-toggle button:hover { background: rgba(21,128,61,.08); }
+  .lang-toggle button:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); }
+  .lang-toggle button[aria-pressed="true"] {
+    background: var(--leaf);
+    color: #fff;
+    border-color: var(--leaf);
+  }
 
   /* --- Step indicator -------------------------------------------------- */
   .stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
@@ -100,25 +108,40 @@
 </head>
 <body>
 
+<!-- Skip link: keyboard / screen-reader users press Tab once and jump
+     past the sticky chrome into the wizard body. -->
+<a class="skip-to-main" href="#main"
+   data-lang="ja">本文へスキップ</a>
+<a class="skip-to-main" href="#main"
+   data-lang="en">Skip to main content</a>
+
 <!--
   Sticky brand chrome — matches the dashboard's .page-header so both
-  surfaces read as one product. The lang toggle replaces the dashboard's
-  filter row in this same slot.
+  surfaces read as one product. Back link returns to the dashboard so
+  the wizard reads as one tool inside it, not a stand-alone page.
 -->
-<header class="page-header">
+<header class="page-header" role="banner">
   <h1>
     <span class="leaf" aria-hidden="true">🌱</span>
     <span data-lang="ja">Sodat Sensor SFC — SD カードセットアップ</span>
     <span data-lang="en">Sodat Sensor SFC — SD Card Setup</span>
   </h1>
   <span class="spacer"></span>
-  <nav class="lang-toggle" aria-label="言語切替">
-    <button onclick="setLang('ja')">日本語</button>
-    <button onclick="setLang('en')">English</button>
+  <a class="nav-link" href="/dashboard/sodat-b966c59f4f9606f9"
+     aria-label="ダッシュボードに戻る">
+    <span aria-hidden="true">←</span>
+    <span data-lang="ja">ダッシュボード</span>
+    <span data-lang="en">Dashboard</span>
+  </a>
+  <nav class="lang-toggle" aria-label="言語切替 / Language toggle">
+    <button type="button" onclick="setLang('ja')" data-lang-btn="ja"
+            aria-pressed="false" aria-label="日本語に切り替え">日本語</button>
+    <button type="button" onclick="setLang('en')" data-lang-btn="en"
+            aria-pressed="false" aria-label="Switch to English">English</button>
   </nav>
 </header>
 
-<main class="page-body">
+<main class="page-body" id="main" role="main">
 
 <p class="tagline">
   <span data-lang="ja">農業・園芸現場のセンサーデータを Raspberry Pi で集めて Google Drive へ</span>
@@ -496,6 +519,11 @@ sudo systemctl status sensor_sfc</code></pre>
 function setLang(lang) {
   document.documentElement.lang = lang;
   try { localStorage.setItem('sodatLang', lang); } catch (e) {}
+  // Flip aria-pressed on the toggle buttons so assistive tech announces
+  // which language is currently active.
+  for (const btn of document.querySelectorAll('[data-lang-btn]')) {
+    btn.setAttribute('aria-pressed', btn.dataset.langBtn === lang ? 'true' : 'false');
+  }
 }
 (function () {
   let saved = null;

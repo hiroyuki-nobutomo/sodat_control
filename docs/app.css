@@ -29,6 +29,19 @@
   --card:        #ffffff;
   --card-edge:   #e3e6e0;
 
+  /* Liquid-Glass surface tokens. Used by .page-header and the chrome
+     navigation buttons so the bar reads as a frosted layer floating
+     over the scrolling content. The opaque colours above stay the
+     source of truth for actual brand colour; these are additive.
+     Note: backdrop-filter has wide support (all evergreens + Safari
+     since 16.4); the rgba bg under it is opaque enough to remain
+     readable in browsers that ignore the filter. */
+  --glass-bg:        rgba(255, 255, 255, 0.72);
+  --glass-bg-soft:   rgba(255, 255, 255, 0.55);
+  --glass-blur:      saturate(180%) blur(20px);
+  --glass-edge:      rgba(31, 36, 33, 0.08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
   /* Text */
   --ink:         #1f2421;
   --ink-soft:    #4a524e;
@@ -80,14 +93,75 @@ body {
   font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* ---------- accessibility primitives ----------
+   These follow JIS X 8341 / 総務省「みんなの公共サイト運用ガイドライン」:
+   - WCAG 2.1 AA-level keyboard focus indicators (visible 3px ring at AA-
+     compliant contrast on both glass and solid backgrounds);
+   - skip-to-main link so screen-reader / keyboard users can bypass the
+     repeated chrome on every page;
+   - prefers-reduced-motion honoured for users who set the OS preference. */
+
+/* Visible focus ring on every interactive element when reached via
+   keyboard. The :focus-visible selector keeps the ring off mouse-only
+   activations to avoid visual noise but always shows it for Tab nav. */
+:focus-visible {
+  outline: 3px solid var(--leaf);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip link: visually hidden until focused, then jumps over the chrome
+   straight to the page's <main id="main"> landmark. Place as the very
+   first element inside <body>. */
+.skip-to-main {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 1000;
+  padding: .6rem 1rem;
+  background: var(--leaf);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: top .18s ease;
+}
+.skip-to-main:focus,
+.skip-to-main:focus-visible {
+  top: .6rem;
+  color: #fff;
+}
+
+/* Respect "Reduce motion" — honour the OS-level accessibility preference
+   so vestibular-sensitive users aren't subjected to step transitions,
+   hover-transform on the stepper, or the lang-toggle slide. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---------- page-header (sticky brand chrome shared by both pages) ----
    The dashboard's app header and the wizard's lang-toggle previously
    looked completely different; this class is the one place that says
    "what the top of every Sodat page looks like". Page-specific extras
-   (dashboard filters, wizard lang toggle) sit inside this bar. */
+   (dashboard filters, wizard lang toggle, page-to-page nav) sit
+   inside this bar.
+
+   Surface is rendered as Liquid Glass — a translucent frosted layer
+   so the warm beige page background reads through subtly and the
+   content scrolls visibly beneath the bar. The bar's `--card`-coloured
+   fallback (set as background-color) keeps it readable in legacy
+   browsers without backdrop-filter. */
 .page-header {
-  background: var(--card);
-  border-bottom: 1px solid var(--card-edge);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-highlight);
   padding: .9rem 1.4rem;
   display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
   position: sticky; top: 0; z-index: 10;
@@ -106,6 +180,36 @@ body {
 }
 .page-header .spacer { flex: 1; }
 .page-header .meta { font-size: .85rem; color: var(--muted); }
+
+/* Chrome navigation buttons — "← Dashboard" on the wizard, "Pi setup →"
+   on the dashboard. Same translucent-pill treatment so the two pages
+   feel like one continuous app surface. */
+.page-header .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  min-height: 36px;
+  padding: .35rem .85rem;
+  font-size: .9rem;
+  color: var(--leaf);
+  text-decoration: none;
+  background: var(--glass-bg-soft);
+  border: 1px solid rgba(21, 128, 61, .25);
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.page-header .nav-link:hover {
+  background: rgba(21, 128, 61, .08);
+  border-color: var(--leaf);
+  color: var(--leaf-hi);
+}
+.page-header .nav-link[aria-current="page"] {
+  background: var(--leaf);
+  color: #fff;
+  border-color: var(--leaf);
+}
 
 /* ---------- typography ---------- */
 a { color: var(--leaf); text-decoration-thickness: 1px; text-underline-offset: 2px; }
@@ -145,26 +249,26 @@ kbd {
 }
 
 /* ---------- CTA button ---------- */
+/* min-height = 44px to meet WCAG / Apple HIG minimum touch target. */
 .cta {
-  display: inline-block;
-  padding: .6rem 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: .55rem 1.2rem;
   font-size: .95rem;
   font-weight: 500;
   background: var(--leaf);
   color: #fff;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   text-decoration: none;
   font-family: inherit;
   line-height: 1.2;
-  transition: background .15s, color .15s, border-color .15s;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 .cta:hover { background: var(--leaf-hi); color: #fff; }
-.cta:focus-visible {
-  outline: 2px solid var(--leaf);
-  outline-offset: 2px;
-}
 .cta[aria-disabled="true"], .cta:disabled {
   background: var(--muted);
   cursor: not-allowed;
@@ -174,7 +278,7 @@ kbd {
   background: transparent;
   color: var(--leaf);
   border: 2px solid var(--leaf);
-  padding: calc(.6rem - 2px) calc(1.15rem - 2px);
+  padding: calc(.55rem - 2px) calc(1.2rem - 2px);
 }
 .cta.secondary:hover {
   background: rgba(21, 128, 61, .08);
