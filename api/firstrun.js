@@ -1,47 +1,35 @@
 // Vercel Serverless Function: GET /api/firstrun?user=<unix-username>&token=<access-token>
 //
 // Returns a cloud-init user-data snippet pre-filled with the project's
-// service-account key (read from the SODAT_SERVICE_ACCOUNT_JSON_B64 env var,
-// set in the Vercel dashboard) and the requested Pi Imager username.
+// service-account key (from SODAT_SERVICE_ACCOUNT_JSON_B64) and the Pi
+// Imager username. Pi Imager v2.0+ ships cloud-init instead of the legacy
+// firstrun.sh; the endpoint name kept for URL stability.
 //
-// The endpoint is still called /api/firstrun for URL stability with the
-// older firstrun.sh flow — the payload is now YAML (cloud-init user-data),
-// because Raspberry Pi Imager v2.0+ ships cloud-init instead of firstrun.sh.
+// Access is gated by SODAT_ACCESS_TOKEN. Lab admins distribute the token as
+// part of the URL (https://<host>/?token=…) so researchers don't type it,
+// but knowing the URL without the token can't extract the SA key.
+// Token rotation = change the env var and redeploy.
 //
-// Access is gated by a shared lab token (SODAT_ACCESS_TOKEN env var). Lab
-// admins distribute the token to researchers as part of the URL:
-//     https://<host>/?token=<the-secret>
-// — that way researchers don't have to type the token, but knowing the URL
-// (without the token) is not enough to extract the service-account key.
-// Token rotation = change the env var and redeploy; old links die instantly.
-//
-// The cloud-init snippet template is inlined below (rather than read at
-// request time from a sibling .yaml.template file via includeFiles).
-// Two earlier deploys failed with FUNCTION_INVOCATION_FAILED because the
-// .yaml.template file was not making it into the function bundle, and the
-// inlined form sidesteps Vercel's file-tracing entirely.
+// The cloud-init template is inlined below to keep Vercel function bundling
+// out of the failure surface — no includeFiles, no readFileSync.
 
 import { timingSafeEqual } from "node:crypto";
+import { decodeServiceAccountCreds } from "../lib/sa_auth.js";
 
 // Linux usernames: lowercase letter first, then [a-z0-9_-], up to 32 chars.
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 
 // Sensor types the project currently supports. Must stay in sync with
-// src/sensors/*.py and with KNOWN_SENSORS in docs/index.html (the Step 3
-// checkbox list).
+// src/sensors/*.py and with KNOWN_SENSORS in docs/index.html (Step 3 checkboxes).
 // (Mock is intentionally excluded — it's for unit tests, not field deployment.)
 const KNOWN_SENSORS = new Set([
-  "BME280",
-  "TDSN7200",
-  "TDSN7300",
-  "IWS660CS",
-  "Camera",
-  "SerialJSON",
+  "BME280", "TDSN7200", "TDSN7300", "IWS660CS", "Camera", "SerialJSON",
 ]);
 
-// Cloud-init user-data snippet. Use String.raw so backslash line-continuations
-// inside the embedded bash script survive intact. Placeholders __SODAT_USER__,
-// __SA_JSON_B64__, __SODAT_SENSORS__, __SPREADSHEET_ID__ are filled in below.
+// Cloud-init user-data snippet. String.raw keeps any future backslash
+// line-continuations inside the embedded bash literal. Placeholders
+// __SODAT_USER__, __SA_JSON_B64__, __SODAT_SENSORS__, __SPREADSHEET_ID__
+// are filled in below.
 const TEMPLATE = String.raw`# ============================================================================
 # Sodat Sensor SFC — cloud-init user-data snippet (zero-touch SD-card setup)
 # ============================================================================
@@ -162,11 +150,8 @@ write_files:
               --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
       fi
 
-      # 7b. Point this device at the lab-wide master spreadsheet (uploader.spreadsheet_id).
-      # SODAT_SPREADSHEET_ID is injected by /api/firstrun from the Vercel env var
-      # SODAT_SPREADSHEET_ID. If unset, fall back to whatever was baked into
-      # config.yaml.template (operator-edited) — the uploader will hard-error
-      # at startup if neither path produced a real ID.
+      # 8. Point this device at the lab-wide master spreadsheet. Falls back to
+      # whatever config.yaml.template baked in if the env var isn't set.
       if [ -n "$SODAT_SPREADSHEET_ID" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
           runuser -u "$SODAT_USER" -- \
               "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
@@ -174,12 +159,10 @@ write_files:
               --spreadsheet-id "$SODAT_SPREADSHEET_ID" || true
       fi
 
-      # 8. Reboot so the firmware re-reads /boot/firmware/config.txt — 01_install_update.sh
-      # appends 'dtparam=i2c_arm=on' to enable I2C, but the kernel/firmware only picks
-      # that up on the NEXT boot, which means BME280 (the I2C sensor) returns
-      # "No such file or directory: '/dev/i2c-1'" until then. Bouncing here makes
-      # the very first cloud-init pass a complete, runnable install.
-      # cloud-init tracks instance-id; the post-reboot boot does not re-run runcmd.
+      # 9. Reboot so the firmware re-reads /boot/firmware/config.txt —
+      # 01_install_update.sh appends 'dtparam=i2c_arm=on', but the kernel
+      # only picks it up on the NEXT boot, so /dev/i2c-1 is missing until
+      # then. cloud-init tracks instance-id, so runcmd does not re-fire.
       echo "=== sodat firstrun: rebooting to apply firmware-level config (I2C) $(date -Is) ==="
       systemctl reboot
 
@@ -223,48 +206,9 @@ function fail(res, status, message) {
   res.status(status).send(`# sodat-firstrun error: ${message}\n`);
 }
 
-// Cloud-init's b64 decoder is lenient about whitespace, but YAML parsers
-// don't like a multi-kilobyte scalar that wraps awkwardly. Strip any
-// whitespace/newlines from the env-var value so the rendered user-data has
-// a clean single-line base64 string under `content:`.
-function normalizeB64(s) {
-  return s.replace(/\s+/g, "");
-}
-
 export default function handler(req, res) {
-  try {
-    return handleImpl(req, res);
-  } catch (e) {
-    // Surface uncaught exceptions instead of letting Vercel return its
-    // generic FUNCTION_INVOCATION_FAILED page — the original cause is
-    // otherwise only visible in Vercel logs.
-    const detail = (e && (e.stack || e.message)) || String(e);
-    try {
-      return fail(res, 500, `unhandled in /api/firstrun: ${detail}`);
-    } catch {
-      throw e;
-    }
-  }
-}
-
-function handleImpl(req, res) {
   if (req.method !== "GET") {
     return fail(res, 405, "Method not allowed (use GET).");
-  }
-
-  // Tiny diagnostic endpoint so we can confirm the function is even reachable
-  // without exercising the env-var / template path. Use ?diag=1.
-  if (req.query && req.query.diag) {
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Cache-Control", "no-store");
-    return res.status(200).send(
-      `sodat firstrun diag ok\n` +
-      `node=${process.version}\n` +
-      `template_bytes=${TEMPLATE.length}\n` +
-      `has_access_token=${!!process.env.SODAT_ACCESS_TOKEN}\n` +
-      `has_sa_b64=${!!process.env.SODAT_SERVICE_ACCOUNT_JSON_B64}\n` +
-      `has_spreadsheet_id=${!!process.env.SODAT_SPREADSHEET_ID}\n`
-    );
   }
 
   const auth = checkToken(req);
@@ -272,44 +216,24 @@ function handleImpl(req, res) {
     return fail(res, auth.status, auth.msg);
   }
 
-  const saB64 = process.env.SODAT_SERVICE_ACCOUNT_JSON_B64;
-  if (!saB64) {
-    return fail(res, 500,
-      "SODAT_SERVICE_ACCOUNT_JSON_B64 env var is not set on this Vercel project. " +
-      "Set it in the Vercel dashboard (Project Settings -> Environment Variables) " +
-      "to the base64-encoded contents of service_account.json."
-    );
-  }
-
-  // Validate the env var actually decodes to a service-account key —
-  // catches paste errors early instead of producing a broken SD card.
-  let decoded;
+  // Validate the SA env early so a paste error fails here instead of producing
+  // a broken SD card. Reuses the same loader the dashboard uses.
+  let saB64;
   try {
-    decoded = Buffer.from(saB64, "base64").toString("utf-8");
-    const obj = JSON.parse(decoded);
-    if (obj.type !== "service_account") {
-      throw new Error('JSON is missing "type": "service_account"');
-    }
-    if (!obj.client_email || !obj.private_key) {
-      throw new Error("JSON is missing client_email or private_key");
-    }
+    decodeServiceAccountCreds();
+    saB64 = process.env.SODAT_SERVICE_ACCOUNT_JSON_B64;
   } catch (e) {
-    return fail(res, 500,
-      `SODAT_SERVICE_ACCOUNT_JSON_B64 does not contain a valid service-account JSON: ${e.message}`
-    );
+    return fail(res, 500, e.message);
   }
 
   const rawUser = typeof req.query.user === "string" ? req.query.user : "sodat";
   if (!USER_RE.test(rawUser)) {
-    return fail(res, 400,
-      `Invalid user "${rawUser}": must match ${USER_RE}.`
-    );
+    return fail(res, 400, `Invalid user "${rawUser}": must match ${USER_RE}.`);
   }
 
   // Sensor selection. "all" (or missing) means leave config.yaml's sensors
-  // list untouched on the Pi. Otherwise the value must be a CSV of known
-  // sensor types — unknown names are rejected to surface typos early instead
-  // of silently producing a Pi that runs zero sensors.
+  // list untouched on the Pi. Unknown names are rejected so a typo surfaces
+  // early instead of silently producing a Pi that runs zero sensors.
   const rawSensors = typeof req.query.sensors === "string" ? req.query.sensors : "all";
   let sensorsValue;
   if (rawSensors.trim().toLowerCase() === "all" || rawSensors.trim() === "") {
@@ -329,9 +253,13 @@ function handleImpl(req, res) {
     sensorsValue = [...new Set(requested)].join(",");
   }
 
+  // Strip any whitespace from the b64 — operators sometimes paste with hard
+  // wraps, and a multi-line scalar would break the YAML structure.
+  const cleanSaB64 = saB64.replace(/\s+/g, "");
+
   const filled = TEMPLATE
     .replace("__SODAT_USER__", rawUser)
-    .replace("__SA_JSON_B64__", normalizeB64(saB64))
+    .replace("__SA_JSON_B64__", cleanSaB64)
     .replace("__SODAT_SENSORS__", sensorsValue)
     // Empty string is fine: the firstrun bash skips util_config.py
     // --spreadsheet-id when SODAT_SPREADSHEET_ID is empty, so the value

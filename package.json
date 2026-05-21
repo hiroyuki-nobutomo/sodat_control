@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Vercel serverless functions + static dashboard for the Sodat Sensor SFC project. Only the dashboard data-fetch + Drive image proxy depend on npm modules; the firstrun snippet endpoint and the setup wizard intentionally have zero npm deps.",
   "dependencies": {
-    "@googleapis/sheets": "^9.0.0",
     "@googleapis/drive": "^8.0.0",
-    "google-auth-library": "^9.14.0"
+    "@googleapis/sheets": "^9.0.0",
+    "google-auth-library": "^9.14.0",
+    "js-yaml": "^4.1.0"
   }
 }
