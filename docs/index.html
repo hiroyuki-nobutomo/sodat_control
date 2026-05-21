@@ -4,45 +4,34 @@
 <meta charset="utf-8">
 <title>Sodat Sensor SFC — SD Card Setup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Shared brand styles (fonts, colours, buttons, callouts, inputs). The
+     wizard-specific layout (stepper, step panels, snippet form) stays
+     in the inline <style> below. -->
+<link rel="stylesheet" href="/app.css">
 <style>
-  :root {
-    color-scheme: light dark;
-    --leaf:      #15803d;
-    --leaf-hi:   #166534;
-    --leaf-soft: #86efac;
-    --muted:     #94a3b8;
+  /* ---- wizard layout: centred long-form column on the shared beige bg ---- */
+  body {
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1rem;
   }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
   h1 { border-bottom: 3px solid var(--leaf); padding-bottom: .3rem; }
   h1 .leaf { color: var(--leaf); margin-right: .3em; }
-  .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 600; letter-spacing: .02em; }
-  h2 { margin-top: 1.5rem; }
-  h3 { margin-top: 1.3rem; }
-  a { color: var(--leaf); }
-  a:hover { color: var(--leaf-hi); }
-  ol li, ul li { margin: .35rem 0; }
-  code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
-  code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 4px; }
-  pre { background: rgba(127,127,127,.12); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
-  .lang-toggle { position: sticky; top: 0; background: var(--bg, #fff); padding: .5rem 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(21,128,61,.15); z-index: 5; }
-  @media (prefers-color-scheme: dark) { .lang-toggle { background: #1a1a1a; } }
-  .lang-toggle button { padding: .3rem .8rem; margin-right: .4rem; cursor: pointer; border: 1px solid rgba(21,128,61,.4); background: transparent; color: inherit; border-radius: 4px; font: inherit; }
+  .tagline { margin: -.4rem 0 1.4rem; color: var(--leaf); font-weight: 500; letter-spacing: .02em; }
+
+  .lang-toggle {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg);
+    padding: .5rem 0; margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(21,128,61,.15);
+  }
+  .lang-toggle button {
+    padding: .3rem .8rem; margin-right: .4rem; cursor: pointer;
+    border: 1px solid rgba(21,128,61,.4);
+    background: transparent; color: inherit;
+    border-radius: 4px; font: inherit;
+  }
   .lang-toggle button:hover { background: rgba(21,128,61,.1); }
-
-  .cta { display: inline-block; padding: .65rem 1.2rem; font-size: 1rem; font-weight: 600; background: var(--leaf); color: #fff; border: 0; border-radius: 6px; cursor: pointer; text-decoration: none; font-family: inherit; }
-  .cta:hover { background: var(--leaf-hi); color: #fff; }
-  .cta[aria-disabled="true"], .cta:disabled { background: var(--muted); cursor: not-allowed; pointer-events: none; }
-  .cta.secondary { background: transparent; color: var(--leaf); border: 2px solid var(--leaf); padding: calc(.65rem - 2px) calc(1.2rem - 2px); }
-  .cta.secondary:hover { background: rgba(21,128,61,.1); color: var(--leaf-hi); border-color: var(--leaf-hi); }
-  .cta.secondary[aria-disabled="true"], .cta.secondary:disabled { color: var(--muted); border-color: var(--muted); background: transparent; }
-
-  .callout { border-left: 4px solid #f59e0b; padding: .6rem 1rem; background: rgba(245,158,11,.1); border-radius: 0 6px 6px 0; margin: 1rem 0; }
-  .callout.danger { border-color: #dc2626; background: rgba(220,38,38,.1); }
-  .callout.info { border-color: #10b981; background: rgba(16,185,129,.1); }
-  kbd { background: rgba(127,127,127,.2); border-radius: 4px; padding: .1em .35em; border: 1px solid rgba(127,127,127,.4); font-size: .85em; }
-  .small { font-size: .9em; opacity: .8; }
-  .status { margin: .8rem 0; font-weight: 600; min-height: 1.4em; }
-  .status.err { color: #dc2626; }
 
   /* --- Step indicator -------------------------------------------------- */
   .stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
@@ -74,22 +63,21 @@
   .nav-row { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid rgba(127,127,127,.2); }
   .nav-row .spacer { flex: 1; }
 
-  /* --- Snippet form inputs ------------------------------------------- */
-  label { display: block; margin: 1rem 0 .3rem; font-weight: 600; }
-  input[type=text] { width: 100%; padding: .55rem .7rem; box-sizing: border-box; border-radius: 6px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; font: inherit; }
-  input[type=text]:focus { outline: none; border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(21,128,61,.15); }
+  /* --- Snippet form inputs (base input style comes from app.css) ----- */
+  label { display: block; margin: 1rem 0 .3rem; }
+  input[type=text] { width: 100%; }
   .btn-group { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: .6rem 0; }
-  .copy-feedback { display: inline-block; margin-left: .8rem; color: var(--leaf); font-weight: 600; opacity: 0; transition: opacity .15s; }
+  .copy-feedback { display: inline-block; margin-left: .8rem; color: var(--leaf); font-weight: 500; opacity: 0; transition: opacity .15s; }
   .copy-feedback.show { opacity: 1; }
   .sensor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .35rem .8rem; margin: .6rem 0 1rem; }
-  .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid rgba(127,127,127,.3); border-radius: 5px; cursor: pointer; user-select: none; transition: background .15s, border-color .15s; }
-  .sensor-row:hover { background: rgba(21,128,61,.08); border-color: rgba(21,128,61,.4); }
+  .sensor-row { display: flex; align-items: center; padding: .35rem .5rem; border: 1px solid var(--card-edge); border-radius: 5px; cursor: pointer; user-select: none; transition: background .15s, border-color .15s; background: var(--card); }
+  .sensor-row:hover { background: rgba(21,128,61,.06); border-color: rgba(21,128,61,.4); }
   .sensor-row:has(input:checked) { border-color: rgba(21,128,61,.55); background: rgba(21,128,61,.05); }
   .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; accent-color: var(--leaf); }
-  .sensor-row .label { font-weight: 600; }
+  .sensor-row .label { font-weight: 500; }
   .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
   .token-fallback { border: 1px solid rgba(245,158,11,.4); background: rgba(245,158,11,.06); border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
-  .token-fallback summary { font-weight: 600; cursor: pointer; }
+  .token-fallback summary { font-weight: 500; cursor: pointer; }
   .token-fallback input { margin-top: .5rem; }
 
   /* --- i18n: show only the currently-selected language --- */
