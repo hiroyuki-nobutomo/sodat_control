@@ -1,15 +1,8 @@
 // Vercel Serverless Function: GET /api/dashboard-data
 //
-// Returns the JSON bundle that drives the sensor dashboard. All access to
-// the master spreadsheet (and any future swap to BigQuery / Postgres) is
-// behind lib/sensor_data.js — this file only does HTTP concerns: caching,
-// content negotiation, error shaping.
-//
-// Caching: 30-min upload cadence means the freshest data shifts every
-// 30 minutes, so we cache at the edge for 15 minutes and serve stale for
-// another 15 while we revalidate in the background. That's a single
-// fetch of the Sheets API per ~15 minutes per Vercel edge region — well
-// inside the Sheets quota even with many concurrent viewers.
+// Returns the JSON bundle that drives the sensor dashboard. All access
+// to the master spreadsheet is behind lib/sensor_data.js; this file only
+// does HTTP concerns: caching headers, content negotiation, error shape.
 
 import { fetchDashboardData } from "../lib/sensor_data.js";
 
@@ -21,26 +14,20 @@ export default async function handler(req, res) {
   try {
     const data = await fetchDashboardData();
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    // 15-min fresh + 15-min stale-while-revalidate. The vercel.json
-    // header rule used to slam Cache-Control: no-store on /api/*, but
-    // that override is now scoped to /api/firstrun only.
-    res.setHeader(
-      "Cache-Control",
-      "public, s-maxage=900, stale-while-revalidate=900"
-    );
+    // 15-min fresh + 15-min stale-while-revalidate: Pi uploads every 30 min,
+    // so this keeps the Sheets API call count per Vercel edge region to ~1/15min
+    // regardless of how many viewers are looking at the dashboard.
+    res.setHeader("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900");
     return res.status(200).json(data);
   } catch (e) {
-    // Surface the error message but never the SA key or stack from
-    // google-auth-library (which can echo PEM fragments).
+    // Surface the message but redact any PEM block — google-auth-library
+    // sometimes echoes PEM fragments in stack traces.
     const safeMsg =
       typeof e?.message === "string"
         ? e.message.replace(/-----BEGIN[\s\S]+?-----END[^-]+-----/g, "[redacted]")
         : "Unknown error";
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    return res.status(500).json({
-      error: "dashboard-data fetch failed",
-      detail: safeMsg,
-    });
+    return res.status(500).json({ error: "dashboard-data fetch failed", detail: safeMsg });
   }
 }

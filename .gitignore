@@ -39,3 +39,7 @@ arduino/gravity_node/build/
 *.tmp
 .env
 .env.local
+
+# Local node_modules from package.json (Vercel installs on deploy)
+node_modules/
+package-lock.json

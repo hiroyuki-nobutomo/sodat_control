@@ -79,7 +79,8 @@
   .sensor-row input { margin-right: .55rem; transform: scale(1.15); cursor: pointer; accent-color: var(--leaf); }
   .sensor-row .label { font-weight: 500; }
   .sensor-row .desc { font-size: .82em; opacity: .75; margin-left: .4em; }
-  .token-fallback { border: 1px solid rgba(245,158,11,.4); background: rgba(245,158,11,.06); border-radius: 6px; padding: .8rem 1rem; margin: 1rem 0; }
+  /* .token-fallback inherits its frame from .callout in app.css; the
+     rules here only cover the <details>-specific bits. */
   .token-fallback summary { font-weight: 500; cursor: pointer; }
   .token-fallback input { margin-top: .5rem; }
 
@@ -379,7 +380,7 @@
     <span data-lang="en"><strong>Handle with care:</strong> the snippet embeds the project's <code>service_account.json</code> (base64). Don't paste it into chat or a public repo. Delete the downloaded copy from your PC after the SD card is written.</span>
   </div>
 
-  <details class="token-fallback" id="tokenFallback">
+  <details class="callout token-fallback" id="tokenFallback">
     <summary>
       <span data-lang="ja">トークン無しでこのページを開いてしまった場合 (手動入力)</span>
       <span data-lang="en">Opened this page without a token? (manual entry)</span>

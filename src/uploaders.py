@@ -54,8 +54,11 @@ UNIT_BY_METRIC = {
 
 # Camera readings carry a local file path under value["image_path"] before
 # upload; that key signals "this is a camera capture, not a scalar metric"
-# and routes the row to the Images sheet instead of All.
+# and routes the row to the Images sheet instead of All. After a failed
+# upload the path is replaced with IMAGE_UPLOAD_FAILED so retries don't
+# re-attempt a known-bad image.
 CAMERA_VALUE_KEY = "image_path"
+IMAGE_UPLOAD_FAILED = "IMAGE_UPLOAD_FAILED"
 
 def robust_retry():
     """Retry network operations for up to 120s with exponential backoff."""
@@ -119,33 +122,27 @@ class GoogleSheetsUploader(Uploader):
             )
 
         self.credentials_path = credentials_path
-        self.images_root_id = folder_id      # Config: images_folder_id (DATA/Images), still used to organise image uploads per device
-        self.data_root_id = data_folder_id   # Config: data_folder_id (DATA), still used for the log-upload destination
+        self.images_root_id = folder_id      # config: uploader.images_folder_id
+        self.data_root_id = data_folder_id   # config: uploader.data_folder_id (logs)
         self.device_id = device_id
         self.spreadsheet_id = spreadsheet_id
 
         self.gc = None
         self.drive_service = None
-        self.spreadsheet = None              # cached gspread Spreadsheet handle
-        self.scalar_ws = None                # cached 'All' worksheet
-        self.images_ws = None                # cached 'Images' worksheet
-
-        # Per-device Drive subfolder IDs (images + logs only; sensor data no
-        # longer needs its own subfolder because all devices write into the
-        # same master spreadsheet).
+        self.spreadsheet = None
+        self.scalar_ws = None
+        self.images_ws = None
         self.device_images_folder_id = None
         self.device_logs_folder_id = None
 
-        # Authenticate immediately (with retry). We deliberately swallow
-        # failures so the app can keep running and self-heal on the next
-        # upload cycle (e.g., if Wi-Fi or NTP isn't ready yet at boot).
+        # Swallow init failures so the app can keep running and self-heal on
+        # the next upload cycle (Wi-Fi / NTP may not be ready at boot).
         try:
             self._authenticate()
             self._resolve_folder_structure()
             self._open_sheets()
         except Exception as e:
             logging.error(f"Initialization failed (Network or Auth): {e}")
-            pass
 
     @robust_retry()
     def _authenticate(self):
@@ -207,15 +204,9 @@ class GoogleSheetsUploader(Uploader):
             return file.get('id')
 
     def _resolve_folder_structure(self):
-        """Resolve per-device Drive subfolders for images + logs.
-
-        Sensor data no longer needs a per-device folder — every device writes
-        into the same master spreadsheet (identified by spreadsheet_id) — so
-        the old DATA/sensor/{device_id}/ traversal is gone.
-        """
+        """Resolve per-device Drive subfolders for images + logs."""
         # Images: DATA/Images/{device_id}
         self.device_images_folder_id = self._get_or_create_subfolder(self.images_root_id, self.device_id)
-
         # Logs: DATA/logs/{device_id}
         logs_root_id = self._get_or_create_subfolder(self.data_root_id, "logs")
         self.device_logs_folder_id = self._get_or_create_subfolder(logs_root_id, self.device_id)
@@ -236,30 +227,26 @@ class GoogleSheetsUploader(Uploader):
     @robust_retry()
     def _retry_open_sheets(self):
         self.spreadsheet = self.gc.open_by_key(self.spreadsheet_id)
-        try:
-            self.scalar_ws = self.spreadsheet.worksheet(SHEET_SCALAR)
-        except gspread.exceptions.WorksheetNotFound:
-            raise RuntimeError(
-                f"Tab '{SHEET_SCALAR}' not found in spreadsheet {self.spreadsheet_id}. "
-                "Create it manually with the expected headers; this code never "
-                "creates sheet tabs."
-            )
-        try:
-            self.images_ws = self.spreadsheet.worksheet(SHEET_IMAGES)
-        except gspread.exceptions.WorksheetNotFound:
-            raise RuntimeError(
-                f"Tab '{SHEET_IMAGES}' not found in spreadsheet {self.spreadsheet_id}. "
-                "Create it manually with the expected headers; this code never "
-                "creates sheet tabs."
-            )
+        self.scalar_ws = self._open_tab(SHEET_SCALAR)
+        self.images_ws = self._open_tab(SHEET_IMAGES)
         # Best-effort header sanity check — warn only, never rewrite, since
-        # the operator might intentionally have extra trailing columns.
+        # the operator may intentionally have extra trailing columns.
         self._warn_if_headers_mismatch(self.scalar_ws, EXPECTED_HEADERS_SCALAR, SHEET_SCALAR)
         self._warn_if_headers_mismatch(self.images_ws, EXPECTED_HEADERS_IMAGES, SHEET_IMAGES)
         logging.info(
             f"Master spreadsheet opened: id={self.spreadsheet_id} "
             f"tabs=[{SHEET_SCALAR}, {SHEET_IMAGES}]"
         )
+
+    def _open_tab(self, name):
+        try:
+            return self.spreadsheet.worksheet(name)
+        except gspread.exceptions.WorksheetNotFound:
+            raise RuntimeError(
+                f"Tab '{name}' not found in spreadsheet {self.spreadsheet_id}. "
+                "Create it manually with the expected headers; this code never "
+                "creates sheet tabs."
+            )
 
     @staticmethod
     def _warn_if_headers_mismatch(worksheet, expected, tab_name):
@@ -278,17 +265,7 @@ class GoogleSheetsUploader(Uploader):
                 "view sheets still produce sensible output."
             )
 
-    @robust_retry()
-    def _get_scalar_sheet(self):
-        if self.scalar_ws is None:
-            raise RuntimeError(f"Scalar worksheet '{SHEET_SCALAR}' is not initialized.")
-        return self.scalar_ws
 
-    def _get_images_sheet(self):
-        if self.images_ws is None:
-            raise RuntimeError(f"Images worksheet '{SHEET_IMAGES}' is not initialized.")
-        return self.images_ws
-    
     @robust_retry()
     def _upload_image(self, image_path: str) -> Optional[Tuple[str, str]]:
         """Uploads an image to Google Drive and returns its webViewLink and file id."""
@@ -424,8 +401,10 @@ class GoogleSheetsUploader(Uploader):
         - Readings within the same minute share one Timestamp string so
           Looker Studio can pivot back to wide form when needed.
         """
-        scalar_sheet = self._get_scalar_sheet()
-        images_sheet = self._get_images_sheet()
+        if self.scalar_ws is None or self.images_ws is None:
+            raise RuntimeError("Master spreadsheet tabs not initialised.")
+        scalar_sheet = self.scalar_ws
+        images_sheet = self.images_ws
 
         jst = timezone(timedelta(hours=9))
         successful_timestamps: List[str] = []
@@ -456,7 +435,7 @@ class GoogleSheetsUploader(Uploader):
                 # garbage to Sheets.
                 if (image_link
                         and not str(image_link).startswith("http")
-                        and image_link != "IMAGE_UPLOAD_FAILED"
+                        and image_link != IMAGE_UPLOAD_FAILED
                         and not os.path.exists(image_link)):
                     logging.warning(
                         f"Evicting stale reading {r.timestamp}: "
@@ -467,7 +446,7 @@ class GoogleSheetsUploader(Uploader):
                 web_view_link = None
                 direct_link = None
 
-                if image_link and not str(image_link).startswith("http") and image_link != "IMAGE_UPLOAD_FAILED":
+                if image_link and not str(image_link).startswith("http") and image_link != IMAGE_UPLOAD_FAILED:
                     # Local path — upload to Drive now.
                     try:
                         upload_result = self._upload_image(image_link)
@@ -506,9 +485,7 @@ class GoogleSheetsUploader(Uploader):
             # ----- Scalar readings → All sheet (one row per metric) -----
             wrote_any = False
             for metric, value in value_dict.items():
-                # Skip absent values — instruction #5: "値が取れなかった
-                # メトリックは行を作らない". None and empty string both count
-                # as missing; numeric 0 is a real value and is kept.
+                # None and empty string are missing; numeric 0 is a real value.
                 if value is None:
                     continue
                 if isinstance(value, str) and value.strip() == "":

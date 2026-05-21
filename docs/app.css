@@ -28,7 +28,6 @@
   --bg:          #f6f7f5;
   --card:        #ffffff;
   --card-edge:   #e3e6e0;
-  --card-shadow: 0 1px 2px rgba(31, 36, 33, .03), 0 1px 8px rgba(31, 36, 33, .04);
 
   /* Text */
   --ink:         #1f2421;
@@ -143,18 +142,6 @@ kbd {
   padding: .1em .4em;
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: .85em;
-}
-
-/* ---------- card surface ---------- */
-/* Both pages use the same subtle card style on the beige background.
-   The dashboard's chart/KPI tiles override the radius and padding;
-   this is the default everywhere else. */
-.card-surface,
-.surface {
-  background: var(--card);
-  border: 1px solid var(--card-edge);
-  border-radius: 10px;
-  box-shadow: var(--card-shadow);
 }
 
 /* ---------- CTA button ---------- */
