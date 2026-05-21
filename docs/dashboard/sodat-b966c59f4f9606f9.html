@@ -28,42 +28,33 @@
   body { min-height: 100vh; }
 
   /* ---------- header ---------- */
-  header.app {
-    background: var(--card);
-    border-bottom: 1px solid var(--card-edge);
-    padding: 1rem 1.4rem;
-    display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
-    position: sticky; top: 0; z-index: 10;
-  }
-  header.app h1 {
-    margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: .02em;
-  }
-  header.app h1 .leaf { color: var(--leaf); margin-right: .35em; }
-  header.app .meta { font-size: .8rem; color: var(--muted); }
-  header.app .filters { margin-left: auto; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
-  header.app select {
-    font: inherit; font-size: .85rem; padding: .35rem .6rem;
+  /* Base sticky chrome comes from .page-header in app.css; only the
+     dashboard-specific bits (filters, tools, status, select sizing) live
+     here so the wizard's header stays visually identical. */
+  .page-header .filters { margin-left: auto; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .page-header select {
+    font: inherit; font-size: .92rem; padding: .35rem .6rem;
     background: var(--card); color: var(--ink);
     border: 1px solid var(--card-edge); border-radius: 6px;
     min-width: 9ch;
   }
-  header.app select:focus { outline: 2px solid var(--leaf); outline-offset: 1px; }
-  header.app .filter-label { font-size: .78rem; color: var(--ink-soft); margin-right: .2rem; }
-  #status { font-size: .78rem; color: var(--muted); }
+  .page-header select:focus { outline: 2px solid var(--leaf); outline-offset: 1px; }
+  .page-header .filter-label { font-size: .85rem; color: var(--ink-soft); margin-right: .2rem; }
+  #status { font-size: .82rem; color: var(--muted); }
   #status.err { color: #b03a2e; }
 
   /* "Tools" — entry points for sibling features. The Pi setup wizard
      used to be the project's single front page; it is now reorganised
      as one of the tools accessed from the dashboard. */
-  header.app .tools { display: flex; gap: .5rem; align-items: center; padding-left: .8rem; border-left: 1px solid var(--card-edge); margin-left: .4rem; }
-  header.app .tools a {
-    font-size: .82rem; color: var(--leaf); text-decoration: none;
+  .page-header .tools { display: flex; gap: .5rem; align-items: center; padding-left: .8rem; border-left: 1px solid var(--card-edge); margin-left: .4rem; }
+  .page-header .tools a {
+    font-size: .9rem; color: var(--leaf); text-decoration: none;
     border: 1px solid rgba(21,128,61,.3); border-radius: 6px;
     padding: .3rem .7rem;
     transition: background .15s, border-color .15s;
   }
-  header.app .tools a:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); color: var(--leaf-hi); }
-  header.app .tools a::after { content: " →"; opacity: .6; }
+  .page-header .tools a:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); color: var(--leaf-hi); }
+  .page-header .tools a::after { content: " →"; opacity: .6; }
 
   /* ---------- main grid ---------- */
   main {
@@ -91,8 +82,8 @@
     border: 1px solid var(--card-edge);
     border-left: 4px solid var(--card-edge);
     border-radius: 10px;
-    padding: .85rem 1rem .9rem;
-    min-height: 92px;
+    padding: .95rem 1.05rem 1rem;
+    min-height: 104px;
     display: flex; flex-direction: column; justify-content: space-between;
   }
   .kpi[data-metric="temperature"]  { border-left-color: var(--c-temperature); }
@@ -100,10 +91,10 @@
   .kpi[data-metric="co2"]          { border-left-color: var(--c-co2); }
   .kpi[data-metric="illuminance"]  { border-left-color: var(--c-illuminance); }
   .kpi[data-metric="pressure"]     { border-left-color: var(--c-pressure); }
-  .kpi-label { font-size: .78rem; color: var(--ink-soft); letter-spacing: .04em; }
-  .kpi-value { font-size: 1.65rem; font-weight: 500; }
-  .kpi-value .unit { font-size: .95rem; color: var(--ink-soft); margin-left: .25em; font-weight: 400; }
-  .kpi-meta { font-size: .72rem; color: var(--muted); }
+  .kpi-label { font-size: .88rem; color: var(--ink-soft); letter-spacing: .03em; }
+  .kpi-value { font-size: 1.95rem; font-weight: 500; line-height: 1.15; }
+  .kpi-value .unit { font-size: 1.05rem; color: var(--ink-soft); margin-left: .25em; font-weight: 400; }
+  .kpi-meta { font-size: .8rem; color: var(--muted); }
   .kpi-meta .ts { margin-right: .4em; }
 
   /* ---------- charts ---------- */
@@ -117,14 +108,14 @@
     background: var(--card);
     border: 1px solid var(--card-edge);
     border-radius: 10px;
-    padding: .9rem 1rem 1rem;
+    padding: 1rem 1.1rem 1.1rem;
   }
   .card h2 {
-    margin: 0 0 .6rem;
-    font-size: .9rem; font-weight: 700; letter-spacing: .03em;
+    margin: 0 0 .65rem;
+    font-size: 1.02rem; font-weight: 700; letter-spacing: .02em;
     color: var(--ink);
   }
-  .card.chart { display: flex; flex-direction: column; gap: .4rem; height: 290px; }
+  .card.chart { display: flex; flex-direction: column; gap: .4rem; height: 320px; }
   .card.chart .canvas-wrap { position: relative; flex: 1; min-height: 0; }
   .card.chart canvas { width: 100% !important; height: 100% !important; }
   .swatch {
@@ -158,12 +149,12 @@
   .cameras .thumb .ts {
     position: absolute; bottom: 0; left: 0; right: 0;
     background: linear-gradient(transparent, rgba(0,0,0,.6));
-    color: #fff; font-size: .68rem; padding: 1rem .4rem .3rem;
+    color: #fff; font-size: .75rem; padding: 1rem .4rem .35rem;
   }
   .cameras .empty {
-    color: var(--muted); font-size: .8rem; padding: .5rem; grid-column: 1 / -1; text-align: center;
+    color: var(--muted); font-size: .9rem; padding: .5rem; grid-column: 1 / -1; text-align: center;
   }
-  .history { font-size: .82rem; color: var(--ink-soft); }
+  .history { font-size: .92rem; color: var(--ink-soft); }
   .history .placeholder { color: var(--muted); font-style: italic; }
 
   /* ---------- loading state ---------- */
@@ -174,7 +165,7 @@
 </head>
 <body>
 
-<header class="app">
+<header class="page-header">
   <h1><span class="leaf" aria-hidden="true">🌱</span>Sodat Sensor Dashboard</h1>
   <span class="meta mono" id="updatedAt"></span>
   <nav class="tools" aria-label="Tools">
@@ -486,9 +477,11 @@
         plugins: {
           legend: {
             position: "bottom",
-            labels: { boxWidth: 12, boxHeight: 2, font: { size: 10 } },
+            labels: { boxWidth: 12, boxHeight: 2, font: { size: 12 } },
           },
           tooltip: {
+            titleFont: { size: 12 },
+            bodyFont: { size: 12 },
             callbacks: {
               label: (item) => `${item.dataset.label}: ${formatValue(metric, item.parsed.y)}`,
             },
@@ -499,11 +492,11 @@
             type: "time",
             time: { tooltipFormat: "MM-dd HH:mm", displayFormats: { hour: "MM-dd HH:mm", day: "MM-dd" } },
             grid: { color: "rgba(0,0,0,.04)" },
-            ticks: { font: { size: 10 }, color: "#666", maxRotation: 0, autoSkip: true, autoSkipPadding: 24 },
+            ticks: { font: { size: 11 }, color: "#666", maxRotation: 0, autoSkip: true, autoSkipPadding: 24 },
           },
           y: {
             grid: { color: "rgba(0,0,0,.04)" },
-            ticks: { font: { size: 10 }, color: "#666" },
+            ticks: { font: { size: 11 }, color: "#666" },
             beginAtZero: false,
           },
         },

@@ -67,6 +67,11 @@ body {
   font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont,
                "Segoe UI", system-ui, sans-serif;
   font-weight: 400;
+  /* Anchor the base size — the dashboard's KPIs / chart tick labels and
+     the wizard's long-form prose both scale relative to this. Slightly
+     above the browser default (16px) so dense numeric tiles read at
+     comfortable distance without breaking the wizard's 760px column. */
+  font-size: 16.5px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -76,14 +81,41 @@ body {
   font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* ---------- page-header (sticky brand chrome shared by both pages) ----
+   The dashboard's app header and the wizard's lang-toggle previously
+   looked completely different; this class is the one place that says
+   "what the top of every Sodat page looks like". Page-specific extras
+   (dashboard filters, wizard lang toggle) sit inside this bar. */
+.page-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--card-edge);
+  padding: .9rem 1.4rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+  position: sticky; top: 0; z-index: 10;
+}
+.page-header h1 {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.page-header h1 .leaf {
+  color: var(--leaf);
+  margin-right: .35em;
+}
+.page-header .spacer { flex: 1; }
+.page-header .meta { font-size: .85rem; color: var(--muted); }
+
 /* ---------- typography ---------- */
 a { color: var(--leaf); text-decoration-thickness: 1px; text-underline-offset: 2px; }
 a:hover { color: var(--leaf-hi); }
 
 h1, h2, h3, h4 { color: var(--ink); letter-spacing: .01em; }
 h1 { font-weight: 700; }
-h2 { margin-top: 1.5rem; font-weight: 700; font-size: 1.1rem; }
-h3 { margin-top: 1.3rem; font-weight: 500; font-size: .98rem; }
+h2 { margin-top: 1.5rem; font-weight: 700; font-size: 1.18rem; }
+h3 { margin-top: 1.3rem; font-weight: 500; font-size: 1.02rem; }
 
 ol li, ul li { margin: .35rem 0; }
 
