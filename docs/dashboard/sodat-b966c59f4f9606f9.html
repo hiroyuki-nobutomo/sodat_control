@@ -56,17 +56,22 @@
   .page-header .tools a:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); color: var(--leaf-hi); }
   .page-header .tools a::after { content: " →"; opacity: .6; }
 
-  /* ---------- main grid ---------- */
+  /* ---------- main grid ----------
+     Flat 3-column layout: each chart / camera / history card is its
+     own grid item. Row 1 = KPIs (spans all 3). Row 2 = temperature,
+     humidity, camera. Row 3 = CO₂, illuminance, work-history. */
   main {
     max-width: 1480px; margin: 0 auto;
     padding: 1.2rem 1.4rem 3rem;
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 1.2rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
   }
   @media (max-width: 1100px) {
-    main { grid-template-columns: 1fr; }
-    aside.rail { order: 2; }
+    main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 720px) {
+    main { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* ---------- KPIs ---------- */
@@ -97,13 +102,7 @@
   .kpi-meta { font-size: .8rem; color: var(--muted); }
   .kpi-meta .ts { margin-right: .4em; }
 
-  /* ---------- charts ---------- */
-  .charts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+  /* ---------- cards ---------- */
   .card {
     background: var(--card);
     border: 1px solid var(--card-edge);
@@ -128,8 +127,7 @@
   .card h2 .swatch[data-metric="illuminance"]  { background: var(--c-illuminance); }
   .card h2 .swatch[data-metric="pressure"]     { background: var(--c-pressure); }
 
-  /* ---------- right rail (camera + work history) ---------- */
-  aside.rail { display: flex; flex-direction: column; gap: 1rem; }
+  /* ---------- camera card (now its own column in the 3-col grid) ---------- */
   .cameras {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -224,46 +222,46 @@
     </div>
   </section>
 
-  <!-- Left: 2x2 charts -->
-  <section class="charts">
-    <div class="card chart">
-      <h2><span class="swatch" data-metric="temperature"></span>温度 / Temperature</h2>
-      <div class="canvas-wrap"><canvas id="chart-temperature"></canvas></div>
+  <!--
+    Lower section: 3 equal-width columns. Row 1 below the KPIs is
+    temperature / humidity / camera; row 2 is CO₂ / illuminance /
+    work-history. Each card is an independent grid item — no nested
+    wrappers — so columns stay aligned across rows.
+  -->
+  <div class="card chart">
+    <h2><span class="swatch" data-metric="temperature"></span>温度 / Temperature</h2>
+    <div class="canvas-wrap"><canvas id="chart-temperature"></canvas></div>
+  </div>
+  <div class="card chart">
+    <h2><span class="swatch" data-metric="humidity"></span>湿度 / Humidity</h2>
+    <div class="canvas-wrap"><canvas id="chart-humidity"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>カメラ / Camera</h2>
+    <div class="cameras" id="cameras">
+      <div class="empty">読み込み中…</div>
     </div>
-    <div class="card chart">
-      <h2><span class="swatch" data-metric="humidity"></span>湿度 / Humidity</h2>
-      <div class="canvas-wrap"><canvas id="chart-humidity"></canvas></div>
-    </div>
-    <div class="card chart">
-      <h2><span class="swatch" data-metric="co2"></span>CO₂</h2>
-      <div class="canvas-wrap"><canvas id="chart-co2"></canvas></div>
-    </div>
-    <div class="card chart">
-      <h2><span class="swatch" data-metric="illuminance"></span>照度 / Illuminance</h2>
-      <div class="canvas-wrap"><canvas id="chart-illuminance"></canvas></div>
-    </div>
-  </section>
+  </div>
 
-  <!-- Right rail: cameras + work history -->
-  <aside class="rail">
-    <div class="card">
-      <h2>カメラ / Camera</h2>
-      <div class="cameras" id="cameras">
-        <div class="empty">読み込み中…</div>
-      </div>
+  <div class="card chart">
+    <h2><span class="swatch" data-metric="co2"></span>CO₂</h2>
+    <div class="canvas-wrap"><canvas id="chart-co2"></canvas></div>
+  </div>
+  <div class="card chart">
+    <h2><span class="swatch" data-metric="illuminance"></span>照度 / Illuminance</h2>
+    <div class="canvas-wrap"><canvas id="chart-illuminance"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>作業履歴 / Work history</h2>
+    <div class="history" id="history">
+      <!--
+        TODO: when an `Operations` (or similar) tab is added to the
+        master spreadsheet, extend lib/sensor_data.js to read it and
+        render entries here. For now this is a static placeholder.
+      -->
+      <p class="placeholder">作業履歴用シートが定義されたら、ここに最新の出来事が並びます。</p>
     </div>
-    <div class="card">
-      <h2>作業履歴 / Work history</h2>
-      <div class="history" id="history">
-        <!--
-          TODO: when an `Operations` (or similar) tab is added to the
-          master spreadsheet, extend lib/sensor_data.js to read it and
-          render entries here. For now this is a static placeholder.
-        -->
-        <p class="placeholder">作業履歴用シートが定義されたら、ここに最新の出来事が並びます。</p>
-      </div>
-    </div>
-  </aside>
+  </div>
 </main>
 
 <script>
