@@ -599,18 +599,31 @@
     render();
   });
 
-  // Propagate the wizard's access token to the "Pi セットアップ" link if
-  // it's already cached in this browser's localStorage from a past wizard
-  // visit. Same-origin, so the cache key is the wizard's "sodatToken".
-  // If no token is cached, the link stays at "/" and the wizard will
-  // prompt the researcher to paste their token (existing fallback).
+  // Make the "Pi セットアップ" link land on the wizard pre-authed.
+  //
+  // Two paths, in priority order:
+  //  1. localStorage cache from a past wizard visit (instant, no network).
+  //  2. /api/wizard-token, which returns the value of SODAT_ACCESS_TOKEN
+  //     so a fresh browser doesn't need to have used the wizard first.
+  //     A successful fetch also writes the value back to localStorage so
+  //     subsequent visits skip the network round-trip.
+  //
+  // If both paths produce nothing (env var missing on the server,
+  // network blocked, …) the link stays at "/" and the wizard falls
+  // back to its existing manual-paste form.
+  function setWizardToken(t) {
+    if (!t) return;
+    try { localStorage.setItem("sodatToken", t); } catch (e) {}
+    const link = document.getElementById("wizard-link");
+    if (link) link.href = "/?token=" + encodeURIComponent(t);
+  }
   try {
-    const cached = localStorage.getItem("sodatToken");
-    if (cached) {
-      const link = document.getElementById("wizard-link");
-      if (link) link.href = "/?token=" + encodeURIComponent(cached);
-    }
+    setWizardToken(localStorage.getItem("sodatToken") || "");
   } catch (e) { /* localStorage unavailable in some private modes */ }
+  fetch("/api/wizard-token", { cache: "no-store" })
+    .then((r) => (r.ok ? r.text() : ""))
+    .then((t) => setWizardToken(t.trim()))
+    .catch(() => { /* leave whatever the cache gave us */ });
 
   loadData();
 })();
