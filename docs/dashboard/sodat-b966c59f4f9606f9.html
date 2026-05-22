@@ -162,7 +162,7 @@
   <!-- The Pi setup wizard at "/" is gated by ?token=… so we don't embed
        the token here. Researchers who have used the wizard once already
        carry the token in localStorage. -->
-  <a class="nav-link" href="/" target="_blank" rel="noopener"
+  <a class="nav-link" id="wizard-link" href="/" target="_blank" rel="noopener"
      aria-label="Pi セットアップウィザードを新しいタブで開く">
     Pi セットアップ <span aria-hidden="true">→</span>
   </a>
@@ -598,6 +598,19 @@
     state.filters.period = e.target.value;
     render();
   });
+
+  // Propagate the wizard's access token to the "Pi セットアップ" link if
+  // it's already cached in this browser's localStorage from a past wizard
+  // visit. Same-origin, so the cache key is the wizard's "sodatToken".
+  // If no token is cached, the link stays at "/" and the wizard will
+  // prompt the researcher to paste their token (existing fallback).
+  try {
+    const cached = localStorage.getItem("sodatToken");
+    if (cached) {
+      const link = document.getElementById("wizard-link");
+      if (link) link.href = "/?token=" + encodeURIComponent(cached);
+    }
+  } catch (e) { /* localStorage unavailable in some private modes */ }
 
   loadData();
 })();
