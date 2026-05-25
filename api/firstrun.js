@@ -125,9 +125,14 @@ write_files:
       # we don't sudo. SUDO_USER is what bootstrap.sh inspects to figure out
       # which non-root account owns the install — set it explicitly.
       echo "running bootstrap as root with SUDO_USER=$SODAT_USER ..."
-      if ! SUDO_USER="$SODAT_USER" bash -c \
-          'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'; then
-          echo "sodat firstrun: bootstrap.sh failed (exit=$?). Re-run later with:"
+      # Capture rc before the conditional — $? inside an `if !` branch is
+      # always 0 (the negation succeeded), so the previous "exit=$?" report
+      # always read 0 even on real failure, masking the underlying cause.
+      SUDO_USER="$SODAT_USER" bash -c \
+          'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'
+      bootstrap_rc=$?
+      if [ "$bootstrap_rc" -ne 0 ]; then
+          echo "sodat firstrun: bootstrap.sh failed (exit=$bootstrap_rc). Re-run later with:"
           echo "  SUDO_USER=$SODAT_USER bash -c 'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'"
           exit 0
       fi
