@@ -9,7 +9,6 @@ from src.models import SensorReading
 
 try:
     import gspread
-    from google.oauth2.credentials import Credentials
     from google.oauth2.service_account import Credentials as SACredentials
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaFileUpload
@@ -120,6 +119,20 @@ class GoogleSheetsUploader(Uploader):
                 "(under 'uploader:') to the ID of the lab-wide master sheet "
                 "that contains the 'All' and 'Images' tabs."
             )
+        # Catch un-substituted template placeholders early — otherwise the
+        # service starts, hits 404 against the literal placeholder string,
+        # and silently retains every reading in the local SQLite buffer.
+        for name, value in (
+            ("uploader.spreadsheet_id", spreadsheet_id),
+            ("uploader.data_folder_id", data_folder_id),
+            ("uploader.images_folder_id", folder_id),
+        ):
+            if isinstance(value, str) and value.startswith("REPLACE_WITH_"):
+                raise ValueError(
+                    f"{name} is still the template placeholder '{value}'. "
+                    f"Set the real Drive ID in config.yaml or via "
+                    f"scripts/util_config.py."
+                )
 
         self.credentials_path = credentials_path
         self.images_root_id = folder_id      # config: uploader.images_folder_id
@@ -152,17 +165,16 @@ class GoogleSheetsUploader(Uploader):
         with open(self.credentials_path) as f:
             cred_data = json.load(f)
 
-        if cred_data.get("type") == "service_account":
-            creds = SACredentials.from_service_account_info(cred_data, scopes=GOOGLE_SCOPES)
-            auth_mode = "Service Account"
-        else:
-            # Legacy: OAuth installed-app user token (token.json from older deployments)
-            creds = Credentials.from_authorized_user_file(self.credentials_path)
-            auth_mode = "OAuth user token (legacy)"
+        if cred_data.get("type") != "service_account":
+            raise ValueError(
+                f"Credentials file {self.credentials_path} is not a Service Account JSON "
+                f"(type={cred_data.get('type')!r}). v2 only supports Service Accounts."
+            )
+        creds = SACredentials.from_service_account_info(cred_data, scopes=GOOGLE_SCOPES)
 
         self.gc = gspread.authorize(creds)
         self.drive_service = build('drive', 'v3', credentials=creds)
-        logging.info(f"Authenticated with Google Sheets and Drive via {auth_mode}.")
+        logging.info("Authenticated with Google Sheets and Drive via Service Account.")
 
     def _get_or_create_subfolder(self, parent_id: Optional[str], folder_name: str) -> Optional[str]:
         """Checks if a folder exists inside parent_id, creates it if not."""

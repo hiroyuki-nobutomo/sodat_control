@@ -14,7 +14,7 @@
 // out of the failure surface — no includeFiles, no readFileSync.
 
 import { timingSafeEqual } from "node:crypto";
-import { decodeServiceAccountCreds } from "../lib/sa_auth.js";
+import { decodeServiceAccountCreds, FILE_ID_RE } from "../lib/sa_auth.js";
 
 // Linux usernames: lowercase letter first, then [a-z0-9_-], up to 32 chars.
 const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
@@ -56,6 +56,8 @@ write_files:
       SODAT_USER=__SODAT_USER__
       SODAT_SENSORS=__SODAT_SENSORS__
       SODAT_SPREADSHEET_ID=__SPREADSHEET_ID__
+      SODAT_DATA_FOLDER_ID=__DATA_FOLDER_ID__
+      SODAT_IMAGES_FOLDER_ID=__IMAGES_FOLDER_ID__
   - path: /etc/sodat-firstrun/service_account.json
     owner: root:root
     permissions: '0600'
@@ -125,7 +127,7 @@ write_files:
       # we don't sudo. SUDO_USER is what bootstrap.sh inspects to figure out
       # which non-root account owns the install — set it explicitly.
       echo "running bootstrap as root with SUDO_USER=$SODAT_USER ..."
-      # Capture rc before the conditional — $? inside an `if !` branch is
+      # Capture rc before the conditional — $? inside an 'if !' branch is
       # always 0 (the negation succeeded), so the previous "exit=$?" report
       # always read 0 even on real failure, masking the underlying cause.
       SUDO_USER="$SODAT_USER" bash -c \
@@ -155,14 +157,27 @@ write_files:
               --config "$SODAT_HOME/sensor_sfc/config.yaml" || true
       fi
 
-      # 8. Point this device at the lab-wide master spreadsheet. Falls back to
-      # whatever config.yaml.template baked in if the env var isn't set.
-      if [ -n "$SODAT_SPREADSHEET_ID" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
+      # 8. Point this device at the lab-wide master spreadsheet + Drive
+      # folders. config.yaml.template ships placeholders (REPLACE_WITH_*),
+      # so any of these env vars left empty in Vercel will cause the Pi
+      # service to fail loudly at startup — which is the intended behaviour
+      # over silently writing to a stranger's Drive.
+      # Each ID is set in its own invocation rather than building a single
+      # argv array — both because Bash array-expansion syntax collides with
+      # the surrounding JS template literal in api/firstrun.js, and because
+      # failure to set one ID shouldn't block the others.
+      apply_util_config() {
+          local flag="$1" value="$2"
+          [ -z "$value" ] && return 0
+          [ -d "$SODAT_HOME/sensor_sfc/.venv" ] || return 0
           runuser -u "$SODAT_USER" -- \
               "$SODAT_HOME/sensor_sfc/.venv/bin/python3" \
               "$SODAT_HOME/sensor_sfc/scripts/util_config.py" \
-              --spreadsheet-id "$SODAT_SPREADSHEET_ID" || true
-      fi
+              "$flag" "$value" || true
+      }
+      apply_util_config --spreadsheet-id    "$SODAT_SPREADSHEET_ID"
+      apply_util_config --data-folder-id    "$SODAT_DATA_FOLDER_ID"
+      apply_util_config --images-folder-id  "$SODAT_IMAGES_FOLDER_ID"
 
       # 9. Reboot so the firmware re-reads /boot/firmware/config.txt —
       # 01_install_update.sh appends 'dtparam=i2c_arm=on', but the kernel
@@ -262,14 +277,35 @@ export default function handler(req, res) {
   // wraps, and a multi-line scalar would break the YAML structure.
   const cleanSaB64 = saB64.replace(/\s+/g, "");
 
+  // Validate Drive/Sheets IDs from env — anything but FILE_ID_RE could
+  // smuggle a newline into the sourced /etc/sodat-firstrun.env and execute
+  // as root, plus typos here cause silent 404s at upload time which is
+  // exactly the bug that triggered this audit. Empty string is allowed
+  // (template's placeholder will catch it at Pi-side startup).
+  const driveIdEnv = (name) => {
+    const v = process.env[name];
+    if (v === undefined || v === "") return "";
+    if (!FILE_ID_RE.test(v)) {
+      throw new Error(`${name} env var contains invalid characters; expected ${FILE_ID_RE}.`);
+    }
+    return v;
+  };
+  let spreadsheetId, dataFolderId, imagesFolderId;
+  try {
+    spreadsheetId  = driveIdEnv("SODAT_SPREADSHEET_ID");
+    dataFolderId   = driveIdEnv("SODAT_DATA_FOLDER_ID");
+    imagesFolderId = driveIdEnv("SODAT_IMAGES_FOLDER_ID");
+  } catch (e) {
+    return fail(res, 500, e.message);
+  }
+
   const filled = TEMPLATE
     .replace("__SODAT_USER__", rawUser)
     .replace("__SA_JSON_B64__", cleanSaB64)
     .replace("__SODAT_SENSORS__", sensorsValue)
-    // Empty string is fine: the firstrun bash skips util_config.py
-    // --spreadsheet-id when SODAT_SPREADSHEET_ID is empty, so the value
-    // baked into config.yaml.template wins by default.
-    .replace("__SPREADSHEET_ID__", process.env.SODAT_SPREADSHEET_ID || "");
+    .replace("__SPREADSHEET_ID__",   spreadsheetId)
+    .replace("__DATA_FOLDER_ID__",   dataFolderId)
+    .replace("__IMAGES_FOLDER_ID__", imagesFolderId);
 
   res.setHeader("Content-Type", "text/yaml; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="sodat-user-data-snippet.yaml"');

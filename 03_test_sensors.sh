@@ -3,6 +3,7 @@ set -e
 
 # Colors
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 CONFIG_FILE="config.yaml"
@@ -13,7 +14,7 @@ echo -e "${GREEN}--- Starting Sensor Sensing Test (3 min) ---${NC}"
 # SMART PROXY: If running from installer, switch to installed instance
 if [ ! -f "config.yaml" ]; then
     REAL_USER=${SUDO_USER:-$USER}
-    REAL_HOME=$(eval echo ~$REAL_USER)
+    REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
     INSTALLED_DIR="$REAL_HOME/sensor_sfc"
     
     if [ -d "$INSTALLED_DIR" ]; then

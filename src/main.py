@@ -58,11 +58,7 @@ def main():
 
     if uploader_type == "GoogleDrive":
         logging.info("Using Google Sheets Uploader.")
-        # Prefer new credentials_file key; fall back to legacy token_file for older configs.
-        credentials_path = cm.get(
-            "uploader.credentials_file",
-            cm.get("uploader.token_file", "secrets/service_account.json"),
-        )
+        credentials_path = cm.get("uploader.credentials_file", "secrets/service_account.json")
         # Master spreadsheet ID is required — every device writes long-form
         # rows into the lab-wide 'All' / 'Images' tabs. Missing config here
         # is a hard error (see GoogleSheetsUploader.__init__).

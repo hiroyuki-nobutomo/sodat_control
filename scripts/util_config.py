@@ -37,6 +37,13 @@ def update_spreadsheet_id(config, spreadsheet_id):
     print(f"Updating uploader.spreadsheet_id: {current} -> {spreadsheet_id}")
     config['uploader']['spreadsheet_id'] = spreadsheet_id
 
+def update_folder_id(config, key, value):
+    if 'uploader' not in config:
+        config['uploader'] = {}
+    current = config['uploader'].get(key)
+    print(f"Updating uploader.{key}: {current} -> {value}")
+    config['uploader'][key] = value
+
 def update_retention(config, days):
     if 'storage' in config and 'retention' in config['storage']:
         print(f"Updating Retention Policy: {days} days")
@@ -44,16 +51,20 @@ def update_retention(config, days):
     else:
         print("Warning: Retention configuration not found in config.yaml")
 
-def update_intervals(config, sensor_int, camera_int, upload_int, upload_offset):
+def update_intervals(config, sensor_int, camera_int, upload_int, upload_offset, log_int):
     # Update Uploader
     if 'uploader' in config:
         if upload_int is not None:
             print(f"Updating Upload Interval: {upload_int}s")
             config['uploader']['interval_seconds'] = upload_int
-        
+
         if upload_offset is not None:
             print(f"Updating Upload Offset: {upload_offset}s")
             config['uploader']['offset_seconds'] = upload_offset
+
+        if log_int is not None:
+            print(f"Updating Log Upload Interval: {log_int}s")
+            config['uploader']['log_interval_seconds'] = log_int
     
     # Update Sensors
     if 'sensors' in config:
@@ -73,16 +84,21 @@ def main():
     parser = argparse.ArgumentParser(description="Configure Sensor SFC Device Settings")
     parser.add_argument("--device-id", help="Set the unique Device ID (e.g., S01, A01)")
     parser.add_argument("--spreadsheet-id", help="Set the lab-wide master spreadsheet ID (uploader.spreadsheet_id)")
+    parser.add_argument("--data-folder-id", help="Set the Drive folder ID for log/data uploads (uploader.data_folder_id)")
+    parser.add_argument("--images-folder-id", help="Set the Drive folder ID for image uploads (uploader.images_folder_id)")
     parser.add_argument("--retention-days", type=int, help="Set local data retention period (days)")
     parser.add_argument("--sensor-interval", type=int, help="Set environmental sensor interval (seconds)")
     parser.add_argument("--camera-interval", type=int, help="Set camera interval (seconds)")
     parser.add_argument("--upload-interval", type=int, help="Set upload interval (seconds)")
     parser.add_argument("--upload-offset", type=int, help="Set upload start offset (seconds)")
+    parser.add_argument("--log-interval", type=int, help="Set log upload interval (seconds)")
     parser.add_argument("--config", default=CONFIG_FILE, help=f"Path to config file (default: {CONFIG_FILE})")
 
     args = parser.parse_args()
 
-    if not any([args.device_id, args.spreadsheet_id, args.retention_days, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset]):
+    if not any([args.device_id, args.spreadsheet_id, args.data_folder_id, args.images_folder_id,
+                args.retention_days, args.sensor_interval, args.camera_interval,
+                args.upload_interval, args.upload_offset, args.log_interval]):
         parser.print_help()
         sys.exit(0)
 
@@ -94,10 +110,16 @@ def main():
     if args.spreadsheet_id:
         update_spreadsheet_id(config, args.spreadsheet_id)
 
+    if args.data_folder_id:
+        update_folder_id(config, 'data_folder_id', args.data_folder_id)
+
+    if args.images_folder_id:
+        update_folder_id(config, 'images_folder_id', args.images_folder_id)
+
     if args.retention_days:
         update_retention(config, args.retention_days)
 
-    update_intervals(config, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset)
+    update_intervals(config, args.sensor_interval, args.camera_interval, args.upload_interval, args.upload_offset, args.log_interval)
 
     save_config(args.config, config)
 

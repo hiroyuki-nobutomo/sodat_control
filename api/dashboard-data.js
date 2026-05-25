@@ -20,11 +20,15 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900");
     return res.status(200).json(data);
   } catch (e) {
-    // Surface the message but redact any PEM block — google-auth-library
-    // sometimes echoes PEM fragments in stack traces.
+    // Surface the message but redact things that shouldn't leak through
+    // the response body: PEM blocks (google-auth-library sometimes echoes
+    // PEM fragments in stack traces) and the SA's client_email (occasionally
+    // present in "Invalid grant for X" messages).
     const safeMsg =
       typeof e?.message === "string"
-        ? e.message.replace(/-----BEGIN[\s\S]+?-----END[^-]+-----/g, "[redacted]")
+        ? e.message
+            .replace(/-----BEGIN[\s\S]+?-----END[^-]+-----/g, "[redacted-pem]")
+            .replace(/[\w.+-]+@[\w-]+\.iam\.gserviceaccount\.com/g, "[redacted-sa-email]")
         : "Unknown error";
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("Content-Type", "application/json; charset=utf-8");

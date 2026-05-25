@@ -39,8 +39,8 @@ uploader:
   # data_folder_id is the parent of the per-device logs/<device_id>/ folder.
   # images_folder_id is the parent of the per-device <device_id>/ folder
   # where camera captures land before their URLs are recorded in 'Images'.
-  data_folder_id: 1PmAWC1bDYRS8Okg7cI2k_6u50BxF4Dnm
-  images_folder_id: 1mSPfmhywhFbYU9m8MS7WrokJPJrgHiv7
+  data_folder_id: REPLACE_WITH_DATA_FOLDER_ID
+  images_folder_id: REPLACE_WITH_IMAGES_FOLDER_ID
   credentials_file: secrets/service_account.json
   interval_seconds: 1800
   log_interval_seconds: 600

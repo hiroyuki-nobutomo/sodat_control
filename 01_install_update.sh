@@ -38,12 +38,13 @@ chmod +x scripts/*.py 2>/dev/null || true
 # 2. User & Path Discovery
 # Ensure we target the real user's home, not /root if run with sudo
 REAL_USER=${SUDO_USER:-$USER}
-REAL_HOME=$(eval echo ~$REAL_USER)
+REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 DEFAULT_TARGET="$REAL_HOME/sensor_sfc"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NEW_CODE_ROOT="$(dirname "$SCRIPT_DIR")"
-# If running from root, BUNDLE_ROOT is the same as SCRIPT_DIR
+# If src/ lives next to this script (running from the bundle root), use
+# SCRIPT_DIR; otherwise fall back to its parent.
 if [[ -d "$SCRIPT_DIR/src" ]]; then NEW_CODE_ROOT="$SCRIPT_DIR"; fi
 
 # 3. Bootstrap: Ensure rsync is available immediately
@@ -66,8 +67,10 @@ sudo fuser -k /dev/video* 2>/dev/null || true
 
 # 5. Fingerprint Discovery: Where is the OLD project?
 find_existing_project() {
-    # Search common locations, excluding the current bundle
-    for search_dir in "$REAL_HOME" "$REAL_HOME/Desktop" "$REAL_HOME/Downloads" "/home/pi"; do
+    # Search the real user's home tree. Older "/home/pi" / Desktop / Downloads
+    # locations were dropped — researchers no longer unzip bundles into them
+    # in the v2 cloud-init flow.
+    for search_dir in "$REAL_HOME"; do
         if [ -d "$search_dir" ]; then
             # Find folders containing config.yaml, depth 2
             local found=$(find "$search_dir" -maxdepth 2 -name "config.yaml" 2>/dev/null)
@@ -174,7 +177,8 @@ if [ "$MODE" == "UPDATE" ]; then
 
     # Clean stale artifacts
     rm -f "$TARGET_PATH"/sensor_sfc_deploy_clean.zip "$TARGET_PATH"/sensor_sfc_update.zip "$TARGET_PATH"/sensor_sfc_installer.zip "$TARGET_PATH"/sensor_sfc_v2.zip 2>/dev/null || true
-    rm -f "$TARGET_PATH"/config.yaml.template 2>/dev/null || true
+    # Note: config.yaml.template is intentionally kept — scripts/util_migrate.py
+    # reads it on every install to backfill keys added in newer versions.
 fi
 
 # 8. Dependency & Environment Setup
@@ -268,10 +272,8 @@ fi
 
 # 10.6 Google credentials presence check.
 # Service runs fine without it, but cloud uploads will fail until placed.
-# Accept either service_account.json (preferred) or legacy token.json.
 SA_FILE="$TARGET_PATH/secrets/service_account.json"
-LEGACY_TOKEN="$TARGET_PATH/secrets/token.json"
-if [ ! -s "$SA_FILE" ] && [ ! -s "$LEGACY_TOKEN" ]; then
+if [ ! -s "$SA_FILE" ]; then
     echo
     echo -e "${YELLOW}=================================================================${NC}"
     echo -e "${YELLOW}[!] Google credentials NOT FOUND.${NC}"

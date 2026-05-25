@@ -22,7 +22,7 @@ fi
 # SMART PROXY: If running from installer, switch to installed instance
 if [ ! -d ".venv" ]; then
     REAL_USER=${SUDO_USER:-$USER}
-    REAL_HOME=$(eval echo ~$REAL_USER)
+    REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
     INSTALLED_DIR="$REAL_HOME/sensor_sfc"
     
     if [ -d "$INSTALLED_DIR" ]; then

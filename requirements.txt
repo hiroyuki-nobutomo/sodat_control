@@ -1,6 +1,5 @@
 # Core dependencies
 schedule
-requests
 pyyaml
 smbus2
 RPi.bme280
@@ -11,9 +10,6 @@ gpiozero
 gspread
 google-auth>=2.47.0
 google-api-python-client>=2.188.0
-google-auth-httplib2
 
-# Testing
-pytest
-pytest-cov
+# Resilience
 tenacity

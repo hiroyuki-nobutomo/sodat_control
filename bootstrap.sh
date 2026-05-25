@@ -30,7 +30,7 @@ if [ "$REAL_USER" = "root" ] || [ -z "$REAL_USER" ]; then
     echo "Example: curl -fsSL <url> | sudo bash"
     exit 1
 fi
-REAL_HOME=$(eval echo "~$REAL_USER")
+REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 BUNDLE_DIR="$REAL_HOME/sodat_control"
 
 echo -e "${GREEN}=== Sodat Sensor SFC v2 — Web Installer ===${NC}"

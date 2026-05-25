@@ -21,7 +21,7 @@ fi
 
 if [ ! -d ".venv" ]; then
     REAL_USER=${SUDO_USER:-$USER}
-    REAL_HOME=$(eval echo ~$REAL_USER)
+    REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
     INSTALLED_DIR="$REAL_HOME/sensor_sfc"
     
     if [ -d "$INSTALLED_DIR" ]; then
@@ -89,6 +89,7 @@ SENSOR_INT=$(get_valid_integer "Env Sensors (BME/TDSN/IWS/Arduino) Interval [Ent
 CAMERA_INT=$(get_valid_integer "Camera Interval [Enter for 1800]: " 1800)
 UPLOAD_INT=$(get_valid_integer "Upload Interval [Enter for 1800]: " 1800)
 UPLOAD_OFFSET=$(get_valid_integer "Upload Start Offset [Enter for 300]: " 300)
+LOG_INT=$(get_valid_integer "Log Upload Interval [Enter for 600]: " 600)
 RETENTION_DAYS=$(get_valid_integer "Local Data Retention (Days) [Enter for 90]: " 90)
 
 echo "Configuring device..."
@@ -99,6 +100,7 @@ if .venv/bin/python3 scripts/util_config.py \
     --camera-interval "$CAMERA_INT" \
     --upload-interval "$UPLOAD_INT" \
     --upload-offset "$UPLOAD_OFFSET" \
+    --log-interval "$LOG_INT" \
     --retention-days "$RETENTION_DAYS"; then
     echo -e "${GREEN}Configuration updated successfully in config.yaml.${NC}"
 else

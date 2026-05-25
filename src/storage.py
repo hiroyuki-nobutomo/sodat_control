@@ -109,12 +109,3 @@ class StorageManager:
         except sqlite3.Error as e:
             logging.error(f"Failed to remove readings from storage: {e}")
             raise
-
-    def clear_all(self):
-        """Clears all data from the database (for testing)."""
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("DELETE FROM readings")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to clear storage: {e}")
-            raise

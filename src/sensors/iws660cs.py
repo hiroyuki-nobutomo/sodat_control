@@ -17,7 +17,7 @@ class IWS660CSSensor(Sensor):
 
     def read_data(self) -> SensorReading:
         try:
-            result = subprocess.run(self.cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(self.cmd, capture_output=True, text=True, check=True, timeout=30)
             output = result.stdout.strip()
 
             if output.replace('.', '', 1).isdigit():

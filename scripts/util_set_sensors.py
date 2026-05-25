@@ -54,7 +54,17 @@ def main() -> int:
         cfg = yaml.safe_load(f) or {}
 
     before = cfg.get("sensors") or []
+    before_types = {s.get("type") for s in before}
     after = [s for s in before if s.get("type") in keep]
+
+    # Warn (don't fail) when --keep names a type that isn't in the
+    # template's sensor list — usually a typo. Doesn't abort because the
+    # remaining names may still produce a viable config.
+    unknown = sorted(keep - before_types)
+    if unknown:
+        print(f"util_set_sensors: warning — these --keep names matched no sensor "
+              f"in the template and were ignored: {unknown}. "
+              f"Available types: {sorted(before_types)}.", file=sys.stderr)
 
     if not after:
         print(f"util_set_sensors: refusing to write an empty sensors list "
