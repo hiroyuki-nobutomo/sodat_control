@@ -41,21 +41,30 @@ check_tokyo_devices() {
             echo "Attempting automated source-build fallback..."
             
             BUILD_DIR="/tmp/td-usb-build"
+            BUILD_LOG="$BUILD_DIR/build.log"
             sudo rm -rf "$BUILD_DIR" && mkdir -p "$BUILD_DIR"
             if git clone -q https://github.com/tokyodevices/td-usb.git "$BUILD_DIR"; then
                 cd "$BUILD_DIR"
-                if gcc -Wno-incompatible-pointer-types -I/usr/include -Wall td-usb.c device_types.c tddevice.c ./linux/tdhid-libusb.c ./linux/tdtimer-posix.c ./devices/*.c -o td-usb -lusb-1.0 -lrt -lm &>/dev/null; then
+                # td-usb's tdhid-libusb.c uses the legacy libusb-0.1 API
+                # (usb_init / usb_find_busses / usb_control_msg), so link
+                # against -lusb, not -lusb-1.0. Compile stderr goes to a log
+                # file so genuine failures are diagnosable instead of silent.
+                if gcc -Wno-incompatible-pointer-types -I/usr/include -Wall td-usb.c device_types.c tddevice.c ./linux/tdhid-libusb.c ./linux/tdtimer-posix.c ./devices/*.c -o td-usb -lusb -lrt -lm 2>"$BUILD_LOG"; then
                     sudo cp td-usb /usr/local/bin/
                     echo -e "[OK] 'td-usb' successfully built and installed."
                 else
-                    echo -e "[!!] ${RED}Source build failed.${NC} Please check internet/dependencies."
+                    echo -e "[!!] ${RED}Source build failed.${NC} See $BUILD_LOG for details."
                 fi
             fi
         fi
     fi
 
     if command -v td-usb &> /dev/null; then
-        HID_LIST=$(td-usb list 2>/dev/null || echo "")
+        # td-usb v0.3.5+ has no `list` subcommand — it prints its usage
+        # banner to stdout for unknown args, which the previous check
+        # mistook for a device list. Enumerate via lsusb instead, matching
+        # the vendor IDs already used by the build trigger above.
+        HID_LIST=$(lsusb | grep -iE "32ee|16c0" || echo "")
         if [ -n "$HID_LIST" ]; then
             echo -e "[OK] Tokyo Devices found:\n$HID_LIST"
         else

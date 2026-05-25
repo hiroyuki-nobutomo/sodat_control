@@ -63,7 +63,9 @@ chmod +x ./*.sh
 
 # Reattach stdin to the controlling terminal so 01_install_update.sh's
 # interactive prompts (Y/N) work even when this script was piped from curl.
-if [ -e /dev/tty ]; then
+# `[ -e /dev/tty ]` is not enough — under cloud-init's runcmd the device
+# node exists but cannot be opened, so we probe by actually opening it.
+if { : </dev/tty; } 2>/dev/null; then
     ./01_install_update.sh < /dev/tty
 else
     # Headless context (e.g. firstrun): defaults are accepted automatically.
