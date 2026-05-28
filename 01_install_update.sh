@@ -229,6 +229,33 @@ sudo udevadm control --reload-rules
 # GOAT-LEVEL: Force kernel to apply rules to ALREADY plugged-in devices immediately
 sudo udevadm trigger --action=add
 
+# Wi-Fi reliability — set the regulatory domain to JP (Pi 5's 5GHz radio
+# refuses to associate on regulated channels without a country code), and
+# install a keepalive watchdog that disables power-save on every boot and
+# nudges wlan0 if the default gateway goes silent. Both are idempotent.
+echo "Configuring Wi-Fi reliability (country + keepalive watchdog)..."
+if command -v raspi-config >/dev/null 2>&1; then
+    sudo raspi-config nonint do_wifi_country JP 2>/dev/null || true
+fi
+sudo install -m 0755 "$TARGET_PATH/scripts/wlan-keepalive.sh" /usr/local/sbin/wlan-keepalive.sh
+sudo tee /etc/systemd/system/sodat-wlan-keepalive.service > /dev/null <<'EOF'
+[Unit]
+Description=Sodat WLAN keepalive (power save off + gateway watchdog)
+After=network-online.target wpa_supplicant.service NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/wlan-keepalive.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now sodat-wlan-keepalive.service || true
+
 # Virtual Environment Integrity
 echo "Building virtual environment (Resumable)..."
 # Check if venv is healthy before deleting (survives weak field Wi-Fi)

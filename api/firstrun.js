@@ -91,6 +91,37 @@ write_files:
       done
       echo "post-ntp wait: $(date -Is) (NTPSynchronized=$(timedatectl show -p NTPSynchronized --value 2>/dev/null))"
 
+      # 1b. Wi-Fi initialisation: set the regulatory domain to JP and disable
+      # power save before the link goes idle. Pi Imager's network-config
+      # normally configures these, but at one of our deployment sites the
+      # 5GHz radio silently refused to associate until country=JP was set
+      # explicitly. iw reg set / power_save off are idempotent and cheap.
+      iw reg set JP 2>/dev/null || true
+      iw dev wlan0 set power_save off 2>/dev/null || true
+
+      # 1c. Wait for wlan0 to actually associate. Without this, the curl
+      # reach test below races the wpa_supplicant up-event and just times
+      # out with no useful log. On failure, dump the link + reg + route
+      # state so we can diagnose remotely from /var/log/sodat-firstrun.log.
+      WLAN_OK=no
+      for i in $(seq 1 60); do
+          if iw dev wlan0 link 2>/dev/null | grep -q '^Connected to'; then
+              WLAN_OK=yes; break
+          fi
+          sleep 2
+      done
+      echo "post-wlan wait: $(date -Is) WLAN_OK=$WLAN_OK"
+      echo "--- diagnostic dump ---"
+      iw reg get 2>/dev/null | head -6
+      iw dev wlan0 link 2>/dev/null | head -10
+      ip -4 addr show wlan0 2>/dev/null | grep inet || echo "(no IPv4 on wlan0)"
+      ip route 2>/dev/null | grep default || echo "(no default route)"
+      echo "--- /diagnostic dump ---"
+      if [ "$WLAN_OK" != "yes" ] ; then
+          echo "sodat firstrun: wlan0 never associated. Check the diagnostic dump above for SSID / signal / reg-domain hints. Aborting bootstrap."
+          exit 0
+      fi
+
       # 2. Wait for actual outbound HTTPS reachability — DNS-only checks can
       # succeed against a stale cache while the route isn't usable.
       REACHED=no
