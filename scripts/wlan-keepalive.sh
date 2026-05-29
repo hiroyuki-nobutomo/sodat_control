@@ -62,31 +62,38 @@ nudge() {
 }
 
 log "starting (interval=${INTERVAL}s threshold=${MISS_THRESHOLD})"
-disable_power_save
 
 miss=0
 while true; do
     sleep "$INTERVAL"
 
-    # Power save can creep back on every link-up event (DHCP renew,
-    # roam, etc.). Re-disable each cycle — it's idempotent and cheap.
+    # Power save creeps back after each link-up event (DHCP renew, roam,
+    # etc.), so re-disable every cycle. Idempotent + cheap.
     disable_power_save
 
-    gw="$(ip route 2>/dev/null | awk '/default/ {print $3; exit}')"
-    if [ -z "$gw" ]; then
+    # Two-stage health check, L2 then L3. The radio losing association
+    # is the failure mode we built this watchdog for; pinging the
+    # gateway covers the remaining "associated but no traffic" case
+    # without churning the link on transient route flaps.
+    if ! iw dev "$IFACE" link 2>/dev/null | grep -q '^Connected to'; then
         miss=$((miss + 1))
-        log "no default route (miss=$miss)"
-    elif ping -c 2 -W 3 "$gw" >/dev/null 2>&1; then
-        miss=0
+        log "$IFACE not associated (miss=$miss)"
     else
-        miss=$((miss + 1))
-        log "gw $gw unreachable (miss=$miss)"
+        gw="$(ip route 2>/dev/null | awk '/default/ {print $3; exit}')"
+        if [ -z "$gw" ]; then
+            miss=$((miss + 1))
+            log "associated but no default route (miss=$miss)"
+        elif ping -c 2 -W 3 "$gw" >/dev/null 2>&1; then
+            miss=0
+        else
+            miss=$((miss + 1))
+            log "gw $gw unreachable (miss=$miss)"
+        fi
     fi
 
     if [ "$miss" -ge "$MISS_THRESHOLD" ]; then
         log "miss=$miss reached threshold; nudging $IFACE"
         nudge
-        disable_power_save
         miss=0
     fi
 done

@@ -354,11 +354,11 @@
     return deviceMatchesFilter(dev);
   }
 
+  // r._tsMs is memoised in render()'s single-pass filter loop so the
+  // same string isn't re-parsed by both this and makeDatasetsForMetric.
   function isInPeriod(r, periodMs) {
     if (!periodMs) return true;
-    const d = parseJstTimestamp(r.ts);
-    if (!d) return false;
-    return Date.now() - d.getTime() <= periodMs;
+    return typeof r._tsMs === "number" && (Date.now() - r._tsMs) <= periodMs;
   }
 
   // ---------- KPI ----------
@@ -414,9 +414,9 @@
     for (const r of rowsForMetric) {
       const key = `${r.sensorType}|${r.deviceId}`;
       if (!byKey.has(key)) byKey.set(key, { sensorType: r.sensorType, deviceId: r.deviceId, points: [] });
-      const d = parseJstTimestamp(r.ts);
-      if (!d || typeof r.value !== "number") continue;
-      byKey.get(key).points.push({ x: d, y: r.value });
+      // r._tsMs comes from render()'s single-pass filter — see isInPeriod.
+      if (typeof r._tsMs !== "number" || typeof r.value !== "number") continue;
+      byKey.get(key).points.push({ x: new Date(r._tsMs), y: r.value });
     }
     // Stable order — sensor type first (so the same-sensor lines stay together), then device id.
     const groups = [...byKey.values()].sort((a, b) => {
@@ -543,21 +543,30 @@
     const deviceById = Object.fromEntries((devices || []).map((d) => [d.id, d]));
     const periodMs = (PERIOD_HOURS[state.filters.period] || 24 * 7) * 3600 * 1000;
 
-    // Single pass over timeseries: filter + bucket-by-metric in one go,
-    // so each of the N chart cards gets its slice without re-scanning the
-    // full series.
+    // Single pass over timeseries: parse the timestamp once (memoised on
+    // the row as _tsMs so isInPeriod / makeDatasetsForMetric reuse it),
+    // filter, and bucket-by-metric in one go. Each chart card then gets
+    // its slice without re-scanning the full series.
     const byMetric = Object.fromEntries(CHART_METRICS.map((m) => [m, []]));
     const filteredScalar = [];
     for (const r of (timeseries || [])) {
+      if (r._tsMs === undefined) {
+        const d = parseJstTimestamp(r.ts);
+        r._tsMs = d ? d.getTime() : null;
+      }
       if (!readingMatchesFilter(r, deviceById)) continue;
       if (!isInPeriod(r, periodMs)) continue;
       filteredScalar.push(r);
       const bucket = byMetric[r.metric];
       if (bucket) bucket.push(r);
     }
-    const filteredImages = (images || []).filter(
-      (r) => readingMatchesFilter(r, deviceById) && isInPeriod(r, periodMs)
-    );
+    const filteredImages = (images || []).filter((r) => {
+      if (r._tsMs === undefined) {
+        const d = parseJstTimestamp(r.ts);
+        r._tsMs = d ? d.getTime() : null;
+      }
+      return readingMatchesFilter(r, deviceById) && isInPeriod(r, periodMs);
+    });
 
     updateKpis(filteredScalar);
     for (const m of CHART_METRICS) {
@@ -600,30 +609,25 @@
   });
 
   // Make the "Pi セットアップ" link land on the wizard pre-authed.
-  //
-  // Two paths, in priority order:
-  //  1. localStorage cache from a past wizard visit (instant, no network).
-  //  2. /api/wizard-token, which returns the value of SODAT_ACCESS_TOKEN
-  //     so a fresh browser doesn't need to have used the wizard first.
-  //     A successful fetch also writes the value back to localStorage so
-  //     subsequent visits skip the network round-trip.
-  //
-  // If both paths produce nothing (env var missing on the server,
-  // network blocked, …) the link stays at "/" and the wizard falls
-  // back to its existing manual-paste form.
+  // Try localStorage first (instant, no network). Fall back to
+  // /api/wizard-token only when the cache misses, so warm browsers
+  // don't pay an extra serverless round-trip per page view.
   function setWizardToken(t) {
     if (!t) return;
     try { localStorage.setItem("sodatToken", t); } catch (e) {}
     const link = document.getElementById("wizard-link");
     if (link) link.href = "/?token=" + encodeURIComponent(t);
   }
-  try {
-    setWizardToken(localStorage.getItem("sodatToken") || "");
-  } catch (e) { /* localStorage unavailable in some private modes */ }
-  fetch("/api/wizard-token", { cache: "no-store" })
-    .then((r) => (r.ok ? r.text() : ""))
-    .then((t) => setWizardToken(t.trim()))
-    .catch(() => { /* leave whatever the cache gave us */ });
+  let cachedToken = "";
+  try { cachedToken = localStorage.getItem("sodatToken") || ""; } catch (e) {}
+  if (cachedToken) {
+    setWizardToken(cachedToken);
+  } else {
+    fetch("/api/wizard-token", { cache: "no-store" })
+      .then((r) => (r.ok ? r.text() : ""))
+      .then((t) => setWizardToken(t.trim()))
+      .catch(() => { /* link stays at "/", wizard paste-form covers it */ });
+  }
 
   loadData();
 })();

@@ -119,9 +119,8 @@ class GoogleSheetsUploader(Uploader):
                 "(under 'uploader:') to the ID of the lab-wide master sheet "
                 "that contains the 'All' and 'Images' tabs."
             )
-        # Catch un-substituted template placeholders early — otherwise the
-        # service starts, hits 404 against the literal placeholder string,
-        # and silently retains every reading in the local SQLite buffer.
+        # Refuse to start on un-substituted REPLACE_WITH_* placeholders;
+        # otherwise the service would 404 against the literal string.
         for name, value in (
             ("uploader.spreadsheet_id", spreadsheet_id),
             ("uploader.data_folder_id", data_folder_id),

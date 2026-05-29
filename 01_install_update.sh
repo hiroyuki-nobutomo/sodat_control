@@ -175,10 +175,9 @@ if [ "$MODE" == "UPDATE" ]; then
         ls -1t "$TARGET_PATH"/config.yaml.bak_* | tail -n +4 | xargs rm -f
     fi
 
-    # Clean stale artifacts
-    rm -f "$TARGET_PATH"/sensor_sfc_deploy_clean.zip "$TARGET_PATH"/sensor_sfc_update.zip "$TARGET_PATH"/sensor_sfc_installer.zip "$TARGET_PATH"/sensor_sfc_v2.zip 2>/dev/null || true
-    # Note: config.yaml.template is intentionally kept — scripts/util_migrate.py
+    # Clean stale artifacts. config.yaml.template stays — util_migrate.py
     # reads it on every install to backfill keys added in newer versions.
+    rm -f "$TARGET_PATH"/sensor_sfc_deploy_clean.zip "$TARGET_PATH"/sensor_sfc_update.zip "$TARGET_PATH"/sensor_sfc_installer.zip "$TARGET_PATH"/sensor_sfc_v2.zip 2>/dev/null || true
 fi
 
 # 8. Dependency & Environment Setup

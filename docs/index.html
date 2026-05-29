@@ -22,27 +22,9 @@
   /* The language toggle now lives inside the sticky .page-header
      (so the chrome is the only sticky element), so the toggle wrapper
      is just inline buttons — no own background or border. */
+  /* Language toggle uses the shared .nav-link pill from app.css; this
+     just gives the two-button group its own flex spacing. */
   .lang-toggle { display: inline-flex; gap: .35rem; }
-  .lang-toggle button {
-    min-height: 36px;
-    padding: .3rem .85rem;
-    cursor: pointer;
-    border: 1px solid rgba(21,128,61,.3);
-    background: var(--glass-bg-soft);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    color: var(--leaf);
-    border-radius: 999px;
-    font: inherit;
-    font-size: .9rem;
-    transition: background .18s ease, border-color .18s ease, color .18s ease;
-  }
-  .lang-toggle button:hover { background: rgba(21,128,61,.08); border-color: var(--leaf); }
-  .lang-toggle button[aria-pressed="true"] {
-    background: var(--leaf);
-    color: #fff;
-    border-color: var(--leaf);
-  }
 
   /* --- Step indicator -------------------------------------------------- */
   .stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; list-style: none; padding: 0; margin: 1.6rem 0 1.8rem; }
@@ -134,10 +116,12 @@
     <span data-lang="en">Dashboard</span>
   </a>
   <nav class="lang-toggle" aria-label="言語切替 / Language toggle">
-    <button type="button" onclick="setLang('ja')" data-lang-btn="ja"
-            aria-pressed="false" aria-label="日本語に切り替え">日本語</button>
-    <button type="button" onclick="setLang('en')" data-lang-btn="en"
-            aria-pressed="false" aria-label="Switch to English">English</button>
+    <button type="button" class="nav-link" onclick="setLang('ja')"
+            data-lang-btn="ja" aria-pressed="false"
+            aria-label="日本語に切り替え">日本語</button>
+    <button type="button" class="nav-link" onclick="setLang('en')"
+            data-lang-btn="en" aria-pressed="false"
+            aria-label="Switch to English">English</button>
   </nav>
 </header>
 
