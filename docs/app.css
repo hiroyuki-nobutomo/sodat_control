@@ -205,10 +205,19 @@ body {
   border-color: var(--leaf);
   color: var(--leaf-hi);
 }
-.page-header .nav-link[aria-current="page"] {
+.page-header .nav-link[aria-current="page"],
+.page-header .nav-link[aria-pressed="true"] {
   background: var(--leaf);
   color: #fff;
   border-color: var(--leaf);
+}
+/* When the pill is a <button> (e.g. wizard language toggle) the UA adds
+   default backgrounds + font that fight the .nav-link surface. Reset
+   them here so the same class works on <a> and <button>. */
+.page-header button.nav-link {
+  font: inherit;
+  font-size: .9rem;
+  cursor: pointer;
 }
 
 /* ---------- typography ---------- */

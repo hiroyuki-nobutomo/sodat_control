@@ -91,11 +91,12 @@ write_files:
       done
       echo "post-ntp wait: $(date -Is) (NTPSynchronized=$(timedatectl show -p NTPSynchronized --value 2>/dev/null))"
 
-      # 1b. Wi-Fi initialisation: set the regulatory domain to JP and disable
-      # power save before the link goes idle. Pi Imager's network-config
-      # normally configures these, but at one of our deployment sites the
-      # 5GHz radio silently refused to associate until country=JP was set
-      # explicitly. iw reg set / power_save off are idempotent and cheap.
+      # 1b. Wi-Fi initialisation. Transient settings only — both are reset
+      # on reboot. The persistent equivalents are installed later by
+      # 01_install_update.sh (raspi-config nonint do_wifi_country JP) and
+      # by /usr/local/sbin/wlan-keepalive.sh (re-disables power save
+      # every 5 min). The reason we set them here too: 01_install_update
+      # hasn't run yet during the GitHub reach test that follows.
       iw reg set JP 2>/dev/null || true
       iw dev wlan0 set power_save off 2>/dev/null || true
 
@@ -158,9 +159,7 @@ write_files:
       # we don't sudo. SUDO_USER is what bootstrap.sh inspects to figure out
       # which non-root account owns the install — set it explicitly.
       echo "running bootstrap as root with SUDO_USER=$SODAT_USER ..."
-      # Capture rc before the conditional — $? inside an 'if !' branch is
-      # always 0 (the negation succeeded), so the previous "exit=$?" report
-      # always read 0 even on real failure, masking the underlying cause.
+      # Capture rc before the conditional — an "if !" branch would make $? always 0.
       SUDO_USER="$SODAT_USER" bash -c \
           'curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | bash'
       bootstrap_rc=$?
@@ -189,14 +188,10 @@ write_files:
       fi
 
       # 8. Point this device at the lab-wide master spreadsheet + Drive
-      # folders. config.yaml.template ships placeholders (REPLACE_WITH_*),
-      # so any of these env vars left empty in Vercel will cause the Pi
-      # service to fail loudly at startup — which is the intended behaviour
-      # over silently writing to a stranger's Drive.
-      # Each ID is set in its own invocation rather than building a single
-      # argv array — both because Bash array-expansion syntax collides with
-      # the surrounding JS template literal in api/firstrun.js, and because
-      # failure to set one ID shouldn't block the others.
+      # folders. config.yaml.template ships REPLACE_WITH_* placeholders,
+      # so an empty env var here surfaces as a loud startup failure on
+      # the Pi rather than a silent write to the wrong Drive. Each ID
+      # is applied independently so one failure doesn't block the rest.
       apply_util_config() {
           local flag="$1" value="$2"
           [ -z "$value" ] && return 0
