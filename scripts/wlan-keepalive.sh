@@ -23,6 +23,11 @@
 #   - Every INTERVAL seconds, ping the default gateway. After
 #     MISS_THRESHOLD consecutive failures, nudge wlan0 to re-associate
 #     (nmcli on Bookworm, wpa_cli on older releases as a fallback).
+#   - nudge() retries up to NUDGE_ATTEMPTS times within a single
+#     trigger, waiting NUDGE_SETTLE seconds between tries and
+#     verifying association via `iw link` — AOI's hidden-SSID AP
+#     loses the first nudge often enough that a single retry is
+#     not enough.
 #
 # Logs go to /var/log/sodat-wlan-keepalive.log. Service runs forever
 # under systemd; restart loop is in the unit file, not here.
@@ -42,23 +47,43 @@ disable_power_save() {
     iw dev "$IFACE" set power_save off 2>/dev/null || true
 }
 
-nudge() {
+NUDGE_ATTEMPTS="${SODAT_WLAN_NUDGE_ATTEMPTS:-3}"
+NUDGE_SETTLE="${SODAT_WLAN_NUDGE_SETTLE:-15}"
+
+nudge_once() {
     # NetworkManager (default on Pi OS Bookworm) preferred; fall back
     # to wpa_cli reconfigure on older releases.
     if command -v nmcli >/dev/null 2>&1; then
-        log "nudging $IFACE via nmcli disconnect+connect"
         nmcli device disconnect "$IFACE" 2>/dev/null || true
         sleep 3
         nmcli device connect "$IFACE" 2>/dev/null || true
     elif command -v wpa_cli >/dev/null 2>&1; then
-        log "nudging $IFACE via wpa_cli reconfigure"
         wpa_cli -i "$IFACE" reconfigure 2>/dev/null || true
     else
-        log "no nmcli/wpa_cli available; bouncing link with ip"
         ip link set "$IFACE" down 2>/dev/null || true
         sleep 2
         ip link set "$IFACE" up 2>/dev/null || true
     fi
+}
+
+nudge() {
+    # Try several times before giving up. AOI's hidden-SSID + flaky-AP
+    # combination regularly loses the first nudge to a probe-response
+    # race or DHCP timeout; without an inner retry, the next attempt
+    # is gated by another MISS_THRESHOLD * INTERVAL of silence.
+    local attempt
+    for attempt in $(seq 1 "$NUDGE_ATTEMPTS"); do
+        log "nudging $IFACE (attempt $attempt/$NUDGE_ATTEMPTS)"
+        nudge_once
+        sleep "$NUDGE_SETTLE"
+        if iw dev "$IFACE" link 2>/dev/null | grep -q '^Connected to'; then
+            log "nudge succeeded on attempt $attempt"
+            return 0
+        fi
+        log "still not associated after attempt $attempt"
+    done
+    log "nudge gave up after $NUDGE_ATTEMPTS attempts; will retry next cycle"
+    return 1
 }
 
 log "starting (interval=${INTERVAL}s threshold=${MISS_THRESHOLD})"
