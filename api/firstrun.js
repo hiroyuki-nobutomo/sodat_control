@@ -100,6 +100,17 @@ write_files:
       iw reg set JP 2>/dev/null || true
       iw dev wlan0 set power_save off 2>/dev/null || true
 
+      # 1b'. Mark every preconfigured Wi-Fi connection as hidden. AOI's
+      # "keioaoinet" is a hidden SSID; Pi Imager's OS-customisation UI
+      # has no checkbox for that, so the connection file it writes leaves
+      # wifi.hidden=no and the station never sends probe-requests for
+      # the SSID — association then never completes. Setting hidden=yes
+      # on visible SSIDs is harmless (just adds active probing).
+      for conn in $(nmcli -t -f NAME,TYPE connection show 2>/dev/null | awk -F: '$2=="802-11-wireless"{print $1}'); do
+          nmcli connection modify "$conn" wifi.hidden yes 2>/dev/null || true
+          nmcli connection up "$conn" 2>/dev/null || true
+      done
+
       # 1c. Wait for wlan0 to actually associate. Without this, the curl
       # reach test below races the wpa_supplicant up-event and just times
       # out with no useful log. On failure, dump the link + reg + route
