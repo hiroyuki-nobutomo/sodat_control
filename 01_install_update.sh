@@ -268,6 +268,10 @@ fi
 echo "Migrating configuration..."
 if [ ! -f "config.yaml" ] && [ -f "config.yaml.template" ]; then
     cp config.yaml.template config.yaml
+    # cp inherits root ownership when this script runs from bootstrap.sh.
+    # Without this chown, later `runuser -u $SODAT_USER util_config.py`
+    # (from firstrun.js) hits PermissionError on the open-for-write.
+    chown "$REAL_USER":"$REAL_USER" config.yaml
 fi
 .venv/bin/python3 scripts/util_migrate.py
 
@@ -275,6 +279,10 @@ fi
 echo "Finalizing systemd service..."
 # Ensure permissions on all scripts in the final location
 chmod +x *.sh 2>/dev/null || true
+# Belt-and-suspenders chown: reclaim any files left root-owned by
+# earlier steps (rsync, pip cache writes, etc.) so subsequent
+# runuser-as-$REAL_USER calls from firstrun.js can write them.
+chown -R "$REAL_USER":"$REAL_USER" "$TARGET_PATH"
 ./04_start_service.sh --stop 2>/dev/null || true
 ./04_start_service.sh
 
