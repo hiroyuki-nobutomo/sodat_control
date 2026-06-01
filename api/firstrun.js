@@ -180,6 +180,15 @@ write_files:
           exit 0
       fi
 
+      # 5b. Reclaim ownership of the install tree before runuser-as-sodat
+      # touches it. bootstrap.sh + 01_install_update.sh run as root and an
+      # earlier version left config.yaml root-owned, causing every Step 6-8
+      # util_config.py write to fail with PermissionError. 01_install_update
+      # now chowns at the source, but this belt-and-suspenders line keeps
+      # the next-Pi rollout safe even when an older install script is in
+      # the repo.
+      chown -R "$SODAT_USER":"$SODAT_USER" "$SODAT_HOME/sensor_sfc" 2>/dev/null || true
+
       # 6. Derive device_id from hostname (s05 -> S05, a01 -> A01).
       HOSTNAME_DERIVED=$(hostname | tr '[:lower:]' '[:upper:]' | sed -nE 's/^([A-Z][0-9]+)$/\1/p')
       if [ -n "$HOSTNAME_DERIVED" ] && [ -d "$SODAT_HOME/sensor_sfc/.venv" ]; then
