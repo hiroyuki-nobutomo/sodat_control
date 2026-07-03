@@ -32,7 +32,81 @@ R8 SODAT は現行システムを置き換えるものではなく、**その上
 
 ---
 
-## 2. 設計原則
+## 2. 設計思想: 標準化タスクを中核に据える（Task-Centric Design）
+
+本システムの技術的コアは **標準化タスク（`task_type`）** である。
+実績・スキル・発生スケジュール・マッチングは独立した概念ではなく、**すべてタスクを参照して定義される**。
+タスクがハブであり、他はすべてスポークである。システム全体がタスクに従う。
+
+### 2.1 すべてがタスクを外部キーに持つ
+
+```mermaid
+flowchart TB
+    TT[標準化タスク型<br/>task_type<br/>= 標準作業辞書]
+    TT --- Rec[実績<br/>誰が どのタスクを 実施したか]
+    TT --- Skill[スキル<br/>誰が どのタスクを できるか]
+    TT --- Sched[発生スケジュール<br/>どのタスクが いつ 必要か]
+    TT --- Match[マッチング<br/>タスクを結合キーに 需給を接続]
+```
+
+- **実績** = 「誰が **どのタスクを** 実施したか」
+- **スキル** = 「誰が **どのタスクを** どの習熟度でできるか」（実績から導出）
+- **発生スケジュール** = 「**どのタスクが** いつ・どれだけ必要か」
+- **マッチング** = **タスクを結合キー**とした需給の接続
+
+### 2.2 標準化がマッチングを「型の結合」に還元する ← 技術的核心
+
+これが「標準化されたタスク」を**技術的**コアたらしめる理由である。
+
+スキル（供給側）も需要（発生側）も **同じタスク語彙で表現される**ため、マッチングは
+`task_type` の **自然結合（join）** になる。「この人のスキルは、この求人要件を満たすか？」という
+**曖昧な対応付け層が不要**になる。求人は「タスク T が必要」、スキルは「タスク T ができる」——
+同一の型 T で照合するだけ。
+
+標準化しなければ、農場ごとにバラバラな作業記述を都度スキル要件へマッピングする層が必要になり、
+そこが精度劣化と保守コストの温床になる。**標準化タスクはこのマッピング層そのものを消す。**
+
+### 2.3 タスクは栽培ドメインと労働ドメインの接続点（pivot）
+
+```mermaid
+flowchart LR
+    Obs[栽培・育成状況<br/>作物 × 生育段階]
+    Task[[標準化タスク<br/>= 共通語彙 / pivot]]
+    Worker[応募者<br/>スキル・実績]
+    Obs -->|② タスク需要を生成| Task
+    Task -->|③ タスクをキーにマッチ| Worker
+```
+
+栽培実証システム（観測）と人材マッチング（労働）という 2 つの世界を、
+**タスクが唯一の共通言語として繋ぐ**。センサ観測も応募者スキルも、最終的に
+「タスク」という 1 つの通貨に換算される。
+
+### 2.4 タスクには 2 種類ある（型 と 実体）
+
+| | タスク**型**（task_type） | タスク**実体/発生**（instance） |
+|---|---|---|
+| 実体 | 標準作業辞書のエントリ | 特定農場・時間枠での提案/リクエスト、実施された作業 |
+| 性質 | **マスタデータ**（ゆっくり変わる・版管理） | **イベント**（速く流れる・追記ログ） |
+| 例 | 「キャベツ定植」という型 | 「◯農場で 5/10 にキャベツ定植を 3 人」 |
+
+**標準作業辞書（昨年度成果: 野菜・果樹・お茶の三作目）は、単なる ② の入力ではなく、
+プラットフォーム全体のスキーマ背骨**である。ログに流れる全事実はこの辞書の型で分類される。
+
+### 2.5 含意: 粒度がシステムの解像度そのもの
+
+- `task_type` が全体の共有キーゆえ、**辞書を変えると全派生状態に波及**する
+  → 辞書は**版管理必須**、各事実は「どの辞書版で分類されたか」を記録する。
+- **タスク分解の粒度 = システム全体の解像度**。粗すぎればスポットワークに分解できず、
+  細かすぎれば実績が集まらない。4.3.2 の「**タスク定義の粒度・妥当性**」は、
+  システムの中心変数を検証する作業として位置づける。
+
+---
+
+## 3. 設計原則
+
+### 原則0: 標準化タスク中心（§2）
+
+すべての事実は標準作業辞書の `task_type` で分類される。タスクが型システムであり結合キーである。
 
 ### 原則1: イベントログ中核（事実は追記のみ、状態は導出する）
 
@@ -72,7 +146,7 @@ N 本の点対点フローより、単一データ層のほうが桁違いに統
 
 ---
 
-## 3. モジュール構成
+## 4. モジュール構成
 
 ```mermaid
 flowchart TB
@@ -82,7 +156,8 @@ flowchart TB
     end
 
     subgraph core[共通データ基盤 -- イベントログ型]
-        Facts[(第1層: 事実ストリーム<br/>追記専用)]
+        Dict[(第0層: 標準作業辞書<br/>task_type マスタ・版管理)]
+        Facts[(第1層: 事実ストリーム<br/>追記専用・task_type で分類)]
         Views[(第2層: 派生ビュー<br/>再計算可能)]
     end
 
@@ -93,6 +168,8 @@ flowchart TB
 
     TPOCast -->|ingestion API| Facts
     Cultiv -->|ingestion API| Facts
+    Dict --> Facts
+    Dict --> Engine
     Facts --> Engine
     Engine --> Views
     Engine --> Facts
@@ -106,70 +183,81 @@ flowchart TB
 
 | モジュール | 基盤から読む | 基盤へ書く | 他モジュール直接連携 |
 |---|---|---|---|
-| **TPOCast 連携** | — | `work_records`, `cultivation_observations` | なし（外部 API のみ） |
-| **AI Engine** | 事実全般 | `worker_skills`, `task_proposals`, `match_results` | なし |
+| **TPOCast 連携** | `task_types` | `work_records`, `cultivation_observations` | なし（外部 API のみ） |
+| **AI Engine** | `task_types`, 事実全般 | `worker_skills`, `task_proposals`, `match_results` | なし |
 | **農家用 UI** | `farmer_dashboard_view`, `task_proposals` | `task_requests` | なし |
 | **応募者用 UI** | `worker_dashboard_view`, `match_results` | `worker_availability`, 応募応答 | なし |
 
 ---
 
-## 4. データ基盤設計
+## 5. データ基盤設計
 
-データ基盤は 2 層構造。**第1層（事実）が唯一の真実、第2層（派生）は利便性のための再計算可能なキャッシュ**。
+データ基盤は 3 層構造。**辞書（第0層）が型を定義し、事実（第1層）が唯一の真実、派生（第2層）は
+再計算可能なキャッシュ**。すべての事実は `task_type_id` を参照する。
 
-### 4.1 第1層: 事実ストリーム（追記専用）
+### 5.0 第0層: 標準作業辞書（マスタ・版管理）
 
-すべて `event_time` と `recorded_at` を持つ。UPDATE / DELETE しない。以下はスケッチ（確定前）。
+| テーブル | 内容 | 主なカラム（案） |
+|---|---|---|
+| `task_types` | 標準化タスクの型定義 | task_type_id, name, crop, applicable_growth_stage, required_qualifications, standard_effort, headcount_basis, granularity_note, **dictionary_version** |
+
+タスク型は全システムの共有キー。版管理し、事実は分類時の `dictionary_version` を保持する。
+
+### 5.1 第1層: 事実ストリーム（追記専用）
+
+すべて `task_type_id`・`event_time`・`recorded_at` を持つ。UPDATE / DELETE しない。以下はスケッチ（確定前）。
 
 | ストリーム | 内容 | 主なカラム（案） |
 |---|---|---|
-| `work_records` | TPOCast から来る作業実績 | worker_id, task_type, crop, farm_id, quantity, quality, event_time, recorded_at, source |
+| `work_records` | TPOCast から来る作業実績 | worker_id, **task_type_id**, farm_id, quantity, quality, event_time, recorded_at, source |
 | `cultivation_observations` | 栽培・育成状況の登録 | farm_id, plot_id, crop, growth_stage, metrics, event_time, recorded_at, source |
 | `worker_profile_events` | 資格・免許の登録（入力事実） | worker_id, attribute, value, event_time, recorded_at |
 | `worker_availability` | 応募者の対応可能時間 | worker_id, available_from, available_to, area, recorded_at |
-| `task_requests` | 農家の人材確保リクエスト | farm_id, task_type, timing_window, estimated_effort, headcount, status, event_time, recorded_at |
+| `task_requests` | 農家の人材確保リクエスト | farm_id, **task_type_id**, timing_window, estimated_effort, headcount, status, event_time, recorded_at |
 | `match_results` | マッチング結果・応答 | request_id, worker_id, score, status(proposed/accepted/declined), event_time, recorded_at |
 
-### 4.2 第2層: 派生ビュー（再計算可能）
+### 5.2 第2層: 派生ビュー（再計算可能）
 
 第1層から計算して生成。いつでも作り直せる。UI はここを読む。
 
 | ビュー | 由来 | 導出内容 |
 |---|---|---|
-| `worker_skills` | `work_records` | ① 習熟度を集計し、閾値超過でスキル認定 |
+| `worker_skills` | `work_records` | ① `(worker_id, task_type_id)` ごとに習熟度を集計し、閾値超過でスキル認定 |
 | `worker_qualifications` | `worker_profile_events` | 資格・免許の現在状態（失効判定含む） |
-| `task_proposals` | `cultivation_observations` × 標準作業辞書 | ② 次タスク・タイミング・負荷・必要人数 |
+| `task_proposals` | `cultivation_observations` × `task_types` | ② 次タスク（task_type_id）・タイミング・負荷・必要人数 |
 | `farmer_dashboard_view` | 複数ストリーム | 農家 UI 用の読み取り面 |
 | `worker_dashboard_view` | 複数ストリーム | 応募者 UI 用の読み取り面 |
 
-### 4.3 「真実はログ、便利さは派生」
+### 5.3 「真実はログ、便利さは派生」
 
 事実は消さずに残しつつ、UI が読む面は状態共有型のように高速に使う二段構え。
 導出ルール（習熟度の閾値など）を変えたら、過去に遡って派生ビューを再計算できる。
 
 ---
 
-## 5. AI Engine（3 つの導出）
+## 6. AI Engine（3 つの導出）
 
-いずれも「ログを読む → 計算 → 派生事実を書く」の同一パターン。
+いずれも「ログを読む → 計算 → 派生事実を書く」の同一パターン。すべて `task_type` が軸。
 
 ### ① スキル導出（実績 → スキル）
-`work_records` を worker × task_type で集計し、回数・品質・期間から**習熟度**を算出。
+`work_records` を `(worker_id, task_type_id)` で集計し、回数・品質・期間から**習熟度**を算出。
 閾値を超えたら `worker_skills` にスキルとして認定を書き出す。**認定根拠の作業実績が常に辿れる**。
+スキルとは「どのタスクを、どの習熟度でできるか」であり、タスク語彙で表現される。
 
 ### ② タスク提案（栽培状況 → タスク）
-`cultivation_observations`（栽培・育成状況）を**標準作業辞書**（昨年度成果: 野菜・果樹・お茶の三作目）と
-突き合わせ、「次に必要な作業・タイミング・工数・必要人数」を `task_proposals` に書き出す。
+`cultivation_observations`（栽培・育成状況）を **標準作業辞書 `task_types`** と突き合わせ、
+「次に必要なタスク（task_type_id）・タイミング・工数・必要人数」を `task_proposals` に書き出す。
 
 ### ③ マッチング（タスク × 人材）
-`task_requests` を `worker_skills` / `worker_qualifications` / `worker_availability` と照合し、
-スコアリングして `match_results` を書き出す。結果は農家・ワーカー双方に提示。
+`task_requests`（需要: task_type_id）を `worker_skills`（供給: task_type_id）と
+**`task_type_id` で結合**し、`worker_qualifications` / `worker_availability` で絞り込み、
+スコアリングして `match_results` を書き出す。需給が同じタスク語彙のため、照合は自然結合になる。
 
 **標準作業辞書**は ② の参照入力であると同時に、4.3.2 の「タスク定義の粒度・妥当性」検証の対象でもある。
 
 ---
 
-## 6. エンドツーエンドのデータフロー
+## 7. エンドツーエンドのデータフロー
 
 ```mermaid
 sequenceDiagram
@@ -188,7 +276,7 @@ sequenceDiagram
     DB->>FU: 次タスク提案を表示
     F->>FU: 「次の作業の人材を確保」リクエスト
     FU->>DB: task_requests 追記
-    E->>DB: リクエスト×スキル×対応可能時間を照合 (③)
+    E->>DB: task_type で リクエスト×スキル×対応可能時間を照合 (③)
     E->>DB: match_results 書込
     DB->>WU: オファー提示
     W->>WU: 承諾/辞退
@@ -199,7 +287,7 @@ sequenceDiagram
 
 ---
 
-## 7. 技術スタック（推奨・要確認）
+## 8. 技術スタック（推奨・要確認）
 
 | 層 | 推奨 | 理由 |
 |---|---|---|
@@ -211,11 +299,11 @@ sequenceDiagram
 > イベントログ型 + リレーショナル照合という要件上、Google Sheets は中核には力不足。**Supabase を推奨**。
 
 **過剰設計をしない**: Kafka + CQRS + イベントソーシング・フレームワークのような重装備は不要。
-Postgres 1 個に「追記専用の事実テーブル群 + マテリアライズドビュー」で十分。
+Postgres 1 個に「標準作業辞書テーブル + 追記専用の事実テーブル群 + マテリアライズドビュー」で十分。
 
 ---
 
-## 8. データガバナンス（4.3.2）
+## 9. データガバナンス（4.3.2）
 
 作物データ・作業データ・人材データを横断的に扱うため、単一データ層で以下を定義する:
 
@@ -223,29 +311,32 @@ Postgres 1 個に「追記専用の事実テーブル群 + マテリアライズ
 - **利用範囲**: マッチングに使える範囲、統計・評価に使える範囲
 - **アクセス制御**: Supabase RLS で「誰がどの事実を読み書きできるか」を一元定義
 - **監査・再現性**: 追記ログにより「時刻 T 時点の判定」を完全再現。実証評価の根拠に
+- **辞書の版管理**: `task_types` はシステムの共有キーゆえ版管理必須。事実は分類時の版を保持し、
+  辞書改訂の影響範囲を追跡可能にする
 
 ---
 
-## 9. 段階的実装計画（案）
+## 10. 段階的実装計画（案）
 
 まず **薄い縦串（thin vertical slice）を通して**から各層を厚くする。
+**標準作業辞書（第0層）は Phase 0 の土台**として最初に据える。
 
 | Phase | 内容 | 成果 |
 |---|---|---|
-| **0** | データ基盤スケルトン（Supabase、事実テーブル、2 時刻、ingestion スタブ） | 事実を追記できる |
-| **1** | ② タスク提案（栽培観測 → 提案）＋標準作業辞書の取り込み | 栽培実証システムと接続、入力側が動く |
+| **0** | データ基盤スケルトン（Supabase、**標準作業辞書 `task_types`**、事実テーブル、2 時刻、ingestion スタブ） | タスク型を定義し、事実を追記できる |
+| **1** | ② タスク提案（栽培観測 × 辞書 → 提案） | 栽培実証システムと接続、入力側が動く |
 | **2** | ① スキル導出（作業記録 → 習熟度 → スキル） | 実績の蓄積とスキル認定 |
-| **3** | ③ マッチングエンジン（リクエスト × スキル × 対応可能時間） | 中核機能が動く |
+| **3** | ③ マッチングエンジン（task_type 結合: リクエスト × スキル × 対応可能時間） | 中核機能が動く |
 | **4** | 農家用 UI / 応募者用 UI（派生ビューの上に構築） | エンドツーエンドのデモ |
 | 横断 | TPOCast 連携、データガバナンス設計 | 外部接続と統治 |
 
 ---
 
-## 10. 未決事項
+## 11. 未決事項
 
-1. **DB 選定**: Supabase 推奨だが確認要（§7）
-2. **TPOCast 連携仕様**: 取り込む作業記録・栽培状況のデータ形式、連携方式（Pull/Push、認証）
-3. **標準作業辞書の形式**: 昨年度成果をどのスキーマで取り込むか
+1. **標準作業辞書の形式**: 昨年度成果（野菜・果樹・お茶）をどのスキーマ・粒度で `task_types` に取り込むか（最優先）
+2. **DB 選定**: Supabase 推奨だが確認要（§8）
+3. **TPOCast 連携仕様**: 取り込む作業記録・栽培状況のデータ形式、連携方式（Pull/Push、認証）
 4. **習熟度→スキルの閾値ルール**: ① の導出ロジックの具体化
 5. **マッチングのスコアリング**: ③ のアルゴリズム（ルールベース → 学習型の段階設計）
 6. **独 AgriCrew / Zenjob 現地調査**: 得られた知見をタスク定義・スキル照合・UI 設計へ反映するポイント
