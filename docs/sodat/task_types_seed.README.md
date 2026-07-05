@@ -34,13 +34,14 @@ tekisai.tea    摘採（茶）
 - 適性 `−`/`△`（専門・技能）は作目まで一致を要求
 
 ベースが複数作目にまたがる（＝束ね候補の）タスク:
-`chukou` `ekihi` `hiryo_sanpu` `jososanpu` `junkai` `kansui` `noyaku` `shukaku` `tsuihi`
+`chukou` `ekihi` `hiryo_sanpu` `jososanpu` `junkai` `kansui` `noyaku` `senbetsu` `shukaku` `tsuihi`
 
 ## 正規化の未決事項（近義語）
 
 呼称が違うため自動では束ならないが、将来プールを検討する候補:
 
-- **選別 `senbetsu.veg` / 選果 `senka.fruit`** — ベースを揃えるか要判断
+- ~~選別 `senbetsu.veg` / 選果 `senka.fruit`~~ → **`senbetsu` に統一済み**
+  （`senbetsu.veg` / `senbetsu.fruit`。表示名は作目慣用の「選別」「選果」を保持）
 - 作目間の 追肥・潅水・農薬 等 — 技能移転の妥当性を実証で確認
 
 正規化する場合はベース名を一致させる（例: 選果→`senbetsu.fruit`）。
