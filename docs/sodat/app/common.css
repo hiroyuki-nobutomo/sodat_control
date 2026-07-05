@@ -1,0 +1,65 @@
+/* SODAT プロトタイプ 共有スタイル */
+:root{
+  --bg:#f6f7f5; --card:#fff; --ink:#1f2a24; --muted:#6b7a72;
+  --line:#e2e7e2; --brand:#2f7d4f; --brand-d:#1f5c39;
+  --accent:#c9772b; --warn:#b23b3b;
+  --apt-cc:#2f7d4f; --apt-c:#5aa06f; --apt-t:#c9772b; --apt-x:#b23b3b;
+  --radius:12px; --shadow:0 1px 3px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12160f;--card:#1b211a;--ink:#e8eee7;--muted:#9db0a4;--line:#2c352b;
+        --brand:#5fbf85;--brand-d:#8ad6a5;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+  line-height:1.55;font-size:15px}
+a{color:var(--brand);text-decoration:none}
+header.app{background:var(--brand-d);color:#fff;padding:.7rem 1rem;
+  display:flex;align-items:center;gap:.75rem;position:sticky;top:0;z-index:10}
+@media (prefers-color-scheme:dark){header.app{background:#0f2b1c}}
+header.app h1{font-size:1.05rem;margin:0;font-weight:700;letter-spacing:.02em}
+header.app .role{font-size:.8rem;opacity:.85;padding:.15rem .5rem;border:1px solid rgba(255,255,255,.35);border-radius:999px}
+header.app nav{margin-left:auto;display:flex;gap:.9rem;font-size:.85rem}
+header.app nav a{color:#fff;opacity:.85}
+header.app nav a:hover{opacity:1}
+.wrap{max-width:1040px;margin:0 auto;padding:1.1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:1rem 1.1rem;margin-bottom:1rem}
+.card h2{margin:.1rem 0 .8rem;font-size:1.05rem}
+.card h3{margin:.2rem 0 .5rem;font-size:.95rem;color:var(--muted)}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:.8rem}
+@media(min-width:720px){.grid.cols-2{grid-template-columns:1fr 1fr}.grid.cols-3{grid-template-columns:1fr 1fr 1fr}}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--brand);color:#fff;border:0;border-radius:8px;
+  padding:.45rem .8rem;cursor:pointer}
+button.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+button:hover{filter:brightness(1.05)}
+select,input{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:600;font-size:.8rem}
+.badge{display:inline-block;padding:.08rem .5rem;border-radius:999px;font-size:.76rem;border:1px solid var(--line)}
+.crop-veg{background:#eaf5ec;color:#2f7d4f}
+.crop-fruit{background:#fdf0e4;color:#b8681f}
+.crop-tea{background:#eef3e6;color:#5a7d2f}
+@media (prefers-color-scheme:dark){.crop-veg,.crop-fruit,.crop-tea{background:#20291f;color:var(--ink)}}
+.apt{font-weight:700}
+.apt-◎{color:var(--apt-cc)} .apt-○{color:var(--apt-c)} .apt-△{color:var(--apt-t)} .apt-−{color:var(--apt-x)}
+.pill{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:.1rem .55rem;font-size:.78rem}
+.score{font-variant-numeric:tabular-nums;font-weight:700}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;min-width:60px}
+.bar>i{display:block;height:100%;background:var(--brand)}
+.tag-ok{color:var(--brand)} .tag-no{color:var(--warn)}
+.hint{background:var(--bg);border-left:3px solid var(--brand);padding:.5rem .7rem;border-radius:6px;font-size:.85rem}
+.launch{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:720px){.launch{grid-template-columns:1fr 1fr 1fr}}
+.launch a.tile{display:block;padding:1.3rem;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--card);box-shadow:var(--shadow);color:var(--ink)}
+.launch a.tile:hover{border-color:var(--brand)}
+.launch .ico{font-size:1.8rem}
+.kv{display:flex;gap:.4rem;flex-wrap:wrap}
+.kv .pill b{font-weight:700}

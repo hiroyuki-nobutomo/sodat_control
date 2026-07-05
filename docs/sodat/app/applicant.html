@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SODAT 応募者用</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./common.css">
+</head>
+<body>
+<header class="app">
+  <h1>SODAT</h1><span class="role">短期バイト応募者用</span>
+  <nav><a href="./">ホーム</a><a href="./manager">管理者</a><a href="./worker">作業者</a></nav>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div class="row"><label class="small muted">ログイン中の応募者</label>
+      <select id="wSel"></select></div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>プロフィール</h2>
+      <div id="profile"></div>
+    </div>
+    <div class="card">
+      <h2>対応可能時間</h2>
+      <div id="avail" class="kv"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>あなたのスキル <span class="small muted">（実績から自動育成）</span></h2>
+    <table id="skillTable"><thead><tr><th>タスク</th><th>作目</th><th>適性</th><th>実績</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>届いたオファー <span class="small muted">（あなたが候補になっている求人）</span></h2>
+    <table id="offerTable"><thead><tr>
+      <th>農園</th><th>タスク</th><th>時期</th><th>あなたの強み</th><th>スコア</th><th>応答</th>
+    </tr></thead><tbody></tbody></table>
+    <p id="noOffer" class="muted small" style="display:none">現在オファーはありません。</p>
+  </div>
+</div>
+
+<script src="./data.js"></script>
+<script src="./matcher.js"></script>
+<script>
+const cropLabel={veg:'野菜',fruit:'果樹',tea:'茶'};
+const cropBadge=c=>`<span class="badge crop-${c}">${cropLabel[c]||c}</span>`;
+const apt=a=>`<span class="apt apt-${a}">${a}</span>`;
+const fmtDate=s=>{const d=new Date(s);return `${d.getMonth()+1}/${d.getDate()}`;};
+const qualLabel={'license.tractor':'トラクター免許','cert.pesticide':'農薬取扱'};
+let wid;
+const responses=JSON.parse(localStorage.getItem('sodat_offer_resp')||'{}');
+function saveResp(){localStorage.setItem('sodat_offer_resp',JSON.stringify(responses));}
+
+async function boot(){
+  await SODAT.load();
+  const sel=document.getElementById('wSel');
+  SODAT.db.workers.forEach(w=>{const o=document.createElement('option');o.value=w.worker_id;o.textContent=`${w.name}（${w.worker_id}）`;sel.appendChild(o);});
+  sel.onchange=()=>{wid=sel.value;render();};
+  wid=SODAT.db.workers[0].worker_id; render();
+}
+function render(){
+  const w=SODAT.worker(wid);
+  document.getElementById('profile').innerHTML=`
+    <div class="kv" style="margin-bottom:.5rem">
+      <span class="pill">氏名 <b>${w.name}</b></span>
+      <span class="pill">エリア <b>${w.area}</b></span>
+    </div>
+    <div class="small muted">資格</div>
+    <div class="kv">${w.qualifications.length?w.qualifications.map(q=>`<span class="pill tag-ok">${qualLabel[q]||q}</span>`).join(''):'<span class="muted small">なし</span>'}</div>`;
+  document.getElementById('avail').innerHTML=w.availability.map(a=>{
+    const f=new Date(a.available_from),t=new Date(a.available_to);
+    return `<span class="pill">${f.getMonth()+1}/${f.getDate()} ${f.getHours()}–${t.getHours()}時</span>`;}).join('');
+  // skills
+  const st=document.querySelector('#skillTable tbody');st.innerHTML='';
+  const sorted=[...w.skills].sort((a,b)=>b.work_count-a.work_count);
+  if(!sorted.length)st.innerHTML='<tr><td colspan="4" class="muted">まだ実績がありません（作業者用画面で作業を記録するとスキルが育ちます）。</td></tr>';
+  sorted.forEach(s=>{const t=SODAT.task(s.task_type_id);const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${t.task_name}</b></td><td>${cropBadge(t.crop)}</td><td>${apt(t.spot_aptitude)}</td><td>${s.work_count}回</td>`;st.appendChild(tr);});
+  // offers: 全求人でマッチし、自分がeligibleなもの
+  const ot=document.querySelector('#offerTable tbody');ot.innerHTML='';
+  let n=0;
+  SODAT.allRequests().forEach(r=>{
+    const m=Matcher.match(r);
+    const me=m.eligible.find(e=>e.worker.worker_id===wid);
+    if(!me)return; n++;
+    const t=m.task,f=m.farm;
+    const key=`${wid}:${r.request_id}`;
+    const strength=[me.exact?`一致実績${me.exact}回`:null,me.bundleBonus?`束ね+${me.bundleBonus}`:null,
+                    me.areaMatch?'地元':null,me.requiredQual&&me.qualPass?'資格有':null].filter(Boolean).join('・');
+    const resp=responses[key];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${f.name}</td>
+      <td><b>${t.task_name}</b> ${apt(t.spot_aptitude)}<div class="small muted">${cropLabel[t.crop]}</div></td>
+      <td>${fmtDate(r.timing_from)}</td>
+      <td class="small">${strength||'—'}</td>
+      <td class="score">${me.score}</td>
+      <td>${resp?`<span class="${resp==='accepted'?'tag-ok':'tag-no'}">${resp==='accepted'?'承諾済':'辞退'}</span>`
+        :`<button data-a="${key}">承諾</button> <button class="ghost" data-d="${key}">辞退</button>`}</td>`;
+    if(!resp){
+      tr.querySelector('[data-a]').onclick=()=>{responses[key]='accepted';saveResp();render();};
+      tr.querySelector('[data-d]').onclick=()=>{responses[key]='declined';saveResp();render();};
+    }
+    ot.appendChild(tr);
+  });
+  document.getElementById('noOffer').style.display=n?'none':'';
+}
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,1710 @@
+{
+ "demo_today": "2026-07-05",
+ "meta": {
+  "note": "SODATプロトタイプ用ダミーデータ（単一ソース生成）",
+  "generated_from": "task_types_seed.csv"
+ },
+ "task_types": [
+  {
+   "task_type_id": "junkai.veg",
+   "base": "junkai",
+   "task_name": "圃場巡回",
+   "crop": "veg",
+   "process": [
+    "圃場準備",
+    "定植〜管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "mizohori.veg",
+   "base": "mizohori",
+   "task_name": "溝堀り",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "指示が明確なら可能",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "koun.veg",
+   "base": "koun",
+   "task_name": "耕運",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "hiryo_sanpu.veg",
+   "base": "hiryo_sanpu",
+   "task_name": "肥料散布",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "慎重な作業が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "unetate_mulcher.veg",
+   "base": "unetate_mulcher",
+   "task_name": "畝立てマルチャー",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "mulch_hari.veg",
+   "base": "mulch_hari",
+   "task_name": "マルチ張り",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 220.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kansui_souchi.veg",
+   "base": "kansui_souchi",
+   "task_name": "潅水装置・潅水",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "設備理解が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "mainte.veg",
+   "base": "mainte",
+   "task_name": "メンテ",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "josozai_sanpu.veg",
+   "base": "josozai_sanpu",
+   "task_name": "除草剤",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "noyaku_sanpu.veg",
+   "base": "noyaku_sanpu",
+   "task_name": "農薬",
+   "crop": "veg",
+   "process": [
+    "圃場準備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "ikubyo_kansui.veg",
+   "base": "ikubyo_kansui",
+   "task_name": "育苗潅水",
+   "crop": "veg",
+   "process": [
+    "播種・育苗"
+   ],
+   "spot_aptitude": "○",
+   "qualification_note": "初心者可（丁寧さ必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 80.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "hachimizu.veg",
+   "base": "hachimizu",
+   "task_name": "鉢水",
+   "crop": "veg",
+   "process": [
+    "播種・育苗"
+   ],
+   "spot_aptitude": "○",
+   "qualification_note": "初心者可",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 60.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "teishoku.veg",
+   "base": "teishoku",
+   "task_name": "定植",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（ニーズ高）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kansui.veg",
+   "base": "kansui",
+   "task_name": "潅水",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "○",
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 90.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "yuin.veg",
+   "base": "yuin",
+   "task_name": "誘引",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 180.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "mekaki.veg",
+   "base": "mekaki",
+   "task_name": "芽かき",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "tekiyo.veg",
+   "base": "tekiyo",
+   "task_name": "摘葉",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 160.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "hormone.veg",
+   "base": "hormone",
+   "task_name": "ホルモン処理",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "tsuihi.veg",
+   "base": "tsuihi",
+   "task_name": "追肥",
+   "crop": "veg",
+   "process": [
+    "定植〜管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "shukaku.veg",
+   "base": "shukaku",
+   "task_name": "収穫",
+   "crop": "veg",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（最需要業務）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 400.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "senbetsu.veg",
+   "base": "senbetsu",
+   "task_name": "選別",
+   "crop": "veg",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（簡単なもの）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "label_hakozume.veg",
+   "base": "label_hakozume",
+   "task_name": "ラベル貼り、箱詰め",
+   "crop": "veg",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（軽作業）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "shukka.veg",
+   "base": "shukka",
+   "task_name": "出荷・配達",
+   "crop": "veg",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "enchi_shuzen.fruit",
+   "base": "enchi_shuzen",
+   "task_name": "園地修繕",
+   "crop": "fruit",
+   "process": [
+    "準備・基盤整備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "taihi.fruit",
+   "base": "taihi",
+   "task_name": "堆肥",
+   "crop": "fruit",
+   "process": [
+    "準備・基盤整備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "力仕事だが、初心者可",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "hiryo_sanpu.fruit",
+   "base": "hiryo_sanpu",
+   "task_name": "肥料",
+   "crop": "fruit",
+   "process": [
+    "準備・基盤整備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "慎重な作業が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "mulch_setchi.fruit",
+   "base": "mulch_setchi",
+   "task_name": "マルチ設置",
+   "crop": "fruit",
+   "process": [
+    "準備・基盤整備"
+   ],
+   "spot_aptitude": "○",
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "sentei.fruit",
+   "base": "sentei",
+   "task_name": "剪定",
+   "crop": "fruit",
+   "process": [
+    "植栽管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 600.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kaishoku.fruit",
+   "base": "kaishoku",
+   "task_name": "改植",
+   "crop": "fruit",
+   "process": [
+    "植栽管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "shinshoku.fruit",
+   "base": "shinshoku",
+   "task_name": "新植",
+   "crop": "fruit",
+   "process": [
+    "植栽管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "丁寧な説明必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "naeki_kanri.fruit",
+   "base": "naeki_kanri",
+   "task_name": "苗木管理",
+   "crop": "fruit",
+   "process": [
+    "植栽管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "丁寧な説明必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kusakari.fruit",
+   "base": "kusakari",
+   "task_name": "草刈り",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "刈払機操作は要経験",
+   "aptitude_basis": "experience",
+   "danger_category": "machine",
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "chukou.fruit",
+   "base": "chukou",
+   "task_name": "中耕",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "tsuihi.fruit",
+   "base": "tsuihi",
+   "task_name": "追肥",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "丁寧な説明が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "noyaku_sanpu.fruit",
+   "base": "noyaku_sanpu",
+   "task_name": "農薬散布",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kongo_sanpu.fruit",
+   "base": "kongo_sanpu",
+   "task_name": "混合散布",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "josozai_sanpu.fruit",
+   "base": "josozai_sanpu",
+   "task_name": "除草剤散布",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "kansui.fruit",
+   "base": "kansui",
+   "task_name": "潅水",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "○",
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 90.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "ekihi.fruit",
+   "base": "ekihi",
+   "task_name": "液肥",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 100.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "tekka.fruit",
+   "base": "tekka",
+   "task_name": "摘果",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 500.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "edatsuri.fruit",
+   "base": "edatsuri",
+   "task_name": "枝つり",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "fukurokake.fruit",
+   "base": "fukurokake",
+   "task_name": "袋掛け",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 700.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "junkai.fruit",
+   "base": "junkai",
+   "task_name": "巡回",
+   "crop": "fruit",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "shukaku.fruit",
+   "base": "shukaku",
+   "task_name": "収穫",
+   "crop": "fruit",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（最需要業務）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 400.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "senbetsu.fruit",
+   "base": "senbetsu",
+   "task_name": "選果",
+   "crop": "fruit",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（簡単なもの）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "sonota_keisagyo.fruit",
+   "base": "sonota_keisagyo",
+   "task_name": "その他軽作業",
+   "crop": "fruit",
+   "process": [
+    "収穫〜出荷"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "seishi.tea",
+   "base": "seishi",
+   "task_name": "整枝",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "daigiri.tea",
+   "base": "daigiri",
+   "task_name": "台切",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "shinko.tea",
+   "base": "shinko",
+   "task_name": "深耕",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "hiryo_sanpu.tea",
+   "base": "hiryo_sanpu",
+   "task_name": "肥料散布",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "shikikusa.tea",
+   "base": "shikikusa",
+   "task_name": "敷き草",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "naeue.tea",
+   "base": "naeue",
+   "task_name": "苗の植え付け",
+   "crop": "tea",
+   "process": [
+    "基盤整備"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "chukou.tea",
+   "base": "chukou",
+   "task_name": "中耕",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "ekihi.tea",
+   "base": "ekihi",
+   "task_name": "液肥",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 100.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "kusatori.tea",
+   "base": "kusatori",
+   "task_name": "草取り",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 250.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "noyaku_sanpu.tea",
+   "base": "noyaku_sanpu",
+   "task_name": "農薬",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "hifuku.tea",
+   "base": "hifuku",
+   "task_name": "被覆",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "tsuyuharai.tea",
+   "base": "tsuyuharai",
+   "task_name": "露払い",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "junkai.tea",
+   "base": "junkai",
+   "task_name": "巡回",
+   "crop": "tea",
+   "process": [
+    "生育管理"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "tekisai.tea",
+   "base": "tekisai",
+   "task_name": "摘採(1〜3番茶)",
+   "crop": "tea",
+   "process": [
+    "摘採・加工"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 350.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "aracha_seizo.tea",
+   "base": "aracha_seizo",
+   "task_name": "荒茶製造",
+   "crop": "tea",
+   "process": [
+    "摘採・加工"
+   ],
+   "spot_aptitude": "△",
+   "qualification_note": "工場補助なら可",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 280.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "shiagecha_seizo.tea",
+   "base": "shiagecha_seizo",
+   "task_name": "仕上げ茶製造",
+   "crop": "tea",
+   "process": [
+    "摘採・加工"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "kojo_sagyo.tea",
+   "base": "kojo_sagyo",
+   "task_name": "工場作業",
+   "crop": "tea",
+   "process": [
+    "補助・施設"
+   ],
+   "spot_aptitude": "◎",
+   "qualification_note": "初心者可（軽作業多い）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
+  },
+  {
+   "task_type_id": "boso_fan.tea",
+   "base": "boso_fan",
+   "task_name": "防霜ファン点検",
+   "crop": "tea",
+   "process": [
+    "補助・施設"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  },
+  {
+   "task_type_id": "josozai_sanpu.tea",
+   "base": "josozai_sanpu",
+   "task_name": "除草剤散布",
+   "crop": "tea",
+   "process": [
+    "補助・施設"
+   ],
+   "spot_aptitude": "−",
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
+  }
+ ],
+ "farms": [
+  {
+   "farm_id": "F01",
+   "name": "みどり野菜農園",
+   "crop": "veg",
+   "area": "磐田",
+   "plot_area_a": 20
+  },
+  {
+   "farm_id": "F02",
+   "name": "遠州みかん園",
+   "crop": "fruit",
+   "area": "浜松",
+   "plot_area_a": 40
+  },
+  {
+   "farm_id": "F03",
+   "name": "牧之原茶園",
+   "crop": "tea",
+   "area": "牧之原",
+   "plot_area_a": 60
+  }
+ ],
+ "workers": [
+  {
+   "worker_id": "W01",
+   "name": "佐藤 太郎",
+   "area": "磐田",
+   "qualifications": [
+    "license.tractor",
+    "cert.pesticide"
+   ],
+   "profile": "veteran_veg",
+   "skills": [
+    {
+     "task_type_id": "shukaku.veg",
+     "work_count": 42,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.veg",
+     "work_count": 32,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "teishoku.veg",
+     "work_count": 27,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kansui.veg",
+     "work_count": 20,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "tsuihi.veg",
+     "work_count": 12,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "noyaku_sanpu.veg",
+     "work_count": 6,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-07T08:00:00",
+     "available_to": "2026-07-07T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-08T08:00:00",
+     "available_to": "2026-07-08T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T14:00:00",
+     "area": "磐田"
+    }
+   ]
+  },
+  {
+   "worker_id": "W02",
+   "name": "鈴木 花子",
+   "area": "磐田",
+   "qualifications": [],
+   "profile": "beginner",
+   "skills": [],
+   "availability": [
+    {
+     "available_from": "2026-07-08T08:00:00",
+     "available_to": "2026-07-08T12:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-09T08:00:00",
+     "available_to": "2026-07-09T12:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-15T08:00:00",
+     "available_to": "2026-07-15T16:00:00",
+     "area": "磐田"
+    }
+   ]
+  },
+  {
+   "worker_id": "W03",
+   "name": "高橋 実",
+   "area": "浜松",
+   "qualifications": [
+    "license.tractor"
+   ],
+   "profile": "veteran_fruit",
+   "skills": [
+    {
+     "task_type_id": "shukaku.fruit",
+     "work_count": 41,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.fruit",
+     "work_count": 28,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "sentei.fruit",
+     "work_count": 22,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "tekka.fruit",
+     "work_count": 18,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "fukurokake.fruit",
+     "work_count": 16,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "noyaku_sanpu.fruit",
+     "work_count": 7,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-13T08:00:00",
+     "available_to": "2026-07-13T16:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T16:00:00",
+     "area": "浜松"
+    }
+   ]
+  },
+  {
+   "worker_id": "W04",
+   "name": "田中 恵",
+   "area": "浜松",
+   "qualifications": [],
+   "profile": "light_multi",
+   "skills": [
+    {
+     "task_type_id": "shukaku.veg",
+     "work_count": 15,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "label_hakozume.veg",
+     "work_count": 18,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.veg",
+     "work_count": 10,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "shukaku.fruit",
+     "work_count": 9,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kusatori.tea",
+     "work_count": 6,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-07T08:00:00",
+     "available_to": "2026-07-07T14:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-11T08:00:00",
+     "available_to": "2026-07-11T16:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-13T08:00:00",
+     "available_to": "2026-07-13T12:00:00",
+     "area": "浜松"
+    }
+   ]
+  },
+  {
+   "worker_id": "W05",
+   "name": "伊藤 健",
+   "area": "牧之原",
+   "qualifications": [
+    "cert.pesticide"
+   ],
+   "profile": "veteran_tea",
+   "skills": [
+    {
+     "task_type_id": "tekisai.tea",
+     "work_count": 35,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "aracha_seizo.tea",
+     "work_count": 20,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kojo_sagyo.tea",
+     "work_count": 25,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "hifuku.tea",
+     "work_count": 14,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "noyaku_sanpu.tea",
+     "work_count": 6,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T17:00:00",
+     "area": "牧之原"
+    },
+    {
+     "available_from": "2026-07-15T08:00:00",
+     "available_to": "2026-07-15T17:00:00",
+     "area": "牧之原"
+    }
+   ]
+  },
+  {
+   "worker_id": "W06",
+   "name": "渡辺 彩",
+   "area": "牧之原",
+   "qualifications": [],
+   "profile": "beginner",
+   "skills": [],
+   "availability": [
+    {
+     "available_from": "2026-07-12T08:00:00",
+     "available_to": "2026-07-12T12:00:00",
+     "area": "牧之原"
+    },
+    {
+     "available_from": "2026-07-16T08:00:00",
+     "available_to": "2026-07-16T16:00:00",
+     "area": "牧之原"
+    }
+   ]
+  },
+  {
+   "worker_id": "W07",
+   "name": "山本 大",
+   "area": "磐田",
+   "qualifications": [],
+   "profile": "light_multi",
+   "skills": [
+    {
+     "task_type_id": "shukaku.veg",
+     "work_count": 15,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "label_hakozume.veg",
+     "work_count": 18,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.veg",
+     "work_count": 10,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "shukaku.fruit",
+     "work_count": 9,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kusatori.tea",
+     "work_count": 6,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-08T08:00:00",
+     "available_to": "2026-07-08T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-10T08:00:00",
+     "available_to": "2026-07-10T14:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-15T08:00:00",
+     "available_to": "2026-07-15T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-17T08:00:00",
+     "available_to": "2026-07-17T12:00:00",
+     "area": "磐田"
+    }
+   ]
+  },
+  {
+   "worker_id": "W08",
+   "name": "中村 優",
+   "area": "浜松",
+   "qualifications": [
+    "license.tractor",
+    "cert.pesticide"
+   ],
+   "profile": "veteran_fruit",
+   "skills": [
+    {
+     "task_type_id": "shukaku.fruit",
+     "work_count": 41,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.fruit",
+     "work_count": 28,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "sentei.fruit",
+     "work_count": 22,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "tekka.fruit",
+     "work_count": 18,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "fukurokake.fruit",
+     "work_count": 16,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "noyaku_sanpu.fruit",
+     "work_count": 7,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-13T08:00:00",
+     "available_to": "2026-07-13T16:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-07T08:00:00",
+     "available_to": "2026-07-07T16:00:00",
+     "area": "浜松"
+    }
+   ]
+  },
+  {
+   "worker_id": "W09",
+   "name": "小林 累",
+   "area": "牧之原",
+   "qualifications": [],
+   "profile": "beginner",
+   "skills": [],
+   "availability": [
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T12:00:00",
+     "area": "牧之原"
+    },
+    {
+     "available_from": "2026-07-14T13:00:00",
+     "available_to": "2026-07-14T17:00:00",
+     "area": "牧之原"
+    }
+   ]
+  },
+  {
+   "worker_id": "W10",
+   "name": "加藤 響",
+   "area": "磐田",
+   "qualifications": [],
+   "profile": "light_multi",
+   "skills": [
+    {
+     "task_type_id": "shukaku.veg",
+     "work_count": 15,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "label_hakozume.veg",
+     "work_count": 18,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "senbetsu.veg",
+     "work_count": 10,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "shukaku.fruit",
+     "work_count": 9,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kusatori.tea",
+     "work_count": 6,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-08T08:00:00",
+     "available_to": "2026-07-08T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-09T08:00:00",
+     "available_to": "2026-07-09T16:00:00",
+     "area": "磐田"
+    },
+    {
+     "available_from": "2026-07-12T08:00:00",
+     "available_to": "2026-07-12T12:00:00",
+     "area": "磐田"
+    }
+   ]
+  },
+  {
+   "worker_id": "W11",
+   "name": "吉田 蓮",
+   "area": "浜松",
+   "qualifications": [],
+   "profile": "beginner",
+   "skills": [],
+   "availability": [
+    {
+     "available_from": "2026-07-13T08:00:00",
+     "available_to": "2026-07-13T12:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T12:00:00",
+     "area": "浜松"
+    },
+    {
+     "available_from": "2026-07-16T08:00:00",
+     "available_to": "2026-07-16T16:00:00",
+     "area": "浜松"
+    }
+   ]
+  },
+  {
+   "worker_id": "W12",
+   "name": "山田 葵",
+   "area": "牧之原",
+   "qualifications": [
+    "cert.pesticide"
+   ],
+   "profile": "semi_tea",
+   "skills": [
+    {
+     "task_type_id": "kojo_sagyo.tea",
+     "work_count": 12,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "kusatori.tea",
+     "work_count": 10,
+     "last_worked_at": "2026-06-05T10:00:00"
+    },
+    {
+     "task_type_id": "hifuku.tea",
+     "work_count": 5,
+     "last_worked_at": "2026-06-05T10:00:00"
+    }
+   ],
+   "availability": [
+    {
+     "available_from": "2026-07-14T08:00:00",
+     "available_to": "2026-07-14T16:00:00",
+     "area": "牧之原"
+    },
+    {
+     "available_from": "2026-07-15T08:00:00",
+     "available_to": "2026-07-15T14:00:00",
+     "area": "牧之原"
+    },
+    {
+     "available_from": "2026-07-12T08:00:00",
+     "available_to": "2026-07-12T12:00:00",
+     "area": "牧之原"
+    }
+   ]
+  }
+ ],
+ "task_requests": [
+  {
+   "request_id": "R01",
+   "farm_id": "F01",
+   "task_type_id": "teishoku.veg",
+   "headcount": 3,
+   "timing_from": "2026-07-08T08:00:00",
+   "timing_to": "2026-07-08T16:00:00",
+   "estimated_effort": 7,
+   "status": "open"
+  },
+  {
+   "request_id": "R02",
+   "farm_id": "F01",
+   "task_type_id": "shukaku.veg",
+   "headcount": 4,
+   "timing_from": "2026-07-15T08:00:00",
+   "timing_to": "2026-07-15T16:00:00",
+   "estimated_effort": 5,
+   "status": "open"
+  },
+  {
+   "request_id": "R03",
+   "farm_id": "F01",
+   "task_type_id": "label_hakozume.veg",
+   "headcount": 2,
+   "timing_from": "2026-07-09T08:00:00",
+   "timing_to": "2026-07-09T16:00:00",
+   "estimated_effort": 3,
+   "status": "open"
+  },
+  {
+   "request_id": "R04",
+   "farm_id": "F02",
+   "task_type_id": "shukaku.fruit",
+   "headcount": 5,
+   "timing_from": "2026-07-13T08:00:00",
+   "timing_to": "2026-07-13T16:00:00",
+   "estimated_effort": 6,
+   "status": "open"
+  },
+  {
+   "request_id": "R05",
+   "farm_id": "F02",
+   "task_type_id": "sentei.fruit",
+   "headcount": 1,
+   "timing_from": "2026-07-07T08:00:00",
+   "timing_to": "2026-07-07T16:00:00",
+   "estimated_effort": 10,
+   "status": "open"
+  },
+  {
+   "request_id": "R06",
+   "farm_id": "F03",
+   "task_type_id": "tekisai.tea",
+   "headcount": 6,
+   "timing_from": "2026-07-10T08:00:00",
+   "timing_to": "2026-07-10T16:00:00",
+   "estimated_effort": 9,
+   "status": "open"
+  },
+  {
+   "request_id": "R07",
+   "farm_id": "F03",
+   "task_type_id": "kojo_sagyo.tea",
+   "headcount": 3,
+   "timing_from": "2026-07-12T08:00:00",
+   "timing_to": "2026-07-12T16:00:00",
+   "estimated_effort": 4,
+   "status": "open"
+  }
+ ],
+ "cultivation_observations": [
+  {
+   "farm_id": "F01",
+   "crop": "veg",
+   "growth_stage": "定植期",
+   "metrics": {
+    "soil_temp_c": 18,
+    "seedling_ready": true
+   },
+   "event_time": "2026-07-04T08:00:00"
+  },
+  {
+   "farm_id": "F01",
+   "crop": "veg",
+   "growth_stage": "収穫期",
+   "metrics": {
+    "maturity": 0.9
+   },
+   "event_time": "2026-07-04T08:00:00"
+  },
+  {
+   "farm_id": "F02",
+   "crop": "fruit",
+   "growth_stage": "摘果期",
+   "metrics": {
+    "fruit_set": "high"
+   },
+   "event_time": "2026-07-04T08:00:00"
+  },
+  {
+   "farm_id": "F02",
+   "crop": "fruit",
+   "growth_stage": "収穫期",
+   "metrics": {
+    "brix": 11.5
+   },
+   "event_time": "2026-07-04T08:00:00"
+  },
+  {
+   "farm_id": "F03",
+   "crop": "tea",
+   "growth_stage": "一番茶前",
+   "metrics": {
+    "new_bud": "3.5leaf"
+   },
+   "event_time": "2026-07-04T08:00:00"
+  }
+ ],
+ "qual_rules": {
+  "noyaku_sanpu": "cert.pesticide"
+ },
+ "proposal_rules": {
+  "veg|定植期": "teishoku.veg",
+  "veg|収穫期": "shukaku.veg",
+  "fruit|摘果期": "tekka.fruit",
+  "fruit|収穫期": "shukaku.fruit",
+  "tea|一番茶前": "tekisai.tea"
+ }
+}

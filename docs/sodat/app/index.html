@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SODAT プロトタイプ</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./common.css">
+</head>
+<body>
+<header class="app">
+  <h1>SODAT</h1>
+  <span class="role">プロトタイプ</span>
+</header>
+<div class="wrap">
+  <div class="card">
+    <h2>農業タスク動的マッチング — 3つの画面</h2>
+    <p class="muted small">標準作業辞書（task_types 65タスク）を中核に、タスクを軸として実績・スキル・求人・マッチングが連携します。データはダミー（<code>fixtures.json</code>）。TPOCast連携は後日。</p>
+    <div class="launch">
+      <a class="tile" href="./manager">
+        <div class="ico">🚜</div>
+        <h3 style="color:var(--ink)">農園管理者用</h3>
+        <p class="muted small">栽培状況からの次タスク提案、求人の作成、候補者マッチング結果の確認。</p>
+      </a>
+      <a class="tile" href="./applicant">
+        <div class="ico">🧑‍🌾</div>
+        <h3 style="color:var(--ink)">短期バイト応募者用</h3>
+        <p class="muted small">自分のスキル・資格・対応可能時間、届いたオファーの承諾／辞退。</p>
+      </a>
+      <a class="tile" href="./worker">
+        <div class="ico">📋</div>
+        <h3 style="color:var(--ink)">作業者用</h3>
+        <p class="muted small">実施した作業を記録（実績蓄積→スキル自動育成）。TPOCastの役割を代替。</p>
+      </a>
+    </div>
+  </div>
+  <div class="card">
+    <h3>データフロー</h3>
+    <p class="small muted">作業者が実績を記録 → スキルが育つ ／ 栽培状況から次タスクを提案 → 農園が求人 → エンジンがタスク軸でマッチ → 応募者にオファー。</p>
+    <p class="small"><a href="../../sodat-r8-architecture.md">アーキテクチャ設計書</a></p>
+  </div>
+</div>
+</body>
+</html>
