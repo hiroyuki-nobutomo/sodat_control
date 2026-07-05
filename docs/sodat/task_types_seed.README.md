@@ -34,15 +34,24 @@ tekisai.tea    摘採（茶）
 - 適性 `−`/`△`（専門・技能）は作目まで一致を要求
 
 ベースが複数作目にまたがる（＝束ね候補の）タスク:
-`chukou` `ekihi` `hiryo_sanpu` `jososanpu` `junkai` `kansui` `noyaku` `senbetsu` `shukaku` `tsuihi`
+`chukou` `ekihi` `hiryo_sanpu` `josozai_sanpu` `junkai` `kansui` `noyaku_sanpu` `senbetsu` `shukaku` `tsuihi`
 
 ## 正規化の未決事項（近義語）
 
 呼称が違うため自動では束ならないが、将来プールを検討する候補:
 
-- ~~選別 `senbetsu.veg` / 選果 `senka.fruit`~~ → **`senbetsu` に統一済み**
-  （`senbetsu.veg` / `senbetsu.fruit`。表示名は作目慣用の「選別」「選果」を保持）
-- 作目間の 追肥・潅水・農薬 等 — 技能移転の妥当性を実証で確認
+作目間で呼称がゆれていたため別ベースだったものを、以下に統一済み
+（表示名は作目慣用を保持。ベースのみ正規化して作目横断で束ねられるようにした）:
+
+- ~~選別 `senbetsu.veg` / 選果 `senka.fruit`~~ → **`senbetsu`**
+- ~~農薬 `noyaku` / 農薬散布 `noyaku_sanpu`~~ → **`noyaku_sanpu`**（野菜・果樹・茶）
+- ~~肥料 `hiryo` / 肥料散布 `hiryo_sanpu`~~ → **`hiryo_sanpu`**（野菜・果樹・茶）
+- ~~除草剤 `josozai` / 除草剤散布 `jososanpu`~~ → **`josozai_sanpu`**（野菜・果樹・茶）
+
+残る確認（ドメイン判断・急がない）:
+
+- 作目間の 追肥・潅水・中耕・液肥・巡回・収穫 等 — 技能移転の妥当性を実証で確認
+- 適性の妥当性（例: 茶「工場作業」◎、野菜の潅水3系統の粒度）
 
 正規化する場合はベース名を一致させる（例: 選果→`senbetsu.fruit`）。
 イベントログは各事実に作目コンテキストを保持し、辞書は `dictionary_version` で版管理するため、
