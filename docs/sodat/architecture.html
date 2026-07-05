@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>SODAT システムアーキテクチャ</title>
+<style>
+  :root{
+    --bg:#edf1ea; --panel:#f6f9f3; --card:#ffffff;
+    --ink:#18231c; --muted:#63716a; --line:#dce4d8; --hair:#c4d0bf;
+    --core:#a76a22; --core-bg:#f6ead5; --core-line:#e4c489; --core-ink:#7c4d14;
+    --cult:#227e77; --cult-bg:#e0f0ee;
+    --ai:#2c6b4c;   --ai-bg:#e3efe8; --ai-ink:#1f5236; --ai-line:#b9d6c4;
+    --ui:#3c5a84;   --ui-bg:#e7edf6;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(20,40,25,.05), 0 8px 24px rgba(20,40,25,.05);
+    --font:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e1411; --panel:#141b17; --card:#19211b;
+      --ink:#e7eee8; --muted:#90a096; --line:#273229; --hair:#35443a;
+      --core:#e2a954; --core-bg:#271f13; --core-line:#5a4622; --core-ink:#f0c98a;
+      --cult:#57b3a9; --cult-bg:#132420;
+      --ai:#5fb07f;   --ai-bg:#122019; --ai-ink:#8fd0a6; --ai-line:#2c4636;
+      --ui:#7c9bd0;   --ui-bg:#141c28;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 26px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#edf1ea; --panel:#f6f9f3; --card:#ffffff;
+    --ink:#18231c; --muted:#63716a; --line:#dce4d8; --hair:#c4d0bf;
+    --core:#a76a22; --core-bg:#f6ead5; --core-line:#e4c489; --core-ink:#7c4d14;
+    --cult:#227e77; --cult-bg:#e0f0ee;
+    --ai:#2c6b4c; --ai-bg:#e3efe8; --ai-ink:#1f5236; --ai-line:#b9d6c4;
+    --ui:#3c5a84; --ui-bg:#e7edf6;
+    --shadow:0 1px 2px rgba(20,40,25,.05), 0 8px 24px rgba(20,40,25,.05);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1411; --panel:#141b17; --card:#19211b;
+    --ink:#e7eee8; --muted:#90a096; --line:#273229; --hair:#35443a;
+    --core:#e2a954; --core-bg:#271f13; --core-line:#5a4622; --core-ink:#f0c98a;
+    --cult:#57b3a9; --cult-bg:#132420;
+    --ai:#5fb07f; --ai-bg:#122019; --ai-ink:#8fd0a6; --ai-line:#2c4636;
+    --ui:#7c9bd0; --ui-bg:#141c28;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 26px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+    line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .shell{max-width:1120px;margin:0 auto;padding:clamp(1.1rem,3vw,2.4rem);}
+
+  /* ---- masthead ---- */
+  .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cult);font-weight:700;}
+  h1{font-size:clamp(1.7rem,4vw,2.5rem);margin:.35rem 0 .5rem;letter-spacing:-.01em;
+    text-wrap:balance;font-weight:800;}
+  .lede{max-width:62ch;color:var(--muted);margin:0 0 1.4rem;font-size:1.02rem;}
+
+  .legend{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem .9rem;padding:0;margin:0 0 2rem;}
+  .legend li{display:flex;align-items:center;gap:.45rem;font-size:.82rem;color:var(--ink);
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.3rem .7rem;}
+  .legend .dot{width:.62rem;height:.62rem;border-radius:50%;flex:none;}
+  .dot.a{background:var(--core)} .dot.b{background:var(--ai)} .dot.c{background:var(--ui)}
+
+  /* ---- strata ---- */
+  .strata{display:flex;flex-direction:column;}
+  .layer{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:1rem 1.1rem 1.15rem;}
+  .layer-label{display:flex;align-items:baseline;gap:.55rem;font-size:.76rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.85rem;}
+  .layer-label .ln{font-family:var(--mono);font-size:.82rem;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.05rem .4rem;letter-spacing:0;}
+
+  .boxes{display:flex;flex-wrap:wrap;gap:.8rem;align-items:stretch;}
+  .box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--hair);
+    border-radius:10px;padding:.7rem .85rem;box-shadow:var(--shadow);flex:1 1 220px;min-width:200px;}
+  .box .t{display:block;font-weight:700;font-size:.96rem;}
+  .box small{display:block;color:var(--muted);font-size:.8rem;margin-top:.2rem;line-height:1.4;}
+  .box.cult{border-left-color:var(--cult)} .box.cult .t{color:var(--cult)}
+  .box.ai{border-left-color:var(--ai)}     .box.ai .t{color:var(--ai)}
+  .box.ui{border-left-color:var(--ui)}     .box.ui .t{color:var(--ui)}
+  .box.person{border-left-color:var(--muted)}
+
+  .tag{font-size:.66rem;font-weight:700;letter-spacing:.04em;vertical-align:middle;
+    color:var(--cult);background:var(--cult-bg);border-radius:5px;padding:.08rem .38rem;margin-left:.35rem;}
+
+  /* core hub */
+  .box.core{flex-basis:100%;border:1.5px solid var(--core-line);border-left-width:4px;
+    border-left-color:var(--core);background:var(--core-bg);}
+  .box.core .t{color:var(--core-ink);font-size:1.05rem;}
+  .box.core .chip{font-size:.66rem;font-weight:800;letter-spacing:.08em;color:#fff;
+    background:var(--core);border-radius:5px;padding:.1rem .45rem;margin-left:.4rem;vertical-align:middle;}
+  .box.core small{color:var(--core-ink);opacity:.85}
+
+  .subgroup{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:.5rem;background:var(--card);
+    border:1px dashed var(--line);border-radius:10px;padding:.6rem .75rem;}
+  .subgroup .h{flex:1 1 100%;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;}
+  .subgroup code{font-family:var(--mono);font-size:.78rem;background:var(--panel);
+    border:1px solid var(--line);border-radius:6px;padding:.15rem .45rem;color:var(--ink);}
+
+  /* highlighted ② and ① */
+  .box.ai.spot{background:var(--core-bg);border-left-color:var(--core);}
+  .box.ai.spot .t{color:var(--core-ink);}
+  .box.ai.spot small{color:var(--core-ink);opacity:.9}
+  .box.ai.spot-b{background:var(--ai-bg);border-color:var(--ai-line);border-left-color:var(--ai);}
+  .box.ai.spot-b .t{color:var(--ai-ink);}
+
+  /* paired boxes (連携 / 同一人材) */
+  .pair{flex:1 1 340px;display:flex;align-items:stretch;gap:.55rem;
+    border:1px solid var(--line);border-radius:10px;padding:.5rem;min-width:290px;}
+  .pair.linked{background:var(--ui-bg);}
+  .pair.same{background:var(--ai-bg);border-color:var(--ai-line);}
+  .pair .box{flex:1 1 0;box-shadow:none;min-width:0;}
+  .pair .link{flex:none;align-self:center;font-size:.68rem;font-weight:700;color:var(--muted);text-align:center;line-height:1.15;}
+  .pair.linked .link span{color:var(--ui);}
+  .pair.same .link span{color:var(--ai);}
+  .pair .link span{display:block;font-size:1.15rem;}
+
+  /* connectors */
+  .connector{display:flex;justify-content:center;align-items:center;height:30px;position:relative;}
+  .connector::before{content:"";width:2px;height:100%;background:var(--hair);}
+  .connector::after{content:"";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+    border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--hair);}
+  .connector .lbl{position:absolute;left:50%;top:50%;transform:translate(14px,-50%);
+    font-size:.72rem;color:var(--muted);white-space:nowrap;background:var(--bg);padding:0 .3rem;}
+
+  /* spotlight flows */
+  .spotlight{margin-top:1.5rem;background:var(--core-bg);border:1px solid var(--core-line);
+    border-radius:var(--radius);padding:1.05rem 1.15rem 1.2rem;}
+  .spotlight.skill{ --core:var(--ai); --core-bg:var(--ai-bg); --core-line:var(--ai-line); --core-ink:var(--ai-ink); }
+  .spotlight h2{margin:.1rem 0 .2rem;font-size:1.1rem;color:var(--core-ink);letter-spacing:-.01em;
+    display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .spotlight h2 .loop{font-size:.68rem;font-weight:800;letter-spacing:.05em;color:#fff;
+    background:var(--core);border-radius:6px;padding:.12rem .5rem;}
+  .spotlight .sub{color:var(--core-ink);opacity:.82;font-size:.86rem;margin:0 0 .9rem;}
+  .flowline{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.5rem;align-items:stretch;counter-reset:s;}
+  .flowline li.step{flex:1 1 200px;min-width:180px;background:var(--card);border:1px solid var(--core-line);
+    border-radius:9px;padding:.6rem .72rem .68rem;font-size:.85rem;}
+  .flowline li.step::before{counter-increment:s;content:counter(s);font-family:var(--mono);font-weight:700;
+    font-size:.72rem;color:#fff;background:var(--core);width:1.3rem;height:1.3rem;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;margin-bottom:.32rem;}
+  .flowline li.step b{color:var(--core-ink)}
+  .flowline li.step code{font-family:var(--mono);font-size:.76em;}
+  .flowline .arrow{flex:none;align-self:center;color:var(--core);font-size:1.15rem;padding:0 .05rem;}
+  .flowline .arrow.loopback{transform:scaleX(1);font-weight:700;}
+
+  footer{margin-top:1.5rem;border-top:1px solid var(--line);padding-top:1rem;
+    color:var(--muted);font-size:.8rem;}
+  footer ul{margin:.4rem 0 0;padding-left:1.1rem;}
+  footer li{margin:.15rem 0;}
+  footer code{font-family:var(--mono);font-size:.78em;}
+  .kbd{font-family:var(--mono);font-size:.82em;background:var(--panel);border:1px solid var(--line);
+    border-radius:5px;padding:.05rem .35rem;}
+
+  @media (max-width:640px){
+    .box{flex-basis:100%;} .pair{flex-wrap:wrap;}
+    .pair .link{flex-basis:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="eyebrow">SODAT — 農業タスク動的マッチング基盤</div>
+    <h1>システムアーキテクチャ</h1>
+    <p class="lede">標準化タスクを中核に、栽培状況の把握から「次に必要なタスク」を自動生成し、各画面へ届ける。作業者＝応募者は同一人材で、記録した作業がスキルとなりマッチングに還元される。</p>
+    <ul class="legend">
+      <li><span class="dot a"></span> 栽培状況 → 次に必要なタスク</li>
+      <li><span class="dot b"></span> 実績 → スキル → マッチング反映（ループ）</li>
+      <li><span class="dot c"></span> 求人 → マッチング</li>
+    </ul>
+  </header>
+
+  <div class="strata">
+
+    <!-- 01 現場・データ源 -->
+    <section class="layer">
+      <div class="layer-label"><span class="ln">01</span> 現場・データ源</div>
+      <div class="boxes">
+        <div class="box cult">
+          <span class="t">栽培実証システム / センサ群</span>
+          <small>Raspberry Pi 5・温湿度・照度・EC・気圧・カメラ</small>
+        </div>
+        <div class="box cult">
+          <span class="t">栽培環境ダッシュボード<span class="tag">既存</span></span>
+          <small>栽培状況の可視化（現行システム）</small>
+        </div>
+        <div class="box person">
+          <span class="t">作業者（＝応募者）</span>
+          <small>実施した作業をその場で記録。記録がスキルとして蓄積される。</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="connector"><span class="lbl">観測・作業実績を追記</span></div>
+
+    <!-- 02 データ基盤 -->
+    <section class="layer">
+      <div class="layer-label"><span class="ln">02</span> 共通データ基盤 — タスク中心・イベントログ</div>
+      <div class="boxes">
+        <div class="box core">
+          <span class="t">標準作業辞書 <code style="font-family:var(--mono);font-size:.85em">task_types</code><span class="chip">中核</span></span>
+          <small>作目 × 工程 × タスク × 適性 ／ 危険区分・必須資格・標準作業時間。全事実がこのタスク語彙で分類される。</small>
+        </div>
+        <div class="subgroup">
+          <span class="h">事実ストリーム（追記のみ・2時刻）</span>
+          <code>work_records</code><code>cultivation_observations</code><code>worker_availability</code><code>worker_profile_events</code><code>task_requests</code><code>match_results</code>
+        </div>
+        <div class="subgroup">
+          <span class="h">派生ビュー（再計算可能）</span>
+          <code>worker_skills</code><code>task_proposals</code>
+        </div>
+      </div>
+    </section>
+
+    <div class="connector"><span class="lbl">ログを読む → 計算 → 派生を書く</span></div>
+
+    <!-- 03 AI Engine -->
+    <section class="layer">
+      <div class="layer-label"><span class="ln">03</span> AI Engine — タスクを軸に</div>
+      <div class="boxes">
+        <div class="box ai spot-b">
+          <span class="t">① スキル導出</span>
+          <small>作業実績（<code style="font-family:var(--mono);font-size:.85em">work_records</code>）を作目×タスク別に集計 → 習熟度 → スキル認定（<code style="font-family:var(--mono);font-size:.85em">worker_skills</code>）</small>
+        </div>
+        <div class="box ai spot">
+          <span class="t">② タスク提案 ＝「次に必要なタスク」</span>
+          <small>栽培状況 × 標準作業辞書 → 次タスク・タイミング・工数・必要人数</small>
+        </div>
+        <div class="box ai">
+          <span class="t">③ マッチング</span>
+          <small>タスク需要 × <b>スキル</b>（①の成果）× 資格 × 対応可能時間。◎は base で束ね。</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="connector"><span class="lbl">各画面へ提示・配信／オファー</span></div>
+
+    <!-- 04 UI 層 -->
+    <section class="layer">
+      <div class="layer-label"><span class="ln">04</span> UI 層</div>
+      <div class="boxes">
+        <div class="pair linked">
+          <div class="box ui">
+            <span class="t">管理者用ダッシュボード</span>
+            <small>次に必要なタスク・求人作成・マッチング結果</small>
+          </div>
+          <div class="link"><span>⟷</span>連携</div>
+          <div class="box cult">
+            <span class="t">栽培環境ダッシュボード</span>
+            <small>栽培状況</small>
+          </div>
+        </div>
+        <div class="pair same">
+          <div class="box ui">
+            <span class="t">作業者用UI</span>
+            <small>作業を記録 → スキルが育つ</small>
+          </div>
+          <div class="link"><span>＝</span>同一人材</div>
+          <div class="box ui">
+            <span class="t">応募者用UI</span>
+            <small>育ったスキルでオファー受信・応答</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Flow 1: 次に必要なタスク -->
+  <section class="spotlight">
+    <h2>「次に必要なタスク」の自動提示フロー</h2>
+    <p class="sub">栽培状況の把握から、双方のダッシュボード（管理者用・栽培環境）へ自動で提示。作業者にも同じタスクが届く。</p>
+    <ol class="flowline">
+      <li class="step"><b>栽培状況を把握</b><br>センサ観測・観察を <code>cultivation_observations</code> に追記</li>
+      <li class="arrow">→</li>
+      <li class="step"><b>② が次タスクを生成</b><br>標準作業辞書と突き合わせ、工数・必要人数つきで算出</li>
+      <li class="arrow">→</li>
+      <li class="step"><b>双方のダッシュボードに提示</b><br>管理者用 ＋ 栽培環境（連携）の両方に表示</li>
+      <li class="arrow">→</li>
+      <li class="step"><b>作業者にも配信</b><br>作業者用UIに次タスクを提示。必要なら求人へ</li>
+    </ol>
+  </section>
+
+  <!-- Flow 2: 実績→スキル→マッチング ループ -->
+  <section class="spotlight skill">
+    <h2>実績がスキルになり、マッチングに効く <span class="loop">↺ フィードバックループ</span></h2>
+    <p class="sub">作業者＝応募者は同一人材。作業者として記録した実績が習熟度→スキルとなり、応募者としてのマッチングを押し上げ、良いオファーが本人に還元される。</p>
+    <ol class="flowline">
+      <li class="step"><b>作業者として作業を記録</b><br>実施作業を <code>work_records</code> に追記（TPOCast代替）</li>
+      <li class="arrow">→</li>
+      <li class="step"><b>① が習熟度→スキル認定</b><br>作目×タスク別に集計 → <code>worker_skills</code>。根拠の実績が辿れる</li>
+      <li class="arrow">→</li>
+      <li class="step"><b>③ マッチングがスキル参照</b><br>同じタスク語彙で照合 → 適合スコアが上がる</li>
+      <li class="arrow loopback">↺</li>
+      <li class="step"><b>応募者として良いオファー</b><br>同一人材に還元。働くほどマッチングが強くなる好循環</li>
+    </ol>
+  </section>
+
+  <footer>
+    <strong>凡例・補足</strong>
+    <ul>
+      <li><b>作業者＝応募者</b>: 同一の登録人材の2つの画面。作業者として貯めた実績が、応募者としてのスキル・マッチングに直結する。</li>
+      <li><span class="tag" style="margin:0">既存</span> は現行の栽培環境ダッシュボード。将来、管理者用ダッシュボードと連携し栽培状況を統合表示する。</li>
+      <li>内部モジュール間は直接 API を持たず、すべて共通データ基盤を介して連携（API は外部境界のみ）。</li>
+      <li>現段階のデータはダミー（<code>fixtures.json</code>）。TPOCast 連携は後日で、当面は作業者用UIが <code>work_records</code> を記録する。</li>
+    </ul>
+  </footer>
+</div>
+</body>
+</html>
