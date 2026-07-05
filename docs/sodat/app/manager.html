@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SODAT 農園管理者用</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./common.css">
+</head>
+<body>
+<header class="app">
+  <h1>SODAT</h1><span class="role">農園管理者用</span>
+  <nav><a href="./">ホーム</a><a href="./applicant">応募者</a><a href="./worker">作業者</a></nav>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <label class="small muted">農園</label>
+        <select id="farmSel"></select>
+      </div>
+      <span id="farmMeta" class="small muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>① 次に必要なタスク提案 <span class="small muted">（栽培状況 × 標準作業辞書）</span></h2>
+    <div id="proposals" class="grid cols-2"></div>
+  </div>
+
+  <div class="card">
+    <h2>② 人材確保リクエスト</h2>
+    <p class="small muted">求人ごとに「候補を見る」を押すと、タスクを軸にマッチング候補を算出します。</p>
+    <table id="reqTable"><thead><tr>
+      <th>タスク</th><th>作目</th><th>適性</th><th>必要人数</th><th>時期</th><th></th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card" id="matchCard" style="display:none">
+    <h2>マッチング候補 <span id="matchFor" class="small muted"></span></h2>
+    <div id="matchExplain" class="hint" style="margin-bottom:.7rem"></div>
+    <table id="matchTable"><thead><tr>
+      <th>#</th><th>応募者</th><th>エリア</th><th>完全一致</th><th>束ね加点</th><th>資格</th><th>空き</th><th>スコア</th>
+    </tr></thead><tbody></tbody></table>
+    <h3 style="margin-top:.9rem">対象外（理由付き）</h3>
+    <div id="rejected" class="kv"></div>
+  </div>
+</div>
+
+<script src="./data.js"></script>
+<script src="./matcher.js"></script>
+<script>
+const cropLabel = {veg:'野菜',fruit:'果樹',tea:'茶'};
+function cropBadge(c){return `<span class="badge crop-${c}">${cropLabel[c]||c}</span>`;}
+function apt(a){return `<span class="apt apt-${a}">${a}</span>`;}
+function fmtDate(s){const d=new Date(s);return `${d.getMonth()+1}/${d.getDate()}`;}
+
+let farmId;
+async function boot(){
+  await SODAT.load();
+  const sel=document.getElementById('farmSel');
+  SODAT.db.farms.forEach(f=>{const o=document.createElement('option');o.value=f.farm_id;o.textContent=f.name;sel.appendChild(o);});
+  sel.onchange=()=>{farmId=sel.value;render();};
+  farmId=SODAT.db.farms[0].farm_id; render();
+}
+function render(){
+  const f=SODAT.farm(farmId);
+  document.getElementById('farmMeta').textContent=`${cropLabel[f.crop]} ／ ${f.area}`;
+  // proposals
+  const props=Matcher.proposalsForFarm(farmId);
+  document.getElementById('proposals').innerHTML = props.length? props.map(p=>`
+    <div class="card" style="margin:0">
+      <div class="row" style="justify-content:space-between">
+        <b>${p.task.task_name}</b> ${apt(p.aptitude)}
+      </div>
+      <div class="small muted">${p.note}</div>
+      <div class="small">${cropBadge(p.task.crop)} <span class="pill">${p.task.task_type_id}</span></div>
+    </div>`).join('') : '<p class="muted small">この農園の観測データからの提案はありません。</p>';
+  // requests
+  const tb=document.querySelector('#reqTable tbody'); tb.innerHTML='';
+  SODAT.requestsForFarm(farmId).forEach(r=>{
+    const t=SODAT.task(r.task_type_id);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${t.task_name}</b><div class="small muted">${t.task_type_id}</div></td>
+      <td>${cropBadge(t.crop)}</td><td>${apt(t.spot_aptitude)}</td>
+      <td>${r.headcount}名</td><td>${fmtDate(r.timing_from)}</td>
+      <td><button class="ghost" data-r="${r.request_id}">候補を見る</button></td>`;
+    tr.querySelector('button').onclick=()=>showMatch(r.request_id);
+    tb.appendChild(tr);
+  });
+  document.getElementById('matchCard').style.display='none';
+}
+function showMatch(rid){
+  const req=SODAT.allRequests().find(r=>r.request_id===rid);
+  const m=Matcher.match(req);
+  document.getElementById('matchCard').style.display='';
+  document.getElementById('matchFor').textContent=`— ${m.task.task_name}（${m.task.task_type_id}） ${m.task.spot_aptitude}`;
+  document.getElementById('matchExplain').innerHTML =
+    m.bundle
+     ? `適性 <b>◎</b> のため <b>base「${m.task.base}」で束ね</b>、他作目の同ベース実績も加点します（軽作業の技能移転）。`+
+       (m.requiredQual?` 必須資格: <b>${m.requiredQual}</b>。`:'')
+     : `適性 <b>${m.task.spot_aptitude}</b>（専門寄り）のため <b>完全一致スキルのみ</b>を候補にします。`+
+       (m.requiredQual?` 必須資格: <b>${m.requiredQual}</b>。`:'');
+  const tb=document.querySelector('#matchTable tbody'); tb.innerHTML='';
+  const max=Math.max(1,...m.eligible.map(e=>e.score));
+  m.eligible.forEach((e,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td>
+      <td><b>${e.worker.name}</b> <span class="small muted">${e.worker.worker_id}</span></td>
+      <td>${e.areaMatch?'<span class="tag-ok">'+e.worker.area+' ✓</span>':'<span class="muted">'+e.worker.area+'</span>'}</td>
+      <td>${e.exact}</td>
+      <td>${e.bundleBonus?('+'+e.bundleBonus):'—'}</td>
+      <td>${e.requiredQual?(e.qualPass?'<span class="tag-ok">有 ✓</span>':'<span class="tag-no">無</span>'):'<span class="muted">—</span>'}</td>
+      <td>${e.avail?'<span class="tag-ok">○</span>':'<span class="muted">×</span>'}</td>
+      <td><div class="row"><span class="score">${e.score}</span><div class="bar" style="flex:1"><i style="width:${Math.round(e.score/max*100)}%"></i></div></div></td>`;
+    tb.appendChild(tr);
+  });
+  if(!m.eligible.length){tb.innerHTML='<tr><td colspan="8" class="muted">条件を満たす候補がいません。</td></tr>';}
+  document.getElementById('rejected').innerHTML =
+    m.rejected.map(r=>`<span class="pill">${r.worker.name} <span class="muted">— ${r.reason}</span></span>`).join('');
+}
+boot();
+</script>
+</body>
+</html>
