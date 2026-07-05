@@ -95,12 +95,17 @@ function showMatch(rid){
   const m=Matcher.match(req);
   document.getElementById('matchCard').style.display='';
   document.getElementById('matchFor').textContent=`— ${m.task.task_name}（${m.task.task_type_id}） ${m.task.spot_aptitude}`;
+  const dangerLabel={machine:'農業機械',height:'高所',anoxia:'酸欠',pesticide:'農薬散布',livestock:'家畜'};
+  const qualLabel={'license.tractor':'トラクター免許','cert.pesticide':'農薬取扱'};
+  const dangerNote = m.task.danger_category
+    ? ` <span class="tag-no">⚠ 危険作業区分: ${dangerLabel[m.task.danger_category]||m.task.danger_category}</span>（適性の根拠: ${m.task.aptitude_basis}）`
+    : ` <span class="muted small">（適性の根拠: ${m.task.aptitude_basis}）</span>`;
+  const qualNote = m.requiredQual ? ` 必須資格: <b>${qualLabel[m.requiredQual]||m.requiredQual}</b>。` : '';
   document.getElementById('matchExplain').innerHTML =
-    m.bundle
-     ? `適性 <b>◎</b> のため <b>base「${m.task.base}」で束ね</b>、他作目の同ベース実績も加点します（軽作業の技能移転）。`+
-       (m.requiredQual?` 必須資格: <b>${m.requiredQual}</b>。`:'')
-     : `適性 <b>${m.task.spot_aptitude}</b>（専門寄り）のため <b>完全一致スキルのみ</b>を候補にします。`+
-       (m.requiredQual?` 必須資格: <b>${m.requiredQual}</b>。`:'');
+    (m.bundle
+     ? `適性 <b>◎</b> のため <b>base「${m.task.base}」で束ね</b>、他作目の同ベース実績も加点します（軽作業の技能移転）。`
+     : `適性 <b>${m.task.spot_aptitude}</b>（専門寄り）のため <b>完全一致スキルのみ</b>を候補にします。`)
+    + qualNote + dangerNote;
   const tb=document.querySelector('#matchTable tbody'); tb.innerHTML='';
   const max=Math.max(1,...m.eligible.map(e=>e.score));
   m.eligible.forEach((e,i)=>{

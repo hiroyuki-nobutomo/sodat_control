@@ -28,6 +28,12 @@ create table task_types (
   process             text[] not null default '{}',     -- 工程（複数値可。例: 圃場巡回は2工程に出現）
   spot_aptitude       text not null check (spot_aptitude in ('◎','○','△','−')),
   qualification_note  text not null default '',
+  -- 適性の来歴・客観接地（docs/sodat/aptitude-rubric.md）
+  aptitude_basis      text not null default 'skill'
+                        check (aptitude_basis in ('danger','qualification','skill','experience','training','routine')),
+  danger_category     text not null default ''
+                        check (danger_category in ('','machine','height','anoxia','pesticide','livestock')),
+  required_qual       text not null default '',          -- 必須資格（マッチングの資格ゲート）
   dictionary_version  text not null default 'r7-2026-03',
   check (task_type_id = base || '.' || crop)
 );

@@ -18,7 +18,8 @@ const Matcher = (() => {
     const t = SODAT.task(req.task_type_id);
     const farm = SODAT.farm(req.farm_id);
     const bundle = t.spot_aptitude === '◎';     // ◎ のみ束ねる
-    const requiredQual = SODAT.db.qual_rules[t.base] || null;
+    // 資格ゲートは task_types の required_qual（危険作業区分に接地）を優先
+    const requiredQual = t.required_qual || SODAT.db.qual_rules[t.base] || null;
 
     const rows = SODAT.db.workers.map(w => {
       const exact = SODAT.skillOf(w, req.task_type_id);

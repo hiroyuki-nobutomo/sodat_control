@@ -17,14 +17,18 @@ create temporary table _seed_staging (
   crop               text,
   process            text,   -- ';' 区切りの生文字列
   spot_aptitude      text,
-  qualification_note text
+  qualification_note text,
+  aptitude_basis     text,
+  danger_category    text,
+  required_qual      text
 ) on commit drop;
 
 -- CSV を staging へ (パスは実行ディレクトリからの相対)
 \copy _seed_staging from '../task_types_seed.csv' with (format csv, header true)
 
 insert into task_types
-  (task_type_id, base, task_name, crop, process, spot_aptitude, qualification_note)
+  (task_type_id, base, task_name, crop, process, spot_aptitude, qualification_note,
+   aptitude_basis, danger_category, required_qual)
 select
   task_type_id,
   base,
@@ -33,7 +37,10 @@ select
   case when coalesce(process,'') = '' then '{}'::text[]
        else string_to_array(process, ';') end,
   spot_aptitude,
-  coalesce(qualification_note,'')
+  coalesce(qualification_note,''),
+  coalesce(nullif(aptitude_basis,''),'skill'),
+  coalesce(danger_category,''),
+  coalesce(required_qual,'')
 from _seed_staging
 on conflict (task_type_id) do update set
   base               = excluded.base,
@@ -41,7 +48,10 @@ on conflict (task_type_id) do update set
   crop               = excluded.crop,
   process            = excluded.process,
   spot_aptitude      = excluded.spot_aptitude,
-  qualification_note = excluded.qualification_note;
+  qualification_note = excluded.qualification_note,
+  aptitude_basis     = excluded.aptitude_basis,
+  danger_category    = excluded.danger_category,
+  required_qual      = excluded.required_qual;
 
 -- 投入確認
 do $$

@@ -15,7 +15,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "mizohori.veg",
@@ -26,7 +29,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "指示が明確なら可能"
+   "qualification_note": "指示が明確なら可能",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "koun.veg",
@@ -37,7 +43,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor"
   },
   {
    "task_type_id": "hiryo_sanpu.veg",
@@ -48,7 +57,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "慎重な作業が必要"
+   "qualification_note": "慎重な作業が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "unetate_mulcher.veg",
@@ -59,7 +71,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor"
   },
   {
    "task_type_id": "mulch_hari.veg",
@@ -70,7 +85,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可"
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kansui_souchi.veg",
@@ -81,7 +99,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "設備理解が必要"
+   "qualification_note": "設備理解が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "mainte.veg",
@@ -92,7 +113,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "josozai_sanpu.veg",
@@ -103,7 +127,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "noyaku_sanpu.veg",
@@ -114,7 +141,10 @@
     "圃場準備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "ikubyo_kansui.veg",
@@ -125,7 +155,10 @@
     "播種・育苗"
    ],
    "spot_aptitude": "○",
-   "qualification_note": "初心者可（丁寧さ必要）"
+   "qualification_note": "初心者可（丁寧さ必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "hachimizu.veg",
@@ -136,7 +169,10 @@
     "播種・育苗"
    ],
    "spot_aptitude": "○",
-   "qualification_note": "初心者可"
+   "qualification_note": "初心者可",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "teishoku.veg",
@@ -147,7 +183,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（ニーズ高）"
+   "qualification_note": "初心者可（ニーズ高）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kansui.veg",
@@ -158,7 +197,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "○",
-   "qualification_note": "初心者可（丁寧な説明が必要）"
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "yuin.veg",
@@ -169,7 +211,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "mekaki.veg",
@@ -180,7 +225,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tekiyo.veg",
@@ -191,7 +239,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "hormone.veg",
@@ -202,7 +253,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tsuihi.veg",
@@ -213,7 +267,10 @@
     "定植〜管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shukaku.veg",
@@ -224,7 +281,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（最需要業務）"
+   "qualification_note": "初心者可（最需要業務）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "senbetsu.veg",
@@ -235,7 +295,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（簡単なもの）"
+   "qualification_note": "初心者可（簡単なもの）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "label_hakozume.veg",
@@ -246,7 +309,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（軽作業）"
+   "qualification_note": "初心者可（軽作業）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shukka.veg",
@@ -257,7 +323,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "enchi_shuzen.fruit",
@@ -268,7 +337,10 @@
     "準備・基盤整備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "taihi.fruit",
@@ -279,7 +351,10 @@
     "準備・基盤整備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "力仕事だが、初心者可"
+   "qualification_note": "力仕事だが、初心者可",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "hiryo_sanpu.fruit",
@@ -290,7 +365,10 @@
     "準備・基盤整備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "慎重な作業が必要"
+   "qualification_note": "慎重な作業が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "mulch_setchi.fruit",
@@ -301,7 +379,10 @@
     "準備・基盤整備"
    ],
    "spot_aptitude": "○",
-   "qualification_note": "初心者可（丁寧な説明が必要）"
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "sentei.fruit",
@@ -312,7 +393,10 @@
     "植栽管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kaishoku.fruit",
@@ -323,7 +407,10 @@
     "植栽管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shinshoku.fruit",
@@ -334,7 +421,10 @@
     "植栽管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "丁寧な説明必要"
+   "qualification_note": "丁寧な説明必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "naeki_kanri.fruit",
@@ -345,7 +435,10 @@
     "植栽管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "丁寧な説明必要"
+   "qualification_note": "丁寧な説明必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kusakari.fruit",
@@ -356,7 +449,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "刈払機操作は要経験"
+   "qualification_note": "刈払機操作は要経験",
+   "aptitude_basis": "experience",
+   "danger_category": "machine",
+   "required_qual": ""
   },
   {
    "task_type_id": "chukou.fruit",
@@ -367,7 +463,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tsuihi.fruit",
@@ -378,7 +477,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "丁寧な説明が必要"
+   "qualification_note": "丁寧な説明が必要",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "noyaku_sanpu.fruit",
@@ -389,7 +491,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "kongo_sanpu.fruit",
@@ -400,7 +505,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "josozai_sanpu.fruit",
@@ -411,7 +519,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "kansui.fruit",
@@ -422,7 +533,10 @@
     "生育管理"
    ],
    "spot_aptitude": "○",
-   "qualification_note": "初心者可（丁寧な説明が必要）"
+   "qualification_note": "初心者可（丁寧な説明が必要）",
+   "aptitude_basis": "training",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "ekihi.fruit",
@@ -433,7 +547,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tekka.fruit",
@@ -444,7 +561,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "edatsuri.fruit",
@@ -455,7 +575,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "fukurokake.fruit",
@@ -466,7 +589,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "junkai.fruit",
@@ -477,7 +603,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shukaku.fruit",
@@ -488,7 +617,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（最需要業務）"
+   "qualification_note": "初心者可（最需要業務）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "senbetsu.fruit",
@@ -499,7 +631,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（簡単なもの）"
+   "qualification_note": "初心者可（簡単なもの）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "sonota_keisagyo.fruit",
@@ -510,7 +645,10 @@
     "収穫〜出荷"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可"
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "seishi.tea",
@@ -521,7 +659,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "daigiri.tea",
@@ -532,7 +673,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shinko.tea",
@@ -543,7 +687,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "machine",
+   "required_qual": "license.tractor"
   },
   {
    "task_type_id": "hiryo_sanpu.tea",
@@ -554,7 +701,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shikikusa.tea",
@@ -565,7 +715,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "naeue.tea",
@@ -576,7 +729,10 @@
     "基盤整備"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "chukou.tea",
@@ -587,7 +743,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "ekihi.tea",
@@ -598,7 +757,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kusatori.tea",
@@ -609,7 +771,10 @@
     "生育管理"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可"
+   "qualification_note": "初心者可",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "noyaku_sanpu.tea",
@@ -620,7 +785,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   },
   {
    "task_type_id": "hifuku.tea",
@@ -631,7 +799,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tsuyuharai.tea",
@@ -642,7 +813,10 @@
     "生育管理"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "半経験者向け"
+   "qualification_note": "半経験者向け",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "junkai.tea",
@@ -653,7 +827,10 @@
     "生育管理"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "tekisai.tea",
@@ -664,7 +841,10 @@
     "摘採・加工"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "aracha_seizo.tea",
@@ -675,7 +855,10 @@
     "摘採・加工"
    ],
    "spot_aptitude": "△",
-   "qualification_note": "工場補助なら可"
+   "qualification_note": "工場補助なら可",
+   "aptitude_basis": "experience",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "shiagecha_seizo.tea",
@@ -686,7 +869,10 @@
     "摘採・加工"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "kojo_sagyo.tea",
@@ -697,7 +883,10 @@
     "補助・施設"
    ],
    "spot_aptitude": "◎",
-   "qualification_note": "初心者可（軽作業多い）"
+   "qualification_note": "初心者可（軽作業多い）",
+   "aptitude_basis": "routine",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "boso_fan.tea",
@@ -708,7 +897,10 @@
     "補助・施設"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "skill",
+   "danger_category": "",
+   "required_qual": ""
   },
   {
    "task_type_id": "josozai_sanpu.tea",
@@ -719,7 +911,10 @@
     "補助・施設"
    ],
    "spot_aptitude": "−",
-   "qualification_note": ""
+   "qualification_note": "",
+   "aptitude_basis": "danger",
+   "danger_category": "pesticide",
+   "required_qual": "cert.pesticide"
   }
  ],
  "farms": [
