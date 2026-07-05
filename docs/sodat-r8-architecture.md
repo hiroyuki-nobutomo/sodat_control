@@ -199,9 +199,19 @@ flowchart TB
 
 | テーブル | 内容 | 主なカラム（案） |
 |---|---|---|
-| `task_types` | 標準化タスクの型定義 | task_type_id, name, crop, applicable_growth_stage, required_qualifications, standard_effort, headcount_basis, granularity_note, **dictionary_version** |
+| `task_types` | 標準化タスクの型定義 | task_type_id(`base.crop`), base, task_name, crop, process, spot_aptitude, qualification_note, **dictionary_version** |
 
 タスク型は全システムの共有キー。版管理し、事実は分類時の `dictionary_version` を保持する。
+
+**ID 規約**: `task_type_id` は例外なく `<base>.<crop>` 形式（全タスクに作目サフィックス）。
+作目で技能・適性が異なるタスク（定植 vs 新植等）を取り違えないため、同一性は常に作目まで含む。
+作目情報を ID から失わないので可逆で安全。
+
+**束ねはマッチング時のみ**: 「作目をまたいで技能移転してよいか」は事実でなく仮説。辞書に焼き込まず、
+マッチング層で判定・検証する（§6③, 4.3.2）。束ねキーはベース名、目安は「ベース一致かつ適性`◎`」。
+追加変数（skill_family 等）は持たない。
+
+初期シード（R7報告書 図2-2-1〜3 由来、野菜23/果樹23/茶19=65タスク）: `docs/sodat/task_types_seed.csv`。
 
 ### 5.1 第1層: 事実ストリーム（追記専用）
 
@@ -252,6 +262,9 @@ flowchart TB
 `task_requests`（需要: task_type_id）を `worker_skills`（供給: task_type_id）と
 **`task_type_id` で結合**し、`worker_qualifications` / `worker_availability` で絞り込み、
 スコアリングして `match_results` を書き出す。需給が同じタスク語彙のため、照合は自然結合になる。
+
+既定は `task_type_id` 完全一致（作目まで一致）。作目非依存タスク（適性`◎`の軽作業等）は、
+**ベース名で束ねて**同一ベースの他作目実績を割引係数付きで加点する（束ねはこの層の判断で、辞書は不変）。
 
 **標準作業辞書**は ② の参照入力であると同時に、4.3.2 の「タスク定義の粒度・妥当性」検証の対象でもある。
 
