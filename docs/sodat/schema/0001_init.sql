@@ -34,6 +34,9 @@ create table task_types (
   danger_category     text not null default ''
                         check (danger_category in ('','machine','height','anoxia','pesticide','livestock')),
   required_qual       text not null default '',          -- 必須資格（マッチングの資格ゲート）
+  -- 標準作業時間（②タスク提案の工数・必要人数の客観化）
+  std_work_time_min   numeric,                            -- 分/10a・1回当たりの目安。NULL=未接地
+  std_work_time_src   text not null default '',           -- 典拠（e-Stat 品目別経営統計 等）
   dictionary_version  text not null default 'r7-2026-03',
   check (task_type_id = base || '.' || crop)
 );

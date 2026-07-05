@@ -54,7 +54,12 @@ const Matcher = (() => {
   }
 
   // ② タスク提案: cultivation_observations × proposal_rules
+  // 工数・必要人数を標準作業時間(std_work_time_min/10a) × 面積 で客観化。
+  const WORKDAY_MIN = 360;   // 1人1日の実作業 6h
+  const WINDOW_DAYS = 3;     // 提案タスクの想定完了日数
   function proposalsForFarm(fid) {
+    const farm = SODAT.farm(fid);
+    const area10a = (farm.plot_area_a || 10) / 10;
     return SODAT.db.cultivation_observations
       .filter(o => o.farm_id === fid)
       .map(o => {
@@ -62,9 +67,19 @@ const Matcher = (() => {
         const ttid = SODAT.db.proposal_rules[key];
         if (!ttid) return null;
         const t = SODAT.task(ttid);
-        return { observation: o, task: t,
-                 aptitude: t.spot_aptitude,
-                 note: `${o.growth_stage} を検知 → ${t.task_name} を提案` };
+        let effortMin = null, headcount = null, grounded = false;
+        if (t.std_work_time_min) {
+          effortMin = t.std_work_time_min * area10a;          // 総工数(分)
+          headcount = Math.max(1, Math.ceil(effortMin / (WORKDAY_MIN * WINDOW_DAYS)));
+          grounded = true;
+        }
+        return {
+          observation: o, task: t, aptitude: t.spot_aptitude,
+          note: `${o.growth_stage} を検知 → ${t.task_name} を提案`,
+          effortHours: effortMin != null ? Math.round(effortMin / 60 * 10) / 10 : null,
+          headcount, windowDays: WINDOW_DAYS, areaA: farm.plot_area_a || null,
+          grounded, src: t.std_work_time_src || null
+        };
       })
       .filter(Boolean);
   }

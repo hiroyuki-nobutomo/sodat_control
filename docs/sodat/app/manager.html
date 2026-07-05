@@ -74,7 +74,15 @@ function render(){
         <b>${p.task.task_name}</b> ${apt(p.aptitude)}
       </div>
       <div class="small muted">${p.note}</div>
-      <div class="small">${cropBadge(p.task.crop)} <span class="pill">${p.task.task_type_id}</span></div>
+      <div class="row small" style="margin:.35rem 0">
+        ${p.grounded
+          ? `<span class="pill">必要人数 <b>${p.headcount}名</b></span>
+             <span class="pill">想定工数 <b>${p.effortHours}h</b></span>
+             <span class="pill muted">${p.areaA}a・${p.windowDays}日想定</span>`
+          : `<span class="pill muted">必要人数: 未算出（標準作業時間 未接地）</span>`}
+      </div>
+      <div class="small">${cropBadge(p.task.crop)} <span class="pill">${p.task.task_type_id}</span>
+        ${p.grounded?`<span class="muted small">工数根拠: 標準作業時間×面積（${p.src}）</span>`:''}</div>
     </div>`).join('') : '<p class="muted small">この農園の観測データからの提案はありません。</p>';
   // requests
   const tb=document.querySelector('#reqTable tbody'); tb.innerHTML='';

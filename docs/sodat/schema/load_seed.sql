@@ -20,7 +20,9 @@ create temporary table _seed_staging (
   qualification_note text,
   aptitude_basis     text,
   danger_category    text,
-  required_qual      text
+  required_qual      text,
+  std_work_time_min  text,
+  std_work_time_src  text
 ) on commit drop;
 
 -- CSV を staging へ (パスは実行ディレクトリからの相対)
@@ -28,7 +30,7 @@ create temporary table _seed_staging (
 
 insert into task_types
   (task_type_id, base, task_name, crop, process, spot_aptitude, qualification_note,
-   aptitude_basis, danger_category, required_qual)
+   aptitude_basis, danger_category, required_qual, std_work_time_min, std_work_time_src)
 select
   task_type_id,
   base,
@@ -40,7 +42,9 @@ select
   coalesce(qualification_note,''),
   coalesce(nullif(aptitude_basis,''),'skill'),
   coalesce(danger_category,''),
-  coalesce(required_qual,'')
+  coalesce(required_qual,''),
+  nullif(std_work_time_min,'')::numeric,
+  coalesce(std_work_time_src,'')
 from _seed_staging
 on conflict (task_type_id) do update set
   base               = excluded.base,
@@ -51,7 +55,9 @@ on conflict (task_type_id) do update set
   qualification_note = excluded.qualification_note,
   aptitude_basis     = excluded.aptitude_basis,
   danger_category    = excluded.danger_category,
-  required_qual      = excluded.required_qual;
+  required_qual      = excluded.required_qual,
+  std_work_time_min  = excluded.std_work_time_min,
+  std_work_time_src  = excluded.std_work_time_src;
 
 -- 投入確認
 do $$

@@ -18,7 +18,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "mizohori.veg",
@@ -32,7 +34,9 @@
    "qualification_note": "指示が明確なら可能",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "koun.veg",
@@ -46,7 +50,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "machine",
-   "required_qual": "license.tractor"
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "hiryo_sanpu.veg",
@@ -60,7 +66,9 @@
    "qualification_note": "慎重な作業が必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "unetate_mulcher.veg",
@@ -74,7 +82,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "machine",
-   "required_qual": "license.tractor"
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "mulch_hari.veg",
@@ -88,7 +98,9 @@
    "qualification_note": "初心者可",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 220.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kansui_souchi.veg",
@@ -102,7 +114,9 @@
    "qualification_note": "設備理解が必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "mainte.veg",
@@ -116,7 +130,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "josozai_sanpu.veg",
@@ -130,7 +146,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "noyaku_sanpu.veg",
@@ -144,7 +162,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "ikubyo_kansui.veg",
@@ -158,7 +178,9 @@
    "qualification_note": "初心者可（丁寧さ必要）",
    "aptitude_basis": "training",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 80.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "hachimizu.veg",
@@ -172,7 +194,9 @@
    "qualification_note": "初心者可",
    "aptitude_basis": "training",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 60.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "teishoku.veg",
@@ -186,7 +210,9 @@
    "qualification_note": "初心者可（ニーズ高）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kansui.veg",
@@ -200,7 +226,9 @@
    "qualification_note": "初心者可（丁寧な説明が必要）",
    "aptitude_basis": "training",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 90.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "yuin.veg",
@@ -214,7 +242,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 180.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "mekaki.veg",
@@ -228,7 +258,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "tekiyo.veg",
@@ -242,7 +274,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 160.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "hormone.veg",
@@ -256,7 +290,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "tsuihi.veg",
@@ -270,7 +306,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "shukaku.veg",
@@ -284,7 +322,9 @@
    "qualification_note": "初心者可（最需要業務）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 400.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "senbetsu.veg",
@@ -298,7 +338,9 @@
    "qualification_note": "初心者可（簡単なもの）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "label_hakozume.veg",
@@ -312,7 +354,9 @@
    "qualification_note": "初心者可（軽作業）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "shukka.veg",
@@ -326,7 +370,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "enchi_shuzen.fruit",
@@ -340,7 +386,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "taihi.fruit",
@@ -354,7 +402,9 @@
    "qualification_note": "力仕事だが、初心者可",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "hiryo_sanpu.fruit",
@@ -368,7 +418,9 @@
    "qualification_note": "慎重な作業が必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "mulch_setchi.fruit",
@@ -382,7 +434,9 @@
    "qualification_note": "初心者可（丁寧な説明が必要）",
    "aptitude_basis": "training",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "sentei.fruit",
@@ -396,7 +450,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 600.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kaishoku.fruit",
@@ -410,7 +466,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "shinshoku.fruit",
@@ -424,7 +482,9 @@
    "qualification_note": "丁寧な説明必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "naeki_kanri.fruit",
@@ -438,7 +498,9 @@
    "qualification_note": "丁寧な説明必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kusakari.fruit",
@@ -452,7 +514,9 @@
    "qualification_note": "刈払機操作は要経験",
    "aptitude_basis": "experience",
    "danger_category": "machine",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "chukou.fruit",
@@ -466,7 +530,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "tsuihi.fruit",
@@ -480,7 +546,9 @@
    "qualification_note": "丁寧な説明が必要",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "noyaku_sanpu.fruit",
@@ -494,7 +562,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kongo_sanpu.fruit",
@@ -508,7 +578,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "josozai_sanpu.fruit",
@@ -522,7 +594,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "kansui.fruit",
@@ -536,7 +610,9 @@
    "qualification_note": "初心者可（丁寧な説明が必要）",
    "aptitude_basis": "training",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 90.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "ekihi.fruit",
@@ -550,7 +626,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 100.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "tekka.fruit",
@@ -564,7 +642,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 500.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "edatsuri.fruit",
@@ -578,7 +658,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "fukurokake.fruit",
@@ -592,7 +674,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 700.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "junkai.fruit",
@@ -606,7 +690,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "shukaku.fruit",
@@ -620,7 +706,9 @@
    "qualification_note": "初心者可（最需要業務）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 400.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "senbetsu.fruit",
@@ -634,7 +722,9 @@
    "qualification_note": "初心者可（簡単なもの）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "sonota_keisagyo.fruit",
@@ -648,7 +738,9 @@
    "qualification_note": "初心者可",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 120.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "seishi.tea",
@@ -662,7 +754,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "daigiri.tea",
@@ -676,7 +770,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "shinko.tea",
@@ -690,7 +786,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "machine",
-   "required_qual": "license.tractor"
+   "required_qual": "license.tractor",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "hiryo_sanpu.tea",
@@ -704,7 +802,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 110.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "shikikusa.tea",
@@ -718,7 +818,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "naeue.tea",
@@ -732,7 +834,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "chukou.tea",
@@ -746,7 +850,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "ekihi.tea",
@@ -760,7 +866,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 100.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "kusatori.tea",
@@ -774,7 +882,9 @@
    "qualification_note": "初心者可",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 250.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "noyaku_sanpu.tea",
@@ -788,7 +898,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": 150.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "hifuku.tea",
@@ -802,7 +914,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 200.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "tsuyuharai.tea",
@@ -816,7 +930,9 @@
    "qualification_note": "半経験者向け",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "junkai.tea",
@@ -830,7 +946,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "tekisai.tea",
@@ -844,7 +962,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 350.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "aracha_seizo.tea",
@@ -858,7 +978,9 @@
    "qualification_note": "工場補助なら可",
    "aptitude_basis": "experience",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 280.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "shiagecha_seizo.tea",
@@ -872,7 +994,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "kojo_sagyo.tea",
@@ -886,7 +1010,9 @@
    "qualification_note": "初心者可（軽作業多い）",
    "aptitude_basis": "routine",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": 300.0,
+   "std_work_time_src": "estat-repr(暫定)"
   },
   {
    "task_type_id": "boso_fan.tea",
@@ -900,7 +1026,9 @@
    "qualification_note": "",
    "aptitude_basis": "skill",
    "danger_category": "",
-   "required_qual": ""
+   "required_qual": "",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   },
   {
    "task_type_id": "josozai_sanpu.tea",
@@ -914,7 +1042,9 @@
    "qualification_note": "",
    "aptitude_basis": "danger",
    "danger_category": "pesticide",
-   "required_qual": "cert.pesticide"
+   "required_qual": "cert.pesticide",
+   "std_work_time_min": null,
+   "std_work_time_src": ""
   }
  ],
  "farms": [
@@ -922,19 +1052,22 @@
    "farm_id": "F01",
    "name": "みどり野菜農園",
    "crop": "veg",
-   "area": "磐田"
+   "area": "磐田",
+   "plot_area_a": 20
   },
   {
    "farm_id": "F02",
    "name": "遠州みかん園",
    "crop": "fruit",
-   "area": "浜松"
+   "area": "浜松",
+   "plot_area_a": 40
   },
   {
    "farm_id": "F03",
    "name": "牧之原茶園",
    "crop": "tea",
-   "area": "牧之原"
+   "area": "牧之原",
+   "plot_area_a": 60
   }
  ],
  "workers": [
