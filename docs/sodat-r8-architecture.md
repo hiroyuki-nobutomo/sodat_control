@@ -179,14 +179,20 @@ flowchart TB
     WorkerUI -->|書込| Facts
 ```
 
-4 モジュールはすべて共通データ基盤を介して連携し、互いを直接呼ばない。
+全モジュールは共通データ基盤を介して連携し、互いを直接呼ばない。
+
+> **決定（R8プロトタイプ）**: TPOCast 連携は**後回し**。当面は **作業者用 UI** が
+> `work_records` / `cultivation_observations` を直接書き込み、TPOCast の役割を内製 UI が代替する。
+> 設計上は供給元（`source` 列）が変わるだけで中核は不変。将来 TPOCast は同じテーブルへ ingestion する。
+> よって当面のモジュールは **3 UI ＋ AI Engine（マッチング）** をタスク DB 上に構築する。
 
 | モジュール | 基盤から読む | 基盤へ書く | 他モジュール直接連携 |
 |---|---|---|---|
-| **TPOCast 連携** | `task_types` | `work_records`, `cultivation_observations` | なし（外部 API のみ） |
-| **AI Engine** | `task_types`, 事実全般 | `worker_skills`, `task_proposals`, `match_results` | なし |
-| **農家用 UI** | `farmer_dashboard_view`, `task_proposals` | `task_requests` | なし |
-| **応募者用 UI** | `worker_dashboard_view`, `match_results` | `worker_availability`, 応募応答 | なし |
+| **作業者用 UI**（現場作業者） | `task_types` | `work_records`, `cultivation_observations` | なし |
+| **農園管理者用 UI**（農家・募集側） | `farmer_dashboard_view`, `task_proposals`, `match_results` | `task_requests` | なし |
+| **短期バイト応募者用 UI** | `worker_dashboard_view`, `match_results` | `worker_availability`, `worker_profile_events`, 応募応答 | なし |
+| **AI Engine**（マッチング） | `task_types`, 事実全般 | `worker_skills`, `task_proposals`, `match_results` | なし |
+| ~~TPOCast 連携~~（後回し） | — | 将来 `work_records` へ ingestion | 外部 API |
 
 ---
 
