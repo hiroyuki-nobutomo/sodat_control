@@ -23,7 +23,7 @@ const USER_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 // src/sensors/*.py and with KNOWN_SENSORS in docs/index.html (Step 3 checkboxes).
 // (Mock is intentionally excluded — it's for unit tests, not field deployment.)
 const KNOWN_SENSORS = new Set([
-  "BME280", "TDSN7200", "TDSN7300", "IWS660CS", "Camera", "SerialJSON",
+  "BME280", "TDSN7200", "TDSN7300", "IWS660CS", "Camera", "SerialJSON", "STEMMASoil",
 ]);
 
 // Cloud-init user-data snippet. String.raw keeps any future backslash
