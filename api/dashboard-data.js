@@ -14,10 +14,10 @@ export default async function handler(req, res) {
   try {
     const data = await fetchDashboardData();
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    // 15-min fresh + 15-min stale-while-revalidate: Pi uploads every 30 min,
-    // so this keeps the Sheets API call count per Vercel edge region to ~1/15min
-    // regardless of how many viewers are looking at the dashboard.
-    res.setHeader("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900");
+    // 10-min fresh + 10-min stale-while-revalidate: the dashboard auto-refreshes
+    // every 10 min, so align the edge cache to that cadence. Keeps the Sheets API
+    // call count per Vercel edge region to ~1/10min regardless of viewer count.
+    res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=600");
     return res.status(200).json(data);
   } catch (e) {
     // Surface the message but redact things that shouldn't leak through

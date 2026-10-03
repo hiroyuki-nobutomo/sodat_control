@@ -680,6 +680,18 @@
   }
 
   loadData();
+
+  // Auto-refresh: re-fetch every 10 min so a left-open dashboard stays
+  // current without a manual reload. Skip while the tab is hidden (no point
+  // hammering the API in a background tab), and refresh right away when the
+  // tab becomes visible again so returning to it shows fresh data.
+  const AUTO_REFRESH_MS = 10 * 60 * 1000;
+  setInterval(() => {
+    if (document.visibilityState === "visible") loadData();
+  }, AUTO_REFRESH_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") loadData();
+  });
 })();
 </script>
 
