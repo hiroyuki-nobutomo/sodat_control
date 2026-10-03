@@ -143,9 +143,10 @@
   .history { font-size: .92rem; color: var(--ink-soft); }
   .history .placeholder { color: var(--muted); font-style: italic; }
   .history { display: flex; flex-direction: column; gap: .7rem; max-height: 320px; overflow-y: auto; }
-  .hist-field { font-weight: 600; font-size: .82rem; margin: 0 0 .25rem; padding-bottom: .15rem; border-bottom: 1px solid rgba(127,127,127,.25); }
-  .hist-list { list-style: none; margin: 0 0 .2rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+  .hist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
   .hist-list li { display: grid; grid-template-columns: auto auto 1fr auto; gap: .45rem; align-items: baseline; font-size: .82rem; }
+  .hist-list.has-dev li { grid-template-columns: auto auto auto 1fr auto; }
+  .hist-dev { font-weight: 600; white-space: nowrap; color: var(--ink-soft, var(--muted)); }
   .hist-when { color: var(--muted); white-space: nowrap; }
   .hist-task { font-weight: 600; white-space: nowrap; }
   .hist-detail { color: var(--ink-soft, var(--muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -567,22 +568,24 @@
       el.innerHTML = '<p class="placeholder">対象の作業履歴がありません。</p>';
       return;
     }
-    const PER_FIELD = 12;
-    const byField = {};
-    for (const w of rows) (byField[w.field] = byField[w.field] || []).push(w);
-    let html = "";
-    for (const f of Object.keys(byField).sort()) {
-      html += `<div class="hist-group"><div class="hist-field">${esc(f || "—")}</div><ul class="hist-list">`;
-      for (const w of byField[f].slice(0, PER_FIELD)) {
-        const photo = w.photoCount
-          ? `<span class="hist-photo" title="写真 ${w.photoCount} 枚">📷${w.photoCount}</span>` : "<span></span>";
-        html += `<li><span class="hist-when mono">${esc(tsLabel(w.ts))}</span>`
-              + `<span class="hist-task">${esc(w.task || "")}</span>`
-              + `<span class="hist-detail" title="${esc(w.detail || "")}">${esc(w.detail || "")}</span>`
-              + `${photo}</li>`;
-      }
-      html += "</ul></div>";
+    // Single chronological list (newest first; workHistory is already sorted).
+    // Show the 畑名 (device) column only when more than one field is in view —
+    // when a single device is shown (filtered, or only one has data) it's noise.
+    const MAX = 60;
+    const items = rows.slice(0, MAX);
+    const multi = new Set(rows.map((w) => w.field)).size > 1;
+    let html = `<ul class="hist-list${multi ? " has-dev" : ""}">`;
+    for (const w of items) {
+      const dev = multi ? `<span class="hist-dev">${esc(w.field || "")}</span>` : "";
+      const photo = w.photoCount
+        ? `<span class="hist-photo" title="写真 ${w.photoCount} 枚">📷${w.photoCount}</span>` : "<span></span>";
+      html += `<li><span class="hist-when mono">${esc(tsLabel(w.ts))}</span>`
+            + dev
+            + `<span class="hist-task">${esc(w.task || "")}</span>`
+            + `<span class="hist-detail" title="${esc(w.detail || "")}">${esc(w.detail || "")}</span>`
+            + `${photo}</li>`;
     }
+    html += "</ul>";
     el.innerHTML = html;
   }
 
