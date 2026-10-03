@@ -142,6 +142,14 @@
   }
   .history { font-size: .92rem; color: var(--ink-soft); }
   .history .placeholder { color: var(--muted); font-style: italic; }
+  .history { display: flex; flex-direction: column; gap: .7rem; max-height: 320px; overflow-y: auto; }
+  .hist-field { font-weight: 600; font-size: .82rem; margin: 0 0 .25rem; padding-bottom: .15rem; border-bottom: 1px solid rgba(127,127,127,.25); }
+  .hist-list { list-style: none; margin: 0 0 .2rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+  .hist-list li { display: grid; grid-template-columns: auto auto 1fr auto; gap: .45rem; align-items: baseline; font-size: .82rem; }
+  .hist-when { color: var(--muted); white-space: nowrap; }
+  .hist-task { font-weight: 600; white-space: nowrap; }
+  .hist-detail { color: var(--ink-soft, var(--muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-photo { color: var(--muted); white-space: nowrap; font-size: .78rem; }
 
   /* ---------- loading state ---------- */
   .skel { background: #ececea; border-radius: 4px; min-height: 1em; display: inline-block; }
@@ -282,6 +290,9 @@
 
   const $ = (sel) => document.querySelector(sel);
   const status = $("#status");
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   let state = {
     raw: null,           // last /api/dashboard-data response
@@ -537,6 +548,44 @@
   }
 
   // ---------- render orchestration ----------
+  // ---------- work history ----------
+  // Grouped by 畑名 (A01/A02/A03), newest first. Honours the Site and Device
+  // filters (a work record's "device" is its field), but NOT the period
+  // filter — field work is sparse (a few entries a month), so a 7-day window
+  // would usually show nothing. Photos live in Google Photos (not Drive), so
+  // we show a 📷count badge rather than a broken inline thumbnail.
+  function renderHistory(workHistory) {
+    const el = $("#history");
+    if (!el) return;
+    const { site, device } = state.filters;
+    const rows = (workHistory || []).filter((w) => {
+      if (site && w.site !== site) return false;
+      if (device && w.field !== device) return false;
+      return true;
+    });
+    if (!rows.length) {
+      el.innerHTML = '<p class="placeholder">対象の作業履歴がありません。</p>';
+      return;
+    }
+    const PER_FIELD = 12;
+    const byField = {};
+    for (const w of rows) (byField[w.field] = byField[w.field] || []).push(w);
+    let html = "";
+    for (const f of Object.keys(byField).sort()) {
+      html += `<div class="hist-group"><div class="hist-field">${esc(f || "—")}</div><ul class="hist-list">`;
+      for (const w of byField[f].slice(0, PER_FIELD)) {
+        const photo = w.photoCount
+          ? `<span class="hist-photo" title="写真 ${w.photoCount} 枚">📷${w.photoCount}</span>` : "<span></span>";
+        html += `<li><span class="hist-when mono">${esc(tsLabel(w.ts))}</span>`
+              + `<span class="hist-task">${esc(w.task || "")}</span>`
+              + `<span class="hist-detail" title="${esc(w.detail || "")}">${esc(w.detail || "")}</span>`
+              + `${photo}</li>`;
+      }
+      html += "</ul></div>";
+    }
+    el.innerHTML = html;
+  }
+
   function render() {
     if (!state.raw) return;
     const { timeseries, images, devices } = state.raw;
@@ -573,6 +622,7 @@
       ensureChart(m, makeDatasetsForMetric(byMetric[m], m));
     }
     renderCameras(filteredImages);
+    renderHistory(state.raw.workHistory);
   }
 
   // ---------- fetch / boot ----------
