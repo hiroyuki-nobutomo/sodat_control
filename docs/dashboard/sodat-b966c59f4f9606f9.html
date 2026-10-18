@@ -151,6 +151,18 @@
   .hist-task { font-weight: 600; white-space: nowrap; }
   .hist-detail { color: var(--ink-soft, var(--muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist-photo { color: var(--muted); white-space: nowrap; font-size: .78rem; }
+  /* Task-list reference tab */
+  .tabs { display: flex; gap: .3rem; padding: .4rem 1rem 0; border-bottom: 1px solid rgba(127,127,127,.2); }
+  .tab-btn { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; padding: .5rem .85rem; font: inherit; color: var(--ink-soft, var(--muted)); cursor: pointer; }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--leaf, #3a7d3a); font-weight: 600; }
+  #panel-tasklist { padding: 1rem; max-width: 1100px; margin: 0 auto; }
+  .tl-controls { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+  .tl-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; align-items: start; }
+  .tl-group { border: 1px solid rgba(127,127,127,.2); border-radius: 8px; padding: .6rem .8rem; }
+  .tl-proc { font-weight: 600; font-size: .9rem; margin: 0 0 .4rem; color: var(--ink); }
+  .tl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+  .tl-list li { font-size: .88rem; color: var(--ink-soft, var(--ink)); }
+  .tl-meta { color: var(--muted); font-size: .85rem; }
 
   /* ---------- loading state ---------- */
   .skel { background: #ececea; border-radius: 4px; min-height: 1em; display: inline-block; }
@@ -189,6 +201,11 @@
     <span id="status" aria-live="polite"></span>
   </div>
 </header>
+
+<nav class="tabs" role="tablist" aria-label="ビュー切替 / View">
+  <button class="tab-btn active" id="tab-dashboard" role="tab" aria-selected="true" aria-controls="main">ダッシュボード</button>
+  <button class="tab-btn" id="tab-tasklist" role="tab" aria-selected="false" aria-controls="panel-tasklist">タスクリスト</button>
+</nav>
 
 <main id="main" role="main">
   <!-- KPIs -->
@@ -257,6 +274,16 @@
     </div>
   </div>
 </main>
+
+<section id="panel-tasklist" role="tabpanel" aria-labelledby="tab-tasklist" hidden>
+  <div class="tl-controls">
+    <label class="filter-label" for="tl-crop">作目 / Crop</label>
+    <select id="tl-crop"></select>
+    <span class="tl-meta" id="tl-meta"></span>
+  </div>
+  <div class="tl-groups" id="tl-groups"><p class="tl-meta">読み込み中…</p></div>
+  <p class="tl-meta" id="tl-source" style="margin-top:1rem"></p>
+</section>
 
 <script>
 (function () {
@@ -681,6 +708,59 @@
       .then((t) => setWizardToken(t.trim()))
       .catch(() => { /* link stays at "/", wizard paste-form covers it */ });
   }
+
+  // ---------- タスクリスト tab (read-only reference) ----------
+  // Snapshot of the canonical SODAT task dictionary (sodat-matching), by
+  // 作目 → 工程 → 作業名. Names only — aptitude / task IDs are omitted.
+  let taskListData = null;
+  async function loadTaskList() {
+    if (taskListData) return taskListData;
+    const resp = await fetch("task-list.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    taskListData = await resp.json();
+    return taskListData;
+  }
+  function renderTaskList() {
+    const sel = $("#tl-crop"), groups = $("#tl-groups"), meta = $("#tl-meta");
+    if (!taskListData) return;
+    const crop = taskListData.crops.find((c) => c.crop === sel.value) || taskListData.crops[0];
+    if (!crop) { groups.innerHTML = '<p class="tl-meta">データがありません。</p>'; return; }
+    meta.textContent = `${crop.count} タスク`;
+    let html = "";
+    for (const p of crop.processes) {
+      html += `<div class="tl-group"><p class="tl-proc">${esc(p.process)}</p><ul class="tl-list">`;
+      for (const t of p.tasks) html += `<li>${esc(t)}</li>`;
+      html += "</ul></div>";
+    }
+    groups.innerHTML = html;
+  }
+  async function initTaskList() {
+    const groups = $("#tl-groups"), sel = $("#tl-crop");
+    try {
+      const data = await loadTaskList();
+      sel.innerHTML = data.crops
+        .map((c) => `<option value="${esc(c.crop)}">${esc(c.label)}（${c.count}）</option>`).join("");
+      sel.onchange = renderTaskList;
+      const src = $("#tl-source");
+      if (src) src.textContent = `出典: ${data.source}（${tsLabel((data.generatedAt || "").replace("T", " ").slice(0, 16))} 時点のスナップショット）`;
+      renderTaskList();
+    } catch (e) {
+      groups.innerHTML = `<p class="tl-meta">タスクリストを読み込めませんでした（${esc(e.message)}）。</p>`;
+    }
+  }
+  function showTab(which) {
+    const isTask = which === "tasklist";
+    $("#main").hidden = isTask;
+    $("#panel-tasklist").hidden = !isTask;
+    $("#tab-dashboard").classList.toggle("active", !isTask);
+    $("#tab-tasklist").classList.toggle("active", isTask);
+    $("#tab-dashboard").setAttribute("aria-selected", String(!isTask));
+    $("#tab-tasklist").setAttribute("aria-selected", String(isTask));
+    const f = $("#filters"); if (f) f.style.visibility = isTask ? "hidden" : "";
+    if (isTask) initTaskList();
+  }
+  $("#tab-dashboard").addEventListener("click", () => showTab("dashboard"));
+  $("#tab-tasklist").addEventListener("click", () => showTab("tasklist"));
 
   loadData();
 
