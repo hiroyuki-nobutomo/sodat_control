@@ -1,7 +1,7 @@
 {
   "generatedAt": "2026-10-18T11:55:03+00:00",
   "source": "sodat-matching/data/task_types_seed.csv",
-  "note": "作目別（item=common）の正本スナップショット。適性・IDは非掲載。",
+  "note": "参照専用。sodat-matching の正本辞書からの書き出し（作目別・item=common）。タスクリストの構成・品目展開（トマト等）は sodat-matching 側の責務で、sodat_control では生成しない。適性・IDは非掲載。",
   "crops": [
     {
       "crop": "veg",
