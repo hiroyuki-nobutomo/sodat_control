@@ -588,7 +588,9 @@
     const { site, device } = state.filters;
     const rows = (workHistory || []).filter((w) => {
       if (site && w.site !== site) return false;
-      if (device && w.field !== device) return false;
+      // Prefix match on a "-" boundary: device S01 also picks up its
+      // positions S01-U / S01-M / S01-L (but not S010).
+      if (device && w.field !== device && !w.field.startsWith(device + "-")) return false;
       return true;
     });
     if (!rows.length) {
