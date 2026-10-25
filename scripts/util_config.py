@@ -86,6 +86,8 @@ def main():
     parser.add_argument("--spreadsheet-id", help="Set the lab-wide master spreadsheet ID (uploader.spreadsheet_id)")
     parser.add_argument("--data-folder-id", help="Set the Drive folder ID for log/data uploads (uploader.data_folder_id)")
     parser.add_argument("--images-folder-id", help="Set the Drive folder ID for image uploads (uploader.images_folder_id)")
+    parser.add_argument("--ingest-url", help="Set the Supabase ingest API URL (uploader.ingest_url)")
+    parser.add_argument("--ingest-token", help="Set the Supabase ingest token (uploader.ingest_token)")
     parser.add_argument("--retention-days", type=int, help="Set local data retention period (days)")
     parser.add_argument("--sensor-interval", type=int, help="Set environmental sensor interval (seconds)")
     parser.add_argument("--camera-interval", type=int, help="Set camera interval (seconds)")
@@ -97,6 +99,7 @@ def main():
     args = parser.parse_args()
 
     if not any([args.device_id, args.spreadsheet_id, args.data_folder_id, args.images_folder_id,
+                args.ingest_url, args.ingest_token,
                 args.retention_days, args.sensor_interval, args.camera_interval,
                 args.upload_interval, args.upload_offset, args.log_interval]):
         parser.print_help()
@@ -115,6 +118,14 @@ def main():
 
     if args.images_folder_id:
         update_folder_id(config, 'images_folder_id', args.images_folder_id)
+
+    if args.ingest_url:
+        update_folder_id(config, 'ingest_url', args.ingest_url)
+
+    if args.ingest_token:
+        # Don't echo the token back to the terminal / firstrun log.
+        config.setdefault('uploader', {})['ingest_token'] = args.ingest_token
+        print("Updating uploader.ingest_token: (hidden)")
 
     if args.retention_days:
         update_retention(config, args.retention_days)
