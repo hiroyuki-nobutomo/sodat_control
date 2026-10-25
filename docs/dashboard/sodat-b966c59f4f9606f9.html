@@ -555,15 +555,15 @@
       const wrap = document.createElement("div");
       wrap.className = "thumb";
       const a = document.createElement("a");
-      a.href = img.webViewLink || "#";
+      a.href = img.url || img.webViewLink || "#";
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       const el = document.createElement("img");
       el.alt = `${img.deviceId} ${img.ts}`;
       el.loading = "lazy";
-      // Route via the server-side proxy so the underlying Drive file does
-      // not need to be publicly shared.
-      el.src = `/api/sensor-image?id=${encodeURIComponent(img.fileId)}`;
+      // Supabase Storage images are public (img.url). Drive images route via
+      // the server-side proxy so the Drive file need not be publicly shared.
+      el.src = img.url || `/api/sensor-image?id=${encodeURIComponent(img.fileId)}`;
       el.onerror = () => { wrap.style.background = "#efe4dc"; };
       a.appendChild(el);
       wrap.appendChild(a);
