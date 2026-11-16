@@ -6,7 +6,7 @@ from src.config import ConfigManager
 from src.logger import setup_logging
 from src.sensors import Sensor, create_sensor
 from src.wifi_monitor import WifiMonitor
-from src.uploaders import MockUploader, GoogleSheetsUploader
+from src.uploaders import MockUploader, GoogleSheetsUploader, SupabaseIngestUploader, TeeUploader
 from src.app import Application
 from src.status import StatusIndicator
 from src.retention import RetentionManager
@@ -69,9 +69,24 @@ def main():
             data_folder_id=cm.get("uploader.data_folder_id"),
             device_id=device_id,
         )
+    elif uploader_type == "Supabase":
+        logging.info("Using Supabase ingest uploader only.")
+        uploader = None
     else:
         logging.info("Using Mock Uploader.")
         uploader = MockUploader(storage_path=cm.get("uploader.mock_path", "uploads.jsonl"))
+
+    # Supabase (sodat-matching) ingest. While Sheets is still the primary
+    # store (transition period, sodat-matching ADR 0024) it runs alongside as
+    # a best-effort secondary; with uploader.type: Supabase it runs alone.
+    ingest_url = cm.get("uploader.ingest_url")
+    ingest_token = cm.get("uploader.ingest_token")
+    if ingest_url and ingest_token:
+        ingest = SupabaseIngestUploader(ingest_url, ingest_token, device_id=device_id)
+        uploader = ingest if uploader is None else TeeUploader(primary=uploader, secondary=ingest)
+        logging.info(f"Supabase ingest enabled ({ingest_url}).")
+    elif uploader is None:
+        raise ValueError("uploader.type is Supabase but uploader.ingest_url / ingest_token are not set.")
     
     # 6. Initialize Retention Manager
     retention_manager = None

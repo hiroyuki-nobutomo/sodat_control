@@ -30,6 +30,8 @@ The `device_id` (`S01`, `S02`, ...) is auto-derived from the hostname you set in
 >    - `SODAT_SPREADSHEET_ID` — the master spreadsheet ID. The firstrun snippet injects this into each device's `config.yaml` at boot, and the dashboard reads from it. Lets you rotate the destination without redeploying the repo.
 >    - `SODAT_DATA_FOLDER_ID` — Drive folder ID for per-device log uploads. Injected into `config.yaml` at first boot the same way as `SODAT_SPREADSHEET_ID`. Must point inside the Shared Drive.
 >    - `SODAT_IMAGES_FOLDER_ID` — Drive folder ID for camera-capture uploads. Same handling as `SODAT_DATA_FOLDER_ID`.
+>    - `SODAT_INGEST_URL` / `SODAT_INGEST_TOKEN` — (optional) Supabase ingest of sodat-matching (`https://<sodat-matching domain>/api/ingest` and the token set there as `SODAT_INGEST_TOKEN`). When set, firstrun writes both into the Pi's `config.yaml` and the Pi also writes every reading to Supabase, alongside Sheets.
+>    - `SODAT_DATA_SOURCE` — (optional) `sheets` (default) or `supabase`. With `supabase`, the dashboard reads from sodat-matching's Supabase (`field_dashboard()`) instead of the spreadsheets.
 >    - `SODAT_WORKLOG_SPREADSHEET_IDS` — (optional) comma-separated IDs of the TPOCast (AOItrace) work-history spreadsheets shown in the dashboard's work-history card. All listed sheets are read and merged, so each farm/device group can keep its own file. If unset, the legacy single `SODAT_WORKLOG_SPREADSHEET_ID`, then the default AOItrace sheet, is used. Share each sheet with the Service Account as Viewer; a sheet that can't be read is skipped without breaking the dashboard.
 > 6. Redeploy so all env vars take effect.
 > 7. Share the **guide** URL with lab members in the form:
@@ -171,6 +173,8 @@ Due to a Pi 5 hardware limitation, you must flash the Arduino via **PC or Mac**.
 >    - `SODAT_SPREADSHEET_ID` — マスタースプレッドシートの ID。firstrun snippet が各機器の `config.yaml` に自動注入し、ダッシュボードもこの ID から読む。repo を再デプロイせずに保存先を切替可能
 >    - `SODAT_DATA_FOLDER_ID` — ログ/データアップロード先の Drive フォルダ ID。`SODAT_SPREADSHEET_ID` と同様に各機器の `config.yaml` へ初回起動時に自動注入。共有ドライブ内のフォルダを指定すること
 >    - `SODAT_IMAGES_FOLDER_ID` — カメラ画像アップロード先の Drive フォルダ ID。`SODAT_DATA_FOLDER_ID` と同じ仕組み
+>    - `SODAT_INGEST_URL` / `SODAT_INGEST_TOKEN` — (任意) sodat-matching の Supabase への書き込み窓口（`https://<sodat-matching のドメイン>/api/ingest`）と、その受付用トークン（sodat-matching 側の `SODAT_INGEST_TOKEN` と同じ値）。設定すると firstrun が Pi の `config.yaml` に書き込み、Pi はスプレッドシートと並行して Supabase にも書く
+>    - `SODAT_DATA_SOURCE` — (任意) `sheets`（既定）か `supabase`。`supabase` にすると、ダッシュボードはスプレッドシートではなく sodat-matching の Supabase（`field_dashboard()`）から読む
 >    - `SODAT_WORKLOG_SPREADSHEET_IDS` — (任意) ダッシュボードの作業履歴カードに表示する TPOCast (AOItrace) 作業履歴スプレッドシートの ID をカンマ区切りで指定。全シートを読んで統合するので、農園・機器ごとに別ファイルで運用できる。未設定時は旧 `SODAT_WORKLOG_SPREADSHEET_ID` (単一)、それも無ければ既定の AOItrace シートを使う。各シートを Service Account に「閲覧者」で共有すること。読めないシートは飛ばし、ダッシュボード全体は止めない
 > 6. 再デプロイで env var が反映される
 > 7. ラボメンバーには**ガイドページ**の URL を共有:
@@ -267,6 +271,26 @@ Device ID (例: S01, A01) の変更や、記録/アップロードの間隔を�
 ### 管理用コマンド
 *   **WiFi 確認:** `./test_wifi.sh`。
 *   **ログ確認:** `./04_start_service.sh --log`。
+
+---
+
+## 🔁 設置済みの Pi で Supabase への書き込みを有効にする (SSH)
+
+sodat-matching への統合（sodat-matching ADR 0020〜0024）の移行期間は、Pi がスプレッドシートと Supabase の両方に書く。設置済みの Pi は SSH で次のとおり更新する（SSH で届かない機器は、書き込み済みの SD カードを送って交換する）。
+
+```bash
+ssh <ユーザー名>@s01.local
+# 1. プログラムを更新（config.yaml は引き継がれる）
+curl -fsSL https://raw.githubusercontent.com/hiroyuki-nobutomo/sodat_control/main/bootstrap.sh | sudo bash
+# 2. Supabase の書き込み窓口とトークンを設定（トークンは端末の履歴に残さないよう、先頭に空白を入れて実行）
+cd ~/sensor_sfc
+ .venv/bin/python3 scripts/util_config.py --ingest-url https://<sodat-matching のドメイン>/api/ingest --ingest-token <受付用トークン>
+# 3. 再起動して確認（ログに "Supabase ingest enabled" と "Supabase ingest accepted" が出る）
+./04_start_service.sh --stop && ./04_start_service.sh
+./04_start_service.sh --log
+```
+
+Supabase への書き込みに失敗しても、スプレッドシートへの書き込みは止まらない。取りこぼした分は、sodat-matching の複製処理（sync-sheets）がスプレッドシートから補う。
 
 ---
 

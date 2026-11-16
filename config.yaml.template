@@ -59,6 +59,13 @@ uploader:
   data_folder_id: REPLACE_WITH_DATA_FOLDER_ID
   images_folder_id: REPLACE_WITH_IMAGES_FOLDER_ID
   credentials_file: secrets/service_account.json
+  # Supabase (sodat-matching) ingest. When both are set, every reading is
+  # also written to Supabase through the ingest API (best-effort, alongside
+  # Sheets). Set by firstrun, or over SSH with:
+  #   .venv/bin/python3 scripts/util_config.py --ingest-url <url> --ingest-token <token>
+  # The Pi never holds a Supabase key — only this token.
+  ingest_url: ""
+  ingest_token: ""
   interval_seconds: 1800
   log_interval_seconds: 600
   offset_seconds: 300

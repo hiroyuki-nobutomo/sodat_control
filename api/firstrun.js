@@ -58,6 +58,8 @@ write_files:
       SODAT_SPREADSHEET_ID=__SPREADSHEET_ID__
       SODAT_DATA_FOLDER_ID=__DATA_FOLDER_ID__
       SODAT_IMAGES_FOLDER_ID=__IMAGES_FOLDER_ID__
+      SODAT_INGEST_URL=__INGEST_URL__
+      SODAT_INGEST_TOKEN=__INGEST_TOKEN__
   - path: /etc/sodat-firstrun/service_account.json
     owner: root:root
     permissions: '0600'
@@ -224,6 +226,9 @@ write_files:
       apply_util_config --spreadsheet-id    "$SODAT_SPREADSHEET_ID"
       apply_util_config --data-folder-id    "$SODAT_DATA_FOLDER_ID"
       apply_util_config --images-folder-id  "$SODAT_IMAGES_FOLDER_ID"
+      # Supabase (sodat-matching) ingest — optional; empty leaves it off.
+      apply_util_config --ingest-url        "$SODAT_INGEST_URL"
+      apply_util_config --ingest-token      "$SODAT_INGEST_TOKEN"
 
       # 9. Reboot so the firmware re-reads /boot/firmware/config.txt —
       # 01_install_update.sh appends 'dtparam=i2c_arm=on', but the kernel
@@ -336,11 +341,21 @@ export default function handler(req, res) {
     }
     return v;
   };
-  let spreadsheetId, dataFolderId, imagesFolderId;
+  // Supabase ingest (sodat-matching). Same newline-smuggling concern as the
+  // Drive IDs: only a plain https URL and a token of URL-safe characters pass.
+  const patternEnv = (name, re) => {
+    const v = process.env[name];
+    if (v === undefined || v === "") return "";
+    if (!re.test(v)) throw new Error(`${name} env var has an unexpected format; expected ${re}.`);
+    return v;
+  };
+  let spreadsheetId, dataFolderId, imagesFolderId, ingestUrl, ingestToken;
   try {
     spreadsheetId  = driveIdEnv("SODAT_SPREADSHEET_ID");
     dataFolderId   = driveIdEnv("SODAT_DATA_FOLDER_ID");
     imagesFolderId = driveIdEnv("SODAT_IMAGES_FOLDER_ID");
+    ingestUrl      = patternEnv("SODAT_INGEST_URL", /^https:\/\/[A-Za-z0-9.-]+(\/[A-Za-z0-9._\/-]*)?$/);
+    ingestToken    = patternEnv("SODAT_INGEST_TOKEN", /^[A-Za-z0-9_-]{16,128}$/);
   } catch (e) {
     return fail(res, 500, e.message);
   }
@@ -351,7 +366,9 @@ export default function handler(req, res) {
     .replace("__SODAT_SENSORS__", sensorsValue)
     .replace("__SPREADSHEET_ID__",   spreadsheetId)
     .replace("__DATA_FOLDER_ID__",   dataFolderId)
-    .replace("__IMAGES_FOLDER_ID__", imagesFolderId);
+    .replace("__IMAGES_FOLDER_ID__", imagesFolderId)
+    .replace("__INGEST_URL__",       ingestUrl)
+    .replace("__INGEST_TOKEN__",     ingestToken);
 
   res.setHeader("Content-Type", "text/yaml; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="sodat-user-data-snippet.yaml"');

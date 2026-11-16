@@ -59,6 +59,25 @@ UNIT_BY_METRIC = {
 CAMERA_VALUE_KEY = "image_path"
 IMAGE_UPLOAD_FAILED = "IMAGE_UPLOAD_FAILED"
 
+JST = timezone(timedelta(hours=9))
+
+
+def minute_rounded_jst(ts: datetime) -> datetime:
+    """Round a reading's timestamp to the nearest minute, in JST.
+
+    Every uploader keys rows on this value: readings from one upload cycle
+    share a Timestamp in Sheets, and Supabase's unique key
+    (device, sensor, metric, time) treats the Sheets copy and the direct
+    ingest of the same reading as one row only if both round identically.
+    """
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    rounded = ts.replace(second=0, microsecond=0)
+    if ts.second >= 30:
+        rounded += timedelta(minutes=1)
+    return rounded.astimezone(JST)
+
+
 def robust_retry():
     """Retry network operations for up to 120s with exponential backoff."""
     return retry(
@@ -417,7 +436,6 @@ class GoogleSheetsUploader(Uploader):
         scalar_sheet = self.scalar_ws
         images_sheet = self.images_ws
 
-        jst = timezone(timedelta(hours=9))
         successful_timestamps: List[str] = []
         scalar_rows: List[list] = []
         image_rows: List[list] = []
@@ -426,13 +444,7 @@ class GoogleSheetsUploader(Uploader):
             # Normalise the timestamp into a stable per-minute JST string so
             # all rows from the same upload cycle share a Timestamp value
             # (lets the dashboard group/join scalar rows with image rows).
-            ts = r.timestamp
-            if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
-            rounded_ts = ts.replace(second=0, microsecond=0)
-            if ts.second >= 30:
-                rounded_ts += timedelta(minutes=1)
-            ts_jst_str = rounded_ts.astimezone(jst).strftime("%Y-%m-%d %H:%M:%S")
+            ts_jst_str = minute_rounded_jst(r.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
             value_dict = r.value or {}
             iso_ts = r.timestamp.isoformat()
@@ -535,3 +547,120 @@ class GoogleSheetsUploader(Uploader):
             f"(from {len(readings)} readings)."
         )
         return successful_timestamps
+
+
+class SupabaseIngestUploader(Uploader):
+    """Writes readings to Supabase through the sodat-matching ingest API.
+
+    The Pi holds only an ingest token, never a Supabase key: the API
+    (POST <ingest_url>?kind=...) validates the token and writes with the
+    server-side key. Camera images go straight to Supabase Storage through a
+    signed upload URL the API issues, so the function's body limit doesn't
+    apply. Stdlib only (urllib), so no new dependency lands on the Pi.
+    """
+
+    def __init__(self, ingest_url: str, ingest_token: str, device_id: str,
+                 timeout: int = 30):
+        if not ingest_url or not ingest_token:
+            raise ValueError("uploader.ingest_url and uploader.ingest_token are required.")
+        self.ingest_url = ingest_url.rstrip("/")
+        self.ingest_token = ingest_token
+        self.device_id = device_id
+        self.timeout = timeout
+
+    def _post(self, kind: str, payload: dict) -> dict:
+        import urllib.request
+        req = urllib.request.Request(
+            f"{self.ingest_url}?kind={kind}",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {self.ingest_token}"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout) as res:
+            return json.loads(res.read().decode("utf-8") or "{}")
+
+    def _put_image(self, upload_url: str, image_path: str):
+        import urllib.request
+        with open(image_path, "rb") as f:
+            body = f.read()
+        req = urllib.request.Request(upload_url, data=body, method="PUT",
+                                     headers={"Content-Type": "image/jpeg", "x-upsert": "true"})
+        with urllib.request.urlopen(req, timeout=self.timeout * 2):
+            pass
+
+    def upload(self, readings: List[SensorReading]) -> List[str]:
+        if not readings:
+            return []
+        successful: List[str] = []
+        rows: List[dict] = []
+        row_owner: List[str] = []
+        for r in readings:
+            iso_ts = r.timestamp.isoformat()
+            ts = minute_rounded_jst(r.timestamp).isoformat()
+            value_dict = r.value or {}
+            if CAMERA_VALUE_KEY in value_dict:
+                image_path = value_dict.get(CAMERA_VALUE_KEY)
+                if (not image_path or str(image_path).startswith("http")
+                        or image_path == IMAGE_UPLOAD_FAILED or not os.path.exists(image_path)):
+                    successful.append(iso_ts)   # nothing local left to send
+                    continue
+                try:
+                    signed = self._post("image-upload", {
+                        "device_id": self.device_id, "sensor_id": r.sensor_id, "ts": ts})
+                    self._put_image(signed["upload_url"], image_path)
+                    self._post("image", {"device_id": self.device_id, "sensor_id": r.sensor_id,
+                                         "ts": ts, "path": signed["path"]})
+                    successful.append(iso_ts)
+                except Exception as e:
+                    logging.warning(f"Supabase image upload failed for {r.timestamp}: {e}")
+                continue
+            for metric, value in value_dict.items():
+                if value is None or (isinstance(value, str) and value.strip() == ""):
+                    continue
+                rows.append({"ts": ts, "sensor_type": r.sensor_type, "sensor_id": r.sensor_id,
+                             "metric": metric, "value": value,
+                             "unit": UNIT_BY_METRIC.get(metric, "")})
+            row_owner.append(iso_ts)
+        if rows:
+            try:
+                res = self._post("readings", {"device_id": self.device_id, "readings": rows})
+                logging.info(f"Supabase ingest accepted {res.get('accepted')} rows "
+                             f"(from {len(row_owner)} readings).")
+                successful.extend(row_owner)
+            except Exception as e:
+                logging.warning(f"Supabase ingest of {len(rows)} rows failed: {e}")
+        else:
+            successful.extend(row_owner)
+        return successful
+
+    def upload_log(self, log_path: str):
+        # Logs stay on the Pi (and on Drive while the Sheets uploader runs).
+        pass
+
+
+class TeeUploader(Uploader):
+    """Writes every reading to a primary and a secondary uploader.
+
+    Transition period (sodat-matching ADR 0024): Sheets stays primary — its
+    success decides what the local DB marks as uploaded, so Sheets never gets
+    duplicate rows from retries. Supabase is secondary and best-effort: a
+    reading it misses still reaches Supabase through the Sheets mirror
+    (sync-sheets). The secondary runs first because the camera path is still
+    a local file at that point; the Sheets uploader replaces it with a Drive
+    URL. After Go the Supabase uploader runs alone.
+    """
+
+    def __init__(self, primary: Uploader, secondary: Uploader):
+        self.primary = primary
+        self.secondary = secondary
+
+    def upload(self, readings: List[SensorReading]) -> List[str]:
+        try:
+            self.secondary.upload(readings)
+        except Exception as e:
+            logging.warning(f"Secondary uploader failed: {e}")
+        return self.primary.upload(readings)
+
+    def upload_log(self, log_path: str):
+        self.primary.upload_log(log_path)
